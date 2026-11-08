@@ -1,0 +1,22 @@
+project: smart-thermostat
+catalog: ../../catalog
+pack: superpowers        # exactly one pack per map; its base applies to every agent below
+aspects:
+  ux-design:
+    paths: ["design/**", "app/src/ui/**"]
+    tools: [pencil]
+    agents: [ux-designer]
+  firmware:
+    paths: ["firmware/**"]
+    tools: [stm32-toolchain]
+    agents: [firmware-engineer]
+    preferred_llm: claude-opus-5-5
+  api:
+    paths: ["api/**"]
+    tools: []
+    agents: [security-reviewer, issue-triager]
+  eda-design:
+    paths: ["hardware/**/*.kicad_sch", "hardware/**/*.kicad_pcb", "hardware/**/*.kicad_pro"]
+    tools: [kicad, kicad-sch-api]
+    agents: [drc-checker, schematic-engineer]
+shared_tools: [github]

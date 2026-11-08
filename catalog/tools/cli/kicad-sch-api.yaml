@@ -1,0 +1,16 @@
+name: kicad-sch-api
+kind: cli
+description: Python library (kicad-sch-api) that creates and edits .kicad_sch files with exact KiCAD formatting, reading symbols from the installed KiCAD libraries. Driven from Bash with the interpreter below.
+provides: [schematic-capture]
+commands:
+  # Existing virtualenv that has kicad-sch-api 0.5.x installed. A durable alternative is a dedicated
+  # venv: python3 -m venv .venv-eda && .venv-eda/bin/pip install kicad-sch-api
+  python: /Users/manaspradhan/Desktop/Design-Studio/KiCAD/.venv/bin/python
+env:
+  KICAD_SYMBOL_DIR: /Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols
+# A broader node-based KiCAD MCP server also exists (~/.claude/KiCAD-MCP-Server) with schematic and PCB
+# tools; it is not used here because the library is deterministic and needs no server.
+skill: skills/kicad-schematic/SKILL.md
+inspect:
+  extensions: [.kicad_sch]
+  dump: [/usr/bin/python3, tools/cli/kicad_sch_dump.py, "{file}"]

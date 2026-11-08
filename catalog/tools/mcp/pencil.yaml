@@ -1,0 +1,15 @@
+name: pencil
+kind: mcp
+description: Pen.dev design canvas. Reads and writes .pen files. The Pen desktop app must be running with a document open.
+provides: [design-canvas, design-tokens]
+server:
+  # Desktop app server. For the VS Code extension use
+  # ~/.pencil/mcp/visual_studio_code/out/mcp-server-darwin-arm64 --app visual_studio_code --agent claudeCodeCLI
+  command: /Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64
+  args: [--app, desktop, --agent, claudeCodeCLI]
+skill: skills/pencil-design/SKILL.md
+inspect:
+  # Document fixtures must be open in the Pen app before an agent or the judge can address them by path.
+  extensions: [.pen]
+  open: [open, -a, Pen, "{file}"]
+  dump: [/usr/bin/python3, tools/mcp/pen_dump.py, dump, "{file}"]

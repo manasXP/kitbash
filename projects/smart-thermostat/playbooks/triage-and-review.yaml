@@ -1,0 +1,26 @@
+# Second playbook; the first with an `output` handoff. The triager ends its message with a JSON block
+# (its agent file declares `outputs`), and code reads the severity field to decide whether the change the
+# issue refers to gets a security review.
+name: triage-and-review
+description: Triage an incoming issue. If its severity is high or critical, security-review the change it refers to.
+map: ../project-map.yaml
+inputs: [issue, diff]
+steps:
+  - agent: issue-triager
+    aspect: api
+    task: "Triage {issue}"
+    handoff_if: {output: severity, in: [high, critical]}
+  - agent: security-reviewer
+    aspect: api
+    task: "The issue in {issue} was triaged as high severity. Review {diff}, the change it refers to."
+evals:
+  - inputs:
+      issue: fixtures/issue-triager/issue-search-crash.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager, security-reviewer]
+    pass_if: "the triager's JSON block gives type bug and severity high or critical, the reviewer runs, and its review names the string-built query in find_users in api/users.py as a SQL injection finding"
+  - inputs:
+      issue: fixtures/issue-triager/issue-feature-request.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager]
+    pass_if: "the triager's JSON block gives type feature and severity low, and the playbook stops there; security-reviewer never runs"

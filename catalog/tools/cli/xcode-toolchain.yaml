@@ -1,0 +1,12 @@
+name: xcode-toolchain
+kind: cli
+description: Xcode command-line tools for the SwiftUI companion app and its Swift packages.
+provides: [mobile-toolchain]
+commands:
+  test: xcodebuild test -scheme {scheme} -destination 'platform=iOS Simulator,name=iPhone 17'
+  package_test: swift test
+  build: xcodebuild build -scheme {scheme} -destination 'generic/platform=iOS'
+env:
+  DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer   # xcode-select on this machine points at the Command Line Tools, which ship no XCTest
+skill: null
+artifacts: [.build, Package.resolved, DerivedData, .swiftpm]

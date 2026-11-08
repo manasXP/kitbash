@@ -1,0 +1,25 @@
+# Triage an issue in the tracking aspect; if its severity is high or critical, security-review the change in the cloud
+# aspect. The two steps run in different aspects, which rule 6 allows as long as each agent is routed where its step says.
+name: triage-and-review
+description: Triage an incoming issue. If its severity is high or critical, security-review the change it refers to.
+map: ../project-map.yaml
+inputs: [issue, diff]
+steps:
+  - agent: issue-triager
+    aspect: tracking
+    task: "Triage {issue}"
+    handoff_if: {output: severity, in: [high, critical]}
+  - agent: security-reviewer
+    aspect: cloud
+    task: "The issue in {issue} was triaged as high severity. Review {diff}, the change it refers to."
+evals:
+  - inputs:
+      issue: fixtures/issue-triager/issue-search-crash.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager, security-reviewer]
+    pass_if: "the triager's JSON block gives type bug and severity high or critical, the reviewer runs, and its review names the string-built query in find_users in api/users.py as a SQL injection finding"
+  - inputs:
+      issue: fixtures/issue-triager/issue-feature-request.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager]
+    pass_if: "the triager's JSON block gives type feature and severity low, and the playbook stops there; security-reviewer never runs"

@@ -1,0 +1,13 @@
+name: android-toolchain
+kind: cli
+description: Android Studio's SDK and JDK with the project's Gradle wrapper, for the Kotlin + Jetpack Compose companion app.
+provides: [mobile-toolchain]
+commands:
+  build: ./gradlew assembleDebug
+  test: ./gradlew test
+  lint: ./gradlew lint
+env:
+  ANDROID_HOME: /Users/manaspradhan/Library/Android/sdk
+  JAVA_HOME: /Applications/Android Studio.app/Contents/jbr/Contents/Home
+skill: null
+artifacts: [build, .gradle, .kotlin, local.properties]

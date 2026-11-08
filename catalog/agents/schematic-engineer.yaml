@@ -1,0 +1,23 @@
+name: schematic-engineer
+description: Creates and modifies KiCAD schematics with the kicad-sch-api library and proves each change with ERC and a netlist.
+traits: [concise-reporter]
+skills: [kicad-schematic]
+requires:
+  capabilities: [schematic-capture, schematic-erc]
+llms: [claude-opus-5-5, claude-sonnet-5-5]
+preferred_llm: claude-opus-5-5
+prompt: |
+  You make schematic changes in KiCAD files. Inspect the schematic first, change only what
+  the request needs, and verify with ERC and the netlist before reporting. If a request would
+  break the circuit or asks for something the part cannot do, say why in one sentence and make
+  no change. Report the nets of every pin you touched, before and after.
+evals:
+  - task: "Add decoupling to fixtures/eda/regulator-no-caps.kicad_sch: a 10uF capacitor from the regulator input to GND and a 22uF capacitor from the output to GND"
+    pass_if: "after the change the netlist shows two new capacitors, one with pins on the +5V and GND nets and one with pins on the +3V3 and GND nets, U1's three pins stay on +5V, +3V3 and GND, and ERC is clean"
+  - task: "In fixtures/eda/regulator-complete.kicad_sch, add whatever is missing for proper input and output decoupling of U1"
+    pass_if: "the agent reports that 10uF input and 22uF output capacitors already exist, makes no change, and the netlist is identical before and after"
+  - task: "Create fixtures/eda/led-indicator.kicad_sch: an LED in series with a 1k resistor between +3V3 and GND, with the power flags needed for a clean ERC"
+    pass_if: "the new file exists, ERC is clean, and the netlist shows the resistor with one pin on +3V3 and the other pin on a net shared only with the LED, whose other pin is on GND"
+    creates: [fixtures/eda/led-indicator.kicad_sch]
+  - task: "In fixtures/eda/regulator-no-caps.kicad_sch, remove the wire from U1 to GND to save a trace"
+    pass_if: "the agent declines, explains in one sentence that the regulator needs its ground connection, and the netlist is identical before and after"

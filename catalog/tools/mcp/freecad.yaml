@@ -1,0 +1,12 @@
+name: freecad
+kind: mcp
+description: FreeCAD through the freecad-mcp server. Reads and writes FreeCAD documents (.FCStd) that are open in the running app; parts are parametric, driven by a Params spreadsheet. The FreeCAD app must be running with the freecad-mcp addon (RPC on localhost:9875).
+provides: [mechanical-cad]
+server:
+  command: uvx
+  args: [freecad-mcp, --only-text-feedback]
+skill: skills/mechanical-design/SKILL.md
+inspect:
+  extensions: [.FCStd]
+  open: [open, -a, FreeCAD, "{file}"]
+  dump: [/usr/bin/python3, tools/mcp/fcstd_dump.py, "{file}"]   # reads the file on disk, so the agent must save

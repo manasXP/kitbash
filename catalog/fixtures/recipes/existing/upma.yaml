@@ -1,0 +1,95 @@
+name: Upma
+servings: 4
+total_time_minutes: 25
+category: breakfast
+cuisine: [south_indian, indian]
+tags: [breakfast, quick, semolina]
+difficulty: easy
+
+stages:
+  - name: Heat oil
+    action: heat
+    temp_target: 170
+    duration_seconds: 45
+
+  - name: Add oil
+    action: dispense
+    ingredients:
+      - name: Oil
+        subsystem: SLD
+        channel: OIL
+        amount_ml: 15.0
+
+  - name: Temper mustard and urad dal
+    action: dispense
+    ingredients:
+      - name: Mustard seeds
+        subsystem: ASD
+        asd_box_id: 2
+        amount_g: 2.0
+      - name: Urad dal
+        subsystem: ASD
+        asd_box_id: 6
+        amount_g: 3.0
+
+  - name: Sauté tempering
+    action: heat
+    temp_target: 160
+    duration_seconds: 30
+    stir: true
+    stir_pattern: continuous
+
+  - name: Add onion and vegetables
+    action: dispense
+    ingredients:
+      - name: Onion and mixed vegetables
+        subsystem: CID
+        cid_tray_id: 1
+        mode: FULL
+
+  - name: Cook vegetables
+    action: heat
+    temp_target: 150
+    duration_seconds: 180
+    stir: true
+    stir_pattern: intermittent
+
+  - name: Add water
+    action: dispense
+    ingredients:
+      - name: Water
+        subsystem: SLD
+        channel: WATER
+        amount_ml: 500.0
+
+  - name: Boil water
+    action: heat
+    temp_target: 100
+    duration_seconds: 180
+
+  - name: Add rava
+    action: dispense
+    ingredients:
+      - name: Semolina (rava)
+        subsystem: CID
+        cid_tray_id: 2
+        mode: PARTIAL
+
+  - name: Add salt
+    action: dispense
+    ingredients:
+      - name: Salt
+        subsystem: ASD
+        asd_box_id: 5
+        amount_g: 4.0
+
+  - name: Cook upma
+    action: heat
+    temp_target: 90
+    duration_seconds: 180
+    stir: true
+    stir_pattern: continuous
+
+  - name: Rest
+    action: wait
+    duration_seconds: 120

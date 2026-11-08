@@ -1,0 +1,8 @@
+name: github
+kind: cli
+description: GitHub through the gh CLI. Pull requests, issues, checks.
+provides: [source-control]
+commands:
+  pr_diff: gh pr diff
+  pr_comment: gh pr comment
+skill: null

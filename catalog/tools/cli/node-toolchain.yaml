@@ -1,0 +1,11 @@
+name: node-toolchain
+kind: cli
+description: Node 22 with pnpm for the TypeScript services (Fastify API, Next.js admin, shared packages). Tests run through the package scripts.
+provides: [service-toolchain]
+commands:
+  install: pnpm install
+  test: pnpm test
+  lint: pnpm lint
+  build: pnpm build
+skill: null
+artifacts: [node_modules, pnpm-lock.yaml, package-lock.json, dist, .next, .turbo]   # written by install, build and test; not edits by the agent

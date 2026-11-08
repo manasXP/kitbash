@@ -1,0 +1,39 @@
+# Build output
+build/
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.map
+*.list
+*.size
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.settings/
+
+# STM32CubeIDE
+Debug/
+Release/
+.mxproject
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local build overrides
+local.mk
+
+# Lint / analysis output
+*.pclint
+cppcheck-results/
+
+# STM32CubeG4 driver cache (fetched by scripts/fetch_cube_drivers.sh)
+.cube_cache/

@@ -1,0 +1,9 @@
+name: python-toolchain
+kind: cli
+description: Python 3 for the CM5 device services (recipe engine, vision pipeline, bridge, cloud sync). Tests run with unittest or pytest from the service directory.
+provides: [service-toolchain]
+commands:
+  test: python3 -m unittest discover -s tests -t .
+  pytest: python3 -m pytest -q
+skill: null
+artifacts: [__pycache__, .pytest_cache]

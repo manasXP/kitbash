@@ -1,0 +1,26 @@
+# Same shape as the smart-thermostat playbook: an engineer edits a schematic, and only if KiCAD's ERC passes does an
+# independent checker review it. Evals run on catalog fixtures, not on the Epicura sheets, which fail ERC today
+# (504 violations on Unified_v1.kicad_sch on 2 Nov 2026), so a real run on them stops after the first step.
+name: schematic-change-and-check
+description: An engineer edits a schematic. If KiCAD's ERC passes, an independent checker reviews the result.
+map: ../project-map.yaml
+inputs: [request, file]
+steps:
+  - agent: schematic-engineer
+    aspect: eda-design
+    task: "{request}"
+    handoff_if: {command: kicad.erc-gate, file: "{file}"}
+  - agent: drc-checker
+    aspect: eda-design
+    task: "Check {file} and report the ERC result and every net the most recent change touched"
+evals:
+  - inputs:
+      request: "Add decoupling to fixtures/eda/regulator-no-caps.kicad_sch: a 10uF capacitor from the regulator input to GND and a 22uF capacitor from the output to GND"
+      file: fixtures/eda/regulator-no-caps.kicad_sch
+    expect_path: [schematic-engineer, drc-checker]
+    pass_if: "the checker reports the schematic clean and names two capacitors, one on +5V and GND and one on +3V3 and GND"
+  - inputs:
+      request: "In fixtures/eda/dangling-wire.kicad_sch, rename the label SDA to I2C_SDA and change nothing else"
+      file: fixtures/eda/dangling-wire.kicad_sch
+    expect_path: [schematic-engineer]
+    pass_if: "the playbook stops after schematic-engineer because ERC still reports the unconnected label, and drc-checker never runs"

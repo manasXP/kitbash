@@ -1,0 +1,91 @@
+name: Poha
+servings: 4
+total_time_minutes: 20
+category: breakfast
+cuisine: [maharashtrian, indian]
+tags: [breakfast, quick, light]
+difficulty: easy
+
+stages:
+  - name: Heat oil
+    action: heat
+    temp_target: 170
+    duration_seconds: 45
+
+  - name: Add oil
+    action: dispense
+    ingredients:
+      - name: Oil
+        subsystem: SLD
+        channel: OIL
+        amount_ml: 15.0
+
+  - name: Temper mustard and curry leaves
+    action: dispense
+    ingredients:
+      - name: Mustard seeds
+        subsystem: ASD
+        asd_box_id: 2
+        amount_g: 2.0
+
+  - name: Sauté
+    action: heat
+    temp_target: 160
+    duration_seconds: 30
+    stir: true
+    stir_pattern: continuous
+
+  - name: Add onion
+    action: dispense
+    ingredients:
+      - name: Onion (diced)
+        subsystem: CID
+        cid_tray_id: 1
+        mode: FULL
+
+  - name: Cook onion
+    action: heat
+    temp_target: 150
+    duration_seconds: 120
+    stir: true
+    stir_pattern: intermittent
+
+  - name: Detect onion translucent
+    action: detect_stage
+    cv_check: onion_translucent
+    duration_seconds: 60
+
+  - name: Add turmeric and chili
+    action: dispense
+    ingredients:
+      - name: Turmeric
+        subsystem: ASD
+        asd_box_id: 3
+        amount_g: 1.5
+      - name: Red chili powder
+        subsystem: ASD
+        asd_box_id: 4
+        amount_g: 1.0
+      - name: Salt
+        subsystem: ASD
+        asd_box_id: 5
+        amount_g: 3.0
+
+  - name: Add soaked poha
+    action: dispense
+    ingredients:
+      - name: Flattened rice (soaked)
+        subsystem: CID
+        cid_tray_id: 2
+        mode: FULL
+
+  - name: Mix and heat
+    action: heat
+    temp_target: 100
+    duration_seconds: 120
+    stir: true
+    stir_pattern: fold
+
+  - name: Rest
+    action: wait
+    duration_seconds: 60

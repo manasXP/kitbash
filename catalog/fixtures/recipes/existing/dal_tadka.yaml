@@ -1,0 +1,98 @@
+name: Dal Tadka
+servings: 4
+total_time_minutes: 35
+category: dal
+cuisine: [north_indian]
+tags: [protein, comfort, everyday]
+difficulty: easy
+
+stages:
+  - name: Heat oil
+    action: heat
+    temp_target: 180
+    duration_seconds: 60
+
+  - name: Dispense tadka spices
+    action: dispense
+    ingredients:
+      - name: Cumin seeds
+        subsystem: ASD
+        asd_box_id: 1
+        amount_g: 3.0
+      - name: Mustard seeds
+        subsystem: ASD
+        asd_box_id: 2
+        amount_g: 2.0
+
+  - name: Add oil
+    action: dispense
+    ingredients:
+      - name: Oil
+        subsystem: SLD
+        channel: OIL
+        amount_ml: 15.0
+
+  - name: Sauté onion-tomato
+    action: dispense
+    ingredients:
+      - name: Onion-tomato mix
+        subsystem: CID
+        cid_tray_id: 1
+        mode: FULL
+
+  - name: Cook onion-tomato
+    action: heat
+    temp_target: 160
+    duration_seconds: 180
+    stir: true
+    stir_pattern: intermittent
+
+  - name: Detect browning
+    action: detect_stage
+    cv_check: onion_golden
+    duration_seconds: 120
+
+  - name: Add turmeric and chili
+    action: dispense
+    ingredients:
+      - name: Turmeric
+        subsystem: ASD
+        asd_box_id: 3
+        amount_g: 2.0
+      - name: Red chili powder
+        subsystem: ASD
+        asd_box_id: 4
+        amount_g: 1.5
+
+  - name: Add pre-soaked dal
+    action: dispense
+    ingredients:
+      - name: Toor dal (pre-soaked)
+        subsystem: CID
+        cid_tray_id: 2
+        mode: FULL
+
+  - name: Add water
+    action: dispense
+    ingredients:
+      - name: Water
+        subsystem: SLD
+        channel: WATER
+        amount_ml: 500.0
+
+  - name: Pressure cook dal
+    action: heat
+    temp_target: 120
+    duration_seconds: 900
+    stir: true
+    stir_pattern: continuous
+
+  - name: Final stir
+    action: stir
+    duration_seconds: 15
+    stir: true
+    stir_pattern: fold
+
+  - name: Rest
+    action: wait
+    duration_seconds: 120

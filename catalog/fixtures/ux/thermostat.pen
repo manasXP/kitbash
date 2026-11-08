@@ -1,0 +1,419 @@
+{
+  "version": "2.17",
+  "children": [
+    {
+      "type": "frame",
+      "id": "sPlFu",
+      "x": 0,
+      "y": 0,
+      "name": "Button",
+      "reusable": true,
+      "fill": "$accent",
+      "cornerRadius": "$radius-pill",
+      "gap": "$space-2",
+      "padding": [
+        "$space-3",
+        "$space-6"
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "BmU2Y",
+          "name": "Label",
+          "fill": "$surface",
+          "content": "Button",
+          "fontFamily": "$font",
+          "fontSize": "$size-body",
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "MZu22",
+      "x": 200,
+      "y": 0,
+      "name": "Button Secondary",
+      "reusable": true,
+      "fill": "$surface",
+      "cornerRadius": "$radius-pill",
+      "stroke": "$accent",
+      "strokeWidth": 1,
+      "gap": "$space-2",
+      "padding": [
+        "$space-3",
+        "$space-6"
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "GW5cP",
+          "name": "Label",
+          "fill": "$accent",
+          "content": "Button",
+          "fontFamily": "$font",
+          "fontSize": "$size-body",
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "A1s3W",
+      "x": 450,
+      "y": 0,
+      "name": "Toggle",
+      "reusable": true,
+      "width": 44,
+      "height": 24,
+      "fill": "$accent",
+      "cornerRadius": "$radius-pill",
+      "padding": 2,
+      "justifyContent": "end",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "ellipse",
+          "id": "Wev7U",
+          "name": "Knob",
+          "fill": "$surface",
+          "width": 20,
+          "height": 20
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ChUxU",
+      "x": 0,
+      "y": 100,
+      "name": "TopBar",
+      "reusable": true,
+      "width": 390,
+      "fill": "$surface",
+      "padding": "$space-4",
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "t4t9x",
+          "name": "Back",
+          "width": 24,
+          "height": 24,
+          "icon": "chevron-left",
+          "library": "lucide",
+          "fill": "$ink"
+        },
+        {
+          "type": "text",
+          "id": "uxM5q",
+          "name": "Title",
+          "fill": "$ink",
+          "content": "Title",
+          "fontFamily": "$font",
+          "fontSize": "$size-heading",
+          "fontWeight": "600"
+        },
+        {
+          "type": "icon",
+          "id": "W0yvr",
+          "name": "More",
+          "width": 24,
+          "height": 24,
+          "icon": "ellipsis",
+          "library": "lucide",
+          "fill": "$ink"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "YAL9b",
+      "x": 0,
+      "y": 200,
+      "name": "ListRow",
+      "reusable": true,
+      "width": 358,
+      "stroke": "$line",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "padding": [
+        "$space-4",
+        0
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "oHFQP",
+          "name": "Texts",
+          "layout": "vertical",
+          "gap": "$space-1",
+          "children": [
+            {
+              "type": "text",
+              "id": "Faljp",
+              "name": "Row Title",
+              "fill": "$ink",
+              "content": "Row title",
+              "fontFamily": "$font",
+              "fontSize": "$size-body",
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "UwkLY",
+              "name": "Row Subtitle",
+              "fill": "$ink-muted",
+              "content": "Subtitle",
+              "fontFamily": "$font",
+              "fontSize": "$size-caption",
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "id": "dX5bt",
+          "type": "ref",
+          "ref": "A1s3W",
+          "name": "Row Toggle"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "dlwV0",
+      "x": 0,
+      "y": 300,
+      "name": "Card",
+      "reusable": true,
+      "width": 358,
+      "fill": "$surface-alt",
+      "cornerRadius": "$radius-card",
+      "layout": "vertical",
+      "gap": "$space-2",
+      "padding": "$space-4",
+      "children": [
+        {
+          "type": "text",
+          "id": "N1Wwm",
+          "name": "Card Label",
+          "fill": "$ink-muted",
+          "content": "Label",
+          "fontFamily": "$font",
+          "fontSize": "$size-caption",
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "LrdYB",
+          "name": "Card Value",
+          "fill": "$ink",
+          "content": "Value",
+          "fontFamily": "$font",
+          "fontSize": "$size-title",
+          "fontWeight": "700"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "VSave",
+      "x": 0,
+      "y": 500,
+      "name": "Home",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "$surface",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "zR7b8",
+          "type": "ref",
+          "ref": "ChUxU",
+          "name": "Home TopBar",
+          "width": "fill_container",
+          "descendants": {
+            "uxM5q": {
+              "content": "Living Room"
+            }
+          }
+        },
+        {
+          "type": "frame",
+          "id": "pQxZj",
+          "name": "Body",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": "$space-4",
+          "padding": "$space-4",
+          "children": [
+            {
+              "id": "Guaye",
+              "type": "ref",
+              "ref": "dlwV0",
+              "name": "Current Temperature",
+              "width": "fill_container",
+              "descendants": {
+                "N1Wwm": {
+                  "content": "Current temperature"
+                },
+                "LrdYB": {
+                  "content": "21.5°"
+                }
+              }
+            },
+            {
+              "id": "TckXc",
+              "type": "ref",
+              "ref": "dlwV0",
+              "name": "Target Temperature",
+              "width": "fill_container",
+              "descendants": {
+                "N1Wwm": {
+                  "content": "Target"
+                },
+                "LrdYB": {
+                  "content": "23.0°"
+                }
+              }
+            },
+            {
+              "id": "d1rJs",
+              "type": "ref",
+              "ref": "YAL9b",
+              "name": "Eco Mode Row",
+              "width": "fill_container",
+              "descendants": {
+                "Faljp": {
+                  "content": "Eco mode"
+                },
+                "UwkLY": {
+                  "content": "Lower the target when nobody is home"
+                }
+              }
+            },
+            {
+              "id": "x0kbje",
+              "type": "ref",
+              "ref": "YAL9b",
+              "name": "Schedule Row",
+              "width": "fill_container",
+              "descendants": {
+                "Faljp": {
+                  "content": "Schedule"
+                },
+                "UwkLY": {
+                  "content": "Weekdays 06:30 to 22:00"
+                }
+              }
+            },
+            {
+              "id": "H5DGj9",
+              "type": "ref",
+              "ref": "sPlFu",
+              "name": "Set Temperature Button",
+              "width": "fill_container",
+              "descendants": {
+                "BmU2Y": {
+                  "content": "Set temperature"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "accent": {
+      "type": "color",
+      "value": "#0F766E"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#B45309"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "surface-alt": {
+      "type": "color",
+      "value": "#F3F5FA"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#14213D"
+    },
+    "ink-muted": {
+      "type": "color",
+      "value": "#6B7489"
+    },
+    "line": {
+      "type": "color",
+      "value": "#D9DDE7"
+    },
+    "font": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "size-title": {
+      "type": "number",
+      "value": 28
+    },
+    "size-heading": {
+      "type": "number",
+      "value": 20
+    },
+    "size-body": {
+      "type": "number",
+      "value": 16
+    },
+    "size-caption": {
+      "type": "number",
+      "value": 13
+    },
+    "space-1": {
+      "type": "number",
+      "value": 4
+    },
+    "space-2": {
+      "type": "number",
+      "value": 8
+    },
+    "space-3": {
+      "type": "number",
+      "value": 12
+    },
+    "space-4": {
+      "type": "number",
+      "value": 16
+    },
+    "space-6": {
+      "type": "number",
+      "value": 24
+    },
+    "space-8": {
+      "type": "number",
+      "value": 32
+    },
+    "radius-card": {
+      "type": "number",
+      "value": 6
+    },
+    "radius-pill": {
+      "type": "number",
+      "value": 999
+    }
+  },
+  "fileToken": "720d5bfe-63ab-4123-ad9e-4c86fede4493"
+}

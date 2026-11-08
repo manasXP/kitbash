@@ -1,0 +1,30 @@
+name: recipe-author
+description: Creates Epicura device recipes from YouTube videos, web pages or recipe text, converting human steps into validated cooking stages and refusing what the robot cannot cook.
+traits: [concise-reporter]
+skills: [recipe-authoring]
+requires:
+  capabilities: [video-transcript, recipe-validation]
+llms: [claude-opus-5-5, claude-sonnet-5-5]
+preferred_llm: claude-opus-5-5
+prompt: |
+  You write recipes for the Epicura one-pot kitchen robot in its device YAML format. Fetch the
+  transcript with the transcript tool when given a URL, read the existing recipes for the
+  dispenser conventions, map the human steps onto heat, dispense, stir, wait and detect_stage
+  stages, validate the file with the recipe validator, and report the pre-prep the user must do.
+  When a fetch fails or the dish needs something the robot cannot do, say so and write nothing.
+# Evals use fixtures/recipes: a real caption track (kanda-poha.txt), a hand-written infeasible one (medu-vada.txt),
+# copies of the project's five recipes under existing/, and an empty out/ for new files. The URL evals touch
+# YouTube, which rate-limits caption fetches (HTTP 429 seen on 2 Nov 2026), so they accept an honest failure.
+evals:
+  - task: "Create a device recipe for 4 servings from the transcript in fixtures/recipes/transcripts/kanda-poha.txt, write it to fixtures/recipes/out/kanda_poha.yaml, and keep the dispenser conventions of the recipes in fixtures/recipes/existing/."
+    creates: [fixtures/recipes/out/kanda_poha.yaml]
+    pass_if: "fixtures/recipes/out/kanda_poha.yaml exists and the agent reports the validator's VALID line for it; the recipe heats oil first, dispenses mustard seeds from ASD box 2 and turmeric from box 3 (salt from box 5 if used), puts onion in a CID tray and the soaked flattened rice in the other CID tray, dispenses oil through SLD OIL, and uses a fold stir pattern or a gentle mix after the poha goes in; the report lists what the user must load in each tray and box (pre-prep) and names anything from the video left out (garnish such as coriander, lemon, sev, or frying peanuts separately) with a reason; no guessed quantity is presented as if it came from the video"
+  - task: "The transcript in fixtures/recipes/transcripts/medu-vada.txt is a medu vada recipe. Create a device recipe from it and write it to fixtures/recipes/out/medu_vada.yaml."
+    creates: [fixtures/recipes/out/medu_vada.yaml]   # must not exist after the run either; listed so the validator knows it is an output path
+    pass_if: "the agent writes no recipe file (fixtures/recipes/out/medu_vada.yaml does not exist) and states that the dish needs deep frying in an oil bath, grinding the batter and shaping by hand, which the robot cannot do, citing the transcript lines or timestamps; it does not produce a watered-down substitute recipe unless clearly labelled as a different dish and the user is told"
+  - task: "Create a device recipe from https://www.youtube.com/watch?v=-MUXuB1ul4g and write it to fixtures/recipes/out/from_video.yaml."
+    creates: [fixtures/recipes/out/from_video.yaml]
+    pass_if: "the agent ran the transcript tool on the URL; then either (a) the transcript was fetched, fixtures/recipes/out/from_video.yaml exists, the agent reports the validator's VALID line and the recipe is a poha (flattened rice) with onion, oil, mustard seeds and turmeric, or (b) the fetch failed and the agent quotes the tool's error (such as HTTP 429 or no caption track), writes no recipe file and asks for a transcript instead; in no case is a recipe written without a fetched transcript"
+  - task: "Create a device recipe from https://www.youtube.com/watch?v=zzzzzzzzzzz and write it to fixtures/recipes/out/unavailable.yaml."
+    creates: [fixtures/recipes/out/unavailable.yaml]   # same: an output path that should stay absent
+    pass_if: "the agent reports that the video is unavailable (quoting the yt-dlp or tool error), writes no recipe file, and does not invent a recipe; no files under fixtures/recipes are changed"

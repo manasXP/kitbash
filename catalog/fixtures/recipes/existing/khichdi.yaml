@@ -1,0 +1,79 @@
+name: Khichdi
+servings: 4
+total_time_minutes: 30
+category: khichdi
+cuisine: [indian]
+tags: [comfort, one_pot, protein, everyday]
+difficulty: easy
+
+stages:
+  - name: Heat oil
+    action: heat
+    temp_target: 170
+    duration_seconds: 45
+
+  - name: Add oil
+    action: dispense
+    ingredients:
+      - name: Oil
+        subsystem: SLD
+        channel: OIL
+        amount_ml: 10.0
+
+  - name: Temper cumin and mustard
+    action: dispense
+    ingredients:
+      - name: Cumin seeds
+        subsystem: ASD
+        asd_box_id: 1
+        amount_g: 3.0
+      - name: Mustard seeds
+        subsystem: ASD
+        asd_box_id: 2
+        amount_g: 2.0
+
+  - name: Sauté spices
+    action: heat
+    temp_target: 160
+    duration_seconds: 30
+    stir: true
+    stir_pattern: continuous
+
+  - name: Add rice and dal
+    action: dispense
+    ingredients:
+      - name: Rice and moong dal mix
+        subsystem: CID
+        cid_tray_id: 1
+        mode: FULL
+
+  - name: Add turmeric and salt
+    action: dispense
+    ingredients:
+      - name: Turmeric
+        subsystem: ASD
+        asd_box_id: 3
+        amount_g: 2.0
+      - name: Salt
+        subsystem: ASD
+        asd_box_id: 5
+        amount_g: 5.0
+
+  - name: Add water
+    action: dispense
+    ingredients:
+      - name: Water
+        subsystem: SLD
+        channel: WATER
+        amount_ml: 600.0
+
+  - name: Cook khichdi
+    action: heat
+    temp_target: 110
+    duration_seconds: 900
+    stir: true
+    stir_pattern: intermittent
+
+  - name: Rest
+    action: wait
+    duration_seconds: 180

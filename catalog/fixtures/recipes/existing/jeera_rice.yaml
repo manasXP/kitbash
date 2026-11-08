@@ -1,0 +1,87 @@
+name: Jeera Rice
+servings: 4
+total_time_minutes: 25
+category: rice
+cuisine: [north_indian]
+tags: [staple, side_dish, everyday]
+difficulty: easy
+
+stages:
+  - name: Heat oil
+    action: heat
+    temp_target: 170
+    duration_seconds: 45
+
+  - name: Add oil and ghee
+    action: dispense
+    ingredients:
+      - name: Oil
+        subsystem: SLD
+        channel: OIL
+        amount_ml: 10.0
+
+  - name: Temper cumin
+    action: dispense
+    ingredients:
+      - name: Cumin seeds
+        subsystem: ASD
+        asd_box_id: 1
+        amount_g: 4.0
+
+  - name: Sauté cumin
+    action: heat
+    temp_target: 160
+    duration_seconds: 30
+    stir: true
+    stir_pattern: continuous
+
+  - name: Detect cumin splutter
+    action: detect_stage
+    cv_check: cumin_splutter
+    duration_seconds: 30
+
+  - name: Add rice
+    action: dispense
+    ingredients:
+      - name: Basmati rice (washed)
+        subsystem: CID
+        cid_tray_id: 1
+        mode: FULL
+
+  - name: Toast rice
+    action: heat
+    temp_target: 140
+    duration_seconds: 60
+    stir: true
+    stir_pattern: fold
+
+  - name: Add water
+    action: dispense
+    ingredients:
+      - name: Water
+        subsystem: SLD
+        channel: WATER
+        amount_ml: 480.0
+
+  - name: Add salt and turmeric
+    action: dispense
+    ingredients:
+      - name: Salt
+        subsystem: ASD
+        asd_box_id: 5
+        amount_g: 4.0
+      - name: Turmeric
+        subsystem: ASD
+        asd_box_id: 3
+        amount_g: 1.0
+
+  - name: Cook rice
+    action: heat
+    temp_target: 100
+    duration_seconds: 720
+    stir: true
+    stir_pattern: intermittent
+
+  - name: Rest
+    action: wait
+    duration_seconds: 300

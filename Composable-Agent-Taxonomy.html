@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Composable Agent Taxonomy</title>
+<style>
+  @page { size: A4; margin: 20mm 19mm 22mm 19mm; }
+
+  :root {
+    --ink: #1a1a1a;
+    --ink-2: #333;
+    --muted: #666;
+    --line: #cfcfcf;
+    --tint: #f6f6f4;
+    --accent: #0f5f58;
+    --code-bg: #f3f3f0;
+    --code-fg: #1e1e1e;
+    --code-key: #0b4f8a;
+    --code-str: #7a3e00;
+    --code-cmt: #6b6b6b;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body {
+    font-family: "Charter", "Palatino", "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
+    color: var(--ink);
+    font-size: 10.6pt;
+    line-height: 1.42;
+    text-align: justify;
+    hyphens: auto;
+  }
+  code, pre, .mono { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace; }
+  code { font-size: 9.2pt; }
+
+  /* ---------- front matter ---------- */
+  .front { text-align: center; margin: 4mm 0 8mm 0; }
+  .front h1 { font-size: 20pt; line-height: 1.22; margin: 0 10mm 3mm 10mm; font-weight: 700; }
+  .front .subtitle { font-size: 12.5pt; color: var(--ink-2); margin: 0 14mm 6mm 14mm; line-height: 1.35; }
+  .front .authors { font-size: 11pt; margin: 0 0 1mm 0; }
+  .front .affil { font-size: 9.6pt; color: var(--muted); margin: 0; }
+  .front .date { font-size: 9.6pt; color: var(--muted); margin: 2mm 0 0 0; }
+
+  .abstract { margin: 6mm 12mm 6mm 12mm; font-size: 9.9pt; line-height: 1.4; }
+  .abstract .h { font-weight: 700; text-align: center; font-size: 10.2pt; margin-bottom: 2mm; letter-spacing: .02em; }
+  .abstract p { margin: 0 0 2mm 0; }
+  .keywords { margin: 0 12mm 4mm 12mm; font-size: 9.4pt; color: var(--ink-2); }
+  .keywords b { color: var(--ink); }
+  hr.rule { border: 0; border-top: 1px solid var(--line); margin: 5mm 0; }
+
+  /* ---------- headings ---------- */
+  h2 { font-size: 13.5pt; margin: 8mm 0 2.5mm 0; font-weight: 700; page-break-after: avoid; text-align: left; }
+  h3 { font-size: 11.2pt; margin: 5mm 0 1.5mm 0; font-weight: 700; page-break-after: avoid; text-align: left; }
+  h4 { font-size: 10.6pt; margin: 3.5mm 0 1mm 0; font-weight: 700; font-style: italic; page-break-after: avoid; text-align: left; }
+  h2 .n, h3 .n { display: inline-block; min-width: 9mm; }
+  p { margin: 0 0 2.4mm 0; }
+  ul, ol { margin: 0 0 2.6mm 0; padding-left: 6mm; }
+  li { margin: 0.8mm 0; }
+  .cite { color: var(--ink); white-space: nowrap; }
+  em.term { font-style: italic; }
+  b.term { font-weight: 700; }
+
+  /* ---------- listings ---------- */
+  .listing { margin: 3mm 0 3.5mm 0; page-break-inside: avoid; }
+  .listing pre {
+    margin: 0; padding: 3mm 4mm; background: var(--code-bg); color: var(--code-fg);
+    border: 1px solid #e2e2dd; border-radius: 3px;
+    font-size: 8.5pt; line-height: 1.38; white-space: pre-wrap; overflow-wrap: anywhere; hyphens: none; text-align: left;
+  }
+  .listing .cap { font-size: 9.1pt; color: var(--ink-2); margin: 1.4mm 0 0 0; text-align: left; line-height: 1.35; }
+  .cap b, .tcap b { font-weight: 700; }
+  .k { color: var(--code-key); }
+  .s { color: var(--code-str); }
+  .c { color: var(--code-cmt); font-style: italic; }
+  .ok { color: #0a6b3a; font-weight: 700; } .no { color: #a11a1a; font-weight: 700; }
+
+  /* ---------- tables ---------- */
+  .tbl { margin: 3mm 0 4mm 0; page-break-inside: avoid; }
+  .tbl.long { page-break-inside: auto; }
+  .tbl.long tr { page-break-inside: avoid; }
+  td.mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.6pt; white-space: nowrap; }
+  .tcap { font-size: 9.1pt; color: var(--ink-2); margin: 0 0 1.4mm 0; text-align: left; line-height: 1.35; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.3pt; text-align: left; }
+  th { border-top: 1.2pt solid var(--ink); border-bottom: 0.7pt solid var(--ink); padding: 1.6mm 2mm; font-weight: 700; vertical-align: bottom; }
+  td { padding: 1.5mm 2mm; border-bottom: 0.4pt solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 1.2pt solid var(--ink); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+
+  /* ---------- figure: pipeline ---------- */
+  .fig { margin: 3mm 0 4mm 0; page-break-inside: avoid; }
+  .pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5mm; margin-right: .3mm; }
+  .pipe .st { border: 0.7pt solid var(--ink); padding: 2.2mm 2.6mm; font-size: 8.9pt; line-height: 1.32; text-align: left; }
+  .pipe .st .ttl { font-weight: 700; margin-bottom: 1mm; }
+  .pipe .st .ttl span { color: var(--muted); font-weight: 400; margin-right: 1.5mm; }
+  .fig .cap { font-size: 9.1pt; color: var(--ink-2); margin: 1.6mm 0 0 0; text-align: left; line-height: 1.35; }
+
+  /* ---------- figure: catalog to running agent ---------- */
+  .arch { display: block; width: 100%; height: auto; }
+  .arch text { font-size: 13px; fill: var(--ink); }
+  .arch .b { font-weight: 700; }
+  .arch .mu { fill: var(--muted); }
+  .arch .it { font-style: italic; }
+  .arch .m { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace; font-size: 12.5px; }
+  .arch .p { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace; font-size: 12px; fill: var(--muted); }
+  .arch .ac { fill: var(--accent); }
+  .arch .band { fill: var(--tint); stroke: var(--line); stroke-width: 1; }
+  .arch .box { fill: #fff; stroke: var(--ink-2); stroke-width: 1; }
+  .arch .hi { fill: #fff; stroke: var(--accent); stroke-width: 2; }
+  .arch .gate { fill: #e7f0ef; stroke: var(--accent); stroke-width: 1.5; }
+  .arch .chip { fill: #fff; stroke: var(--accent); stroke-width: 1; }
+  .arch .code { fill: #fff; stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 5 3; }
+  .arch .ln { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+  .arch .lna { fill: none; stroke: var(--accent); stroke-width: 2; }
+
+  /* ---------- definition list ---------- */
+  dl { margin: 0 0 3mm 0; }
+  dt { font-weight: 700; margin-top: 1.6mm; }
+  dd { margin: 0.3mm 0 0 6mm; }
+
+  /* ---------- references ---------- */
+  .refs { font-size: 9.3pt; line-height: 1.36; }
+  .refs ol { padding-left: 7.5mm; }
+  .refs li { margin: 0 0 1.4mm 0; text-align: left; }
+  .refs i { font-style: italic; }
+  .refs .url { word-break: break-all; }
+
+  .pb { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  .small { font-size: 9.2pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ============================ FRONT MATTER ============================ -->
+<div class="front">
+  <h1>A Composable Agent Taxonomy: Traits, Capability Contracts, and Mandatory Evaluation for an Agent That Assembles Agents</h1>
+  <p class="authors">Manas Pradhan</p>
+  <p class="affil">AgentTaxonomy project</p>
+  <p class="date">1 November 2026</p>
+</div>
+
+<div class="abstract">
+  <div class="h">Abstract</div>
+  <p>We study the problem of an AI agent that assembles other agents from a catalog of reusable parts, checks them, and admits them to a project only after they have demonstrably worked. An initial design for such a system borrowed its structure from object-oriented programming: abstract base agents, inheritance, skills owned by a base class, and a combinatorial symbolic notation for the project map. We argue that this structure is a poor fit because a language-model agent is defined by a merged prompt, which behaves like a document rather than like a class, and because the design had no step that checked whether a generated agent worked. We propose a flat taxonomy in which an agent is composed from <em>traits</em> (small reusable behavior fragments with tool grants and denials), standalone <em>skills</em> that declare their own requirements, and <em>capabilities</em>, a named contract between agents and tools so that no agent names a vendor. Tools are bound to <em>aspects</em> of a project rather than to agents, which yields least privilege as a property of the project map. A project may attach exactly one <em>pack</em>, a vendored third-party skill set whose base applies to every agent in the map, so that project-wide methodology is composed rather than inherited and base skills cannot clash. Evaluations are a mandatory member of every agent. Conflicts between traits are resolved by a visible, justified override, and a validator enforces six rules. We implemented the catalog, the validator, an evaluation runner that drives a coding agent headlessly and grades results with a second model, and a meta-agent that designs an agent, validates it, evaluates it, and registers it only on an all-pass. Six agents spanning code review, issue triage, UI design, STM32 firmware, and KiCAD electronics pass 18 of 18 evaluations, each agent for under one US dollar, and pass again after a pack vendored from the superpowers library is attached to the map. The one agent produced by the meta-agent initially failed an evaluation and was correctly refused registration, exposing a rubric defect that a human then fixed. We report what the harness had to learn to evaluate agents against live design documents and deterministic engineering tools. The symbolic notation the original design wanted is decided on evidence once the consumers exist: it would shorten six lines of a playbook and add a parser to four programs, so notation stays three conventions inside YAML scalars rather than a language. Playbooks, left undefined by the original design, enter the taxonomy as procedures over agents that code runs and code hands off, distinguished from skills by who reads them; two playbooks pass 4 of 4 evaluations, one handing off on a tool's exit status and one on a field of an agent's structured output, and in each a stop path is exercised.</p>
+</div>
+<div class="keywords"><b>Keywords:</b> LLM agents, agent composition, traits, skill packs, capability-based tool binding, least privilege, agent evaluation, LLM-as-judge, meta-agents, Model Context Protocol.</div>
+
+<hr class="rule">
+
+<!-- ============================ 1. INTRODUCTION ============================ -->
+<h2><span class="n">1</span>Introduction</h2>
+
+<p>Large language models can now write a competent agent definition from a one-paragraph request. This makes a <em>meta-agent</em>, a program that reads a request and emits a new agent built from catalog parts, a realistic engineering target rather than a research aspiration. The difficulty has moved. Generating an agent is the easy half of the problem. Knowing whether the generated agent works, and preventing it from being deployed before that is known, is the hard half.</p>
+
+<p>The present work began as a review of an initial design for such a system. That design, which we call the <em>inheritance design</em> throughout this paper, made the following commitments. An agent bundles a list of allowed LLMs, a set of skills, hooks, playbooks, and MCP servers, together with a name and a preferred LLM drawn from its own list. Agents inherit from a <em>base agent</em>; base agents are abstract and cannot be invoked during project execution. A <em>base skill</em> belongs to a base agent, which must come from a predefined list. Each project carries an <em>agent map</em> that deploys agents hierarchically to the project's aspects, and the map was to be written in a combinatorial symbolic notation that the meta-agent would read.</p>
+
+<p>Three of these commitments are sound and we keep them: the bundle, the project map, and the preferred-LLM constraint. The rest import type-system ideas into a setting where the resolver is not a compiler but a language model reading a merged prompt. Inheritance, abstract classes, and ownership all presume a deterministic resolver with a defined override order. A model reading parent and child text together reconciles them nondeterministically. Our thesis is therefore simple: <b>LLM agents behave like documents, not like classes</b>, and a taxonomy for them should be built from flat composition with explicit merge rules, plus an evaluation step that lets the generator reject its own output.</p>
+
+<p>This paper makes the following contributions.</p>
+<ol>
+  <li>A <b>composable taxonomy</b> of nine file kinds (trait, skill, tool, capability, agent, pack, project map with aspects, playbook, and eval) in which nothing is inherited implicitly and every merge is stated once (Section&nbsp;4).</li>
+  <li>A <b>capability contract</b> between agents and tools, with tools bound to project aspects rather than to agents. Swapping a vendor is a one-line change, and least privilege follows from the map rather than from policy (Section&nbsp;4.3, 4.6).</li>
+  <li>A <b>single-pack rule</b> for project-wide base skills: a map attaches at most one vendored skill pack, composed before every agent, with per-aspect exclusions that must be justified (Section&nbsp;4.8).</li>
+  <li>A <b>validator</b> with six rules and cross-reference checks whose errors are precise enough to serve as repair instructions to a model (Section&nbsp;5).</li>
+  <li>An <b>evaluation runner</b> that composes an agent as the taxonomy prescribes, runs it headlessly in an isolated workspace, and grades it with a second model against a stated pass condition, including against live design documents and deterministic EDA tools (Section&nbsp;6).</li>
+  <li>A <b>meta-agent</b> that selects parts, emits an agent with evals, validates, evaluates, and registers only on an all-pass, together with a case study in which the gate held (Section&nbsp;7).</li>
+  <li>An <b>empirical record</b>: six agents across four engineering domains, 18 of 18 evaluations passing before and after a pack is attached, and two two-step playbooks passing 4 of 4, with per-eval cost and time (Section&nbsp;8).</li>
+</ol>
+
+<p>Section&nbsp;2 places the work among related ideas in programming languages and agent systems. Section&nbsp;3 analyzes the inheritance design. Sections&nbsp;4 to 7 present the taxonomy and its implementation. Section&nbsp;8 reports results, Section&nbsp;9 discusses limitations, and Section&nbsp;10 states what remains open.</p>
+
+<!-- ============================ 2. BACKGROUND ============================ -->
+<h2><span class="n">2</span>Background and related work</h2>
+
+<h3><span class="n">2.1</span>Composition in programming languages</h3>
+<p>The tension between reuse and specialization is old. Taivalsaari's survey of inheritance <span class="cite">[1]</span> catalogs the many incompatible meanings the word carries and the anomalies that follow when a mechanism designed for one meaning is used for another. The <em>Design Patterns</em> authors advised favoring object composition over class inheritance <span class="cite">[2]</span>. Schärli et al. introduced <em>traits</em> as composable units of behavior that carry methods but no state, are combined by explicit sum and exclusion operators, and surface every conflict so the composing class must resolve it <span class="cite">[3]</span>. Our traits borrow the name deliberately: they are small, stateless, order-composed, and conflicts between them are rejected unless the composer resolves them visibly. Fowler's account of dependency injection <span class="cite">[4]</span> underlies our capability contract: an agent declares what it needs by interface, and the binding to a concrete provider is made elsewhere. Parnas's criterion of information hiding <span class="cite">[5]</span> motivates binding tools to aspects: what an agent cannot see, it cannot misuse.</p>
+
+<h3><span class="n">2.2</span>Language-model agents and their substrates</h3>
+<p>Tool-using agents interleave reasoning with actions <span class="cite">[6]</span> and can learn when to call tools <span class="cite">[7]</span>. Surveys of autonomous LLM agents <span class="cite">[8]</span> describe profile, memory, planning, and action modules, which is a functional decomposition rather than a reuse taxonomy. Multi-agent frameworks assign roles through standard operating procedures <span class="cite">[9]</span> or conversation patterns <span class="cite">[10]</span>; their role definitions are the kind of artifact our catalog stores, but they do not address how roles are composed from parts or checked before use. Anthropic's practitioner guidance recommends simple composable patterns over frameworks and stresses that an agent's tools be designed as carefully as its prompt <span class="cite">[11]</span>.</p>
+<p>Our implementation targets a concrete substrate. Claude Code provides subagents defined as markdown with YAML frontmatter, hooks that run shell commands at lifecycle events and can block a tool call, and a headless mode for programmatic use <span class="cite">[12]</span>. Agent Skills package procedural knowledge as a folder with a <code>SKILL.md</code> whose frontmatter states what the skill is for <span class="cite">[13]</span>. The Model Context Protocol (MCP) standardizes how a model-facing client connects to tool servers <span class="cite">[14]</span>. These give us file formats a model already reads well, which is one reason we reject a bespoke symbolic notation.</p>
+
+<h3><span class="n">2.3</span>Evaluation and safety</h3>
+<p>Using a strong model as a judge of another model's output agrees with human preference at useful rates when the judge is given the task and a rubric <span class="cite">[15]</span>. Benchmarks such as SWE-bench <span class="cite">[16]</span> established that an agent's value is measured by executable outcomes on fixtures, not by the plausibility of its text. Reflexion <span class="cite">[17]</span> showed that an agent loop which feeds evaluation results back as language improves outcomes, which is the shape of our meta-agent's repair pass. Fixture-based tests follow the discipline of xUnit and test-driven development <span class="cite">[18]</span>. On safety, indirect prompt injection through content an agent reads <span class="cite">[19]</span> motivated one of the meta-agent's self-authored fixtures, and the principle of least privilege <span class="cite">[20]</span> motivates per-aspect tool mounting.</p>
+
+<!-- ============================ 3. ANALYSIS ============================ -->
+<h2><span class="n">3</span>Analysis of the inheritance design</h2>
+
+<h3><span class="n">3.1</span>What holds up</h3>
+<p><b>The bundle.</b> A model plus skills, hooks, and tool servers is the shape production agent stacks already take <span class="cite">[12]</span>. Formalizing it costs nothing and gives the validator something to check.</p>
+<p><b>The project agent map.</b> Routing different agents to different parts of a project is the most valuable idea in the design. It has precedent in directory-scoped agent and skill configuration, and it is where tool binding and least privilege naturally live.</p>
+<p><b>A preferred LLM from an allowed list.</b> Routing by cost and capability is a real need. The constraint is a one-line validation rule.</p>
+
+<h3><span class="n">3.2</span>What does not</h3>
+<p><b>Inheritance.</b> Prompts do not override like methods. When a child agent's prompt is concatenated with its parent's, the model sees both and reconciles them by judgment, not by a defined rule. Two readers of the same hierarchy will predict different behavior, and the model will produce a third. The design wanted reuse plus specialization; inheritance delivers neither reliably in this medium.</p>
+<p><b>Skills owned by abstract agents.</b> Tying a skill to a base agent forces any agent that wants the skill to inherit the whole class, with its prompt and tool posture. Skills are already portable modules <span class="cite">[13]</span>; ownership subtracts value.</p>
+<p><b>Combinatorial symbols.</b> Models read YAML and markdown fluently. A notation is a new language for both humans and models, and it earns its place only once a validator exists to consume it. Section&nbsp;4.10 decides the question once one does.</p>
+<p><b>No evaluation step.</b> Without it the meta-agent is a template filler that emits unverified output at scale.</p>
+<p><b>Playbooks undefined.</b> As written, playbooks overlap with skills. A concept that cannot be distinguished from an existing one should not enter a taxonomy.</p>
+<p><b>A base skill with no home.</b> The design also wanted a base skill applied to the whole project, which is a real need: teams adopt a methodology pack such as superpowers, gstack, or GSD and expect every agent to follow it. Tying that to a base agent is the wrong mechanism, but dropping the base agent must not drop the need. Section&nbsp;4.8 gives it a home.</p>
+<p>Every entry in this list is a type-system idea applied to text. The resolver for an agent definition is a language model reading a merged prompt. The design should target that reader.</p>
+
+<!-- ============================ 4. TAXONOMY ============================ -->
+<h2><span class="n">4</span>The composable taxonomy</h2>
+<p>The taxonomy consists of nine pieces. Each is a plain file a human can read and a validator can check. Nothing is inherited implicitly. We present them in the order a composer encounters them, with the real files from the implemented catalog as listings. Figure&nbsp;1 follows one agent through all nine, from catalog part to playbook step.</p>
+
+<div class="fig">
+<svg class="arch" viewBox="0 0 862 900" role="img" aria-labelledby="arch-t arch-d" xmlns="http://www.w3.org/2000/svg">
+  <title id="arch-t">How drc-checker goes from catalog parts to a running playbook step</title>
+  <desc id="arch-d">Traits and skills compose into the agent. The agent requires a capability that a tool provides. The agent passes a gate of validation and evals to enter an aspect of the project map, where the tool is also bound. The map produces a composed prompt in merge order, and a playbook runs composed agents with handoffs decided by code.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+    <marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0f5f58"/></marker>
+  </defs>
+
+  <!-- catalog -->
+  <rect class="band" x="0.5" y="0.5" width="859" height="226"/>
+  <text x="14" y="22"><tspan class="b">Catalog</tspan><tspan class="mu"> &#160;reusable parts that know no project</tspan></text>
+
+  <rect class="box" x="14" y="36" width="256" height="56"/>
+  <text x="24" y="56" class="b">traits</text>
+  <text x="24" y="78" class="m">read-only, concise-reporter</text>
+
+  <rect class="box" x="14" y="100" width="256" height="52"/>
+  <text x="24" y="120" class="b">skills</text>
+  <text x="24" y="140" class="m">kicad-eda</text>
+
+  <rect class="box" x="14" y="160" width="256" height="56"/>
+  <text x="24" y="180"><tspan class="b">pack</tspan> &#160;<tspan class="m">superpowers</tspan></text>
+  <text x="24" y="202" class="m">verification-before-completion</text>
+
+  <path class="ln" d="M270 64L306 96" marker-end="url(#ah)"/>
+  <path class="ln" d="M270 126L306 126" marker-end="url(#ah)"/>
+
+  <rect class="hi" x="306" y="62" width="130" height="108"/>
+  <text x="316" y="82" class="b">agent</text>
+  <text x="316" y="104" class="m b ac">drc-checker</text>
+  <text x="316" y="128">+ evals, required</text>
+  <text x="316" y="148">prompt, LLMs,</text>
+  <text x="316" y="164">hooks</text>
+
+  <path class="ln" d="M436 116L498 116" marker-end="url(#ah)"/>
+  <text x="467" y="108" text-anchor="middle">requires</text>
+
+  <rect class="chip" x="498" y="86" width="150" height="60" rx="30"/>
+  <text x="573" y="110" text-anchor="middle">capability</text>
+  <text x="573" y="130" text-anchor="middle" class="m ac">design-rule-check</text>
+
+  <path class="ln" d="M712 116L648 116" marker-end="url(#ah)"/>
+  <text x="680" y="108" text-anchor="middle">provides</text>
+
+  <rect class="box" x="712" y="62" width="134" height="108"/>
+  <text x="722" y="82" class="b">tool</text>
+  <text x="722" y="104" class="m">kicad</text>
+  <text x="722" y="128">carries skill</text>
+  <text x="722" y="148" class="m">kicad-eda</text>
+
+  <text x="573" y="188" text-anchor="middle" class="mu it">agent and tool never name each other</text>
+
+  <!-- meta-agent -->
+  <rect class="box" x="56" y="250" width="230" height="84"/>
+  <text x="66" y="270" class="b">Meta-agent</text>
+  <text x="66" y="288">turns a request into an agent,</text>
+  <text x="66" y="304">its evals and its fixtures;</text>
+  <text x="66" y="320">errors get one repair pass</text>
+  <path class="ln" d="M160 250L160 228" marker-end="url(#ah)"/>
+  <path class="ln" d="M331 290L287 290" marker-end="url(#ah)"/>
+
+  <!-- gate -->
+  <rect class="gate" x="318" y="244" width="422" height="112"/>
+  <text x="437" y="264"><tspan class="b ac">Gate</tspan><tspan> &#160;the only way into a map</tspan></text>
+  <rect class="chip" x="331" y="273" width="80" height="32"/>
+  <text x="371" y="294" text-anchor="middle">validate</text>
+  <path class="ln" d="M411 289L437 289" marker-end="url(#ah)"/>
+  <rect class="chip" x="437" y="273" width="68" height="32"/>
+  <text x="471" y="294" text-anchor="middle">compose</text>
+  <rect class="chip" x="513" y="273" width="48" height="32"/>
+  <text x="537" y="294" text-anchor="middle">run</text>
+  <rect class="chip" x="569" y="273" width="48" height="32"/>
+  <text x="593" y="294" text-anchor="middle">diff</text>
+  <rect class="chip" x="625" y="273" width="62" height="32"/>
+  <text x="656" y="294" text-anchor="middle">judge</text>
+  <path class="ln" d="M505 289L513 289M561 289L569 289M617 289L625 289"/>
+  <text x="371" y="322" text-anchor="middle" class="mu">six rules</text>
+  <text x="562" y="322" text-anchor="middle" class="mu">every eval, judged by a second model</text>
+  <text x="331" y="345"><tspan class="b">any fail:</tspan> stays in the catalog, not registered</text>
+
+  <text x="704" y="376" text-anchor="end"><tspan class="b ac">all pass:</tspan> name added to the aspect's agents</text>
+  <text x="792" y="376" text-anchor="end">bound here</text>
+
+  <!-- project map -->
+  <rect class="band" x="0.5" y="384.5" width="859" height="186"/>
+  <rect class="box" x="14" y="396" width="252" height="26"/>
+  <text x="24" y="414"><tspan class="m">pack: superpowers</tspan> &#160;<tspan class="mu">at most one</tspan></text>
+  <text x="282" y="414"><tspan class="b">Project map</tspan> &#160;<tspan class="m">smart-thermostat</tspan></text>
+
+  <rect class="box" x="14" y="430" width="190" height="98"/>
+  <text x="24" y="448" class="b">ux-design</text>
+  <text x="24" y="465" class="p">design/**, app/src/ui/**</text>
+  <text x="24" y="484">agents</text><text x="70" y="484" class="m">ux-designer</text>
+  <text x="24" y="518">tools</text><text x="70" y="518" class="m">pencil</text>
+
+  <rect class="box" x="212" y="430" width="190" height="98"/>
+  <text x="222" y="448" class="b">firmware</text>
+  <text x="222" y="465" class="p">firmware/**</text>
+  <text x="222" y="484">agents</text><text x="268" y="484" class="m">firmware-engineer</text>
+  <text x="222" y="518">tools</text><text x="268" y="518" class="m">stm32-toolchain</text>
+
+  <rect class="box" x="410" y="430" width="190" height="98"/>
+  <text x="420" y="448" class="b">api</text>
+  <text x="420" y="465" class="p">api/**</text>
+  <text x="420" y="484">agents</text><text x="466" y="484" class="m">security-reviewer</text>
+  <text x="466" y="500" class="m">issue-triager</text>
+  <text x="420" y="518">tools</text><text x="466" y="518" class="mu">none</text>
+
+  <rect class="hi" x="610" y="430" width="236" height="130"/>
+  <text x="620" y="448" class="b">eda-design</text>
+  <text x="620" y="465" class="p">hardware/**</text>
+  <text x="620" y="484">agents</text><text x="666" y="484" class="m b ac">drc-checker</text>
+  <text x="666" y="500" class="m">schematic-engineer</text>
+  <text x="620" y="518">tools</text><text x="666" y="518" class="m">kicad, kicad-sch-api</text>
+  <text x="620" y="546" class="mu it">no other aspect mounts kicad</text>
+
+  <rect class="box" x="14" y="534" width="586" height="26"/>
+  <text x="24" y="552"><tspan>shared tools</tspan> &#160;<tspan class="m">github</tspan> &#160;<tspan class="mu">mounted in every aspect</tspan></text>
+
+  <!-- composed agent -->
+  <rect class="band" x="0.5" y="592.5" width="859" height="180"/>
+  <text x="14" y="614" class="b">Composed agent</text>
+  <text x="14" y="632" class="m ac">drc-checker in eda-design</text>
+  <text x="14" y="664">model</text><text x="96" y="664" class="m">claude-sonnet-5-5</text>
+  <text x="14" y="686">mounted</text><text x="96" y="686" class="m">kicad, kicad-sch-api, github</text>
+  <text x="14" y="708">denied</text><text x="96" y="708" class="m">Edit, Write</text>
+  <text x="14" y="730">not mounted</text><text x="96" y="730" class="m">pencil, stm32-toolchain</text>
+
+  <path class="ln" d="M334 610L334 758" marker-end="url(#ah)"/>
+  <text transform="translate(329 684) rotate(-90)" text-anchor="middle">later text wins</text>
+
+  <g>
+    <rect x="342" y="606" width="504" height="26" fill="#0f5f58" fill-opacity=".04" stroke="#0f5f58"/>
+    <rect x="342" y="632" width="504" height="26" fill="#0f5f58" fill-opacity=".07" stroke="#0f5f58"/>
+    <rect x="342" y="658" width="504" height="26" fill="#0f5f58" fill-opacity=".10" stroke="#0f5f58"/>
+    <rect x="342" y="684" width="504" height="26" fill="#0f5f58" fill-opacity=".13" stroke="#0f5f58"/>
+    <rect x="342" y="710" width="504" height="26" fill="#0f5f58" fill-opacity=".16" stroke="#0f5f58"/>
+    <rect x="342" y="736" width="504" height="26" fill="#0f5f58" fill-opacity=".19" stroke="#0f5f58"/>
+  </g>
+  <text x="352" y="624"><tspan class="b">1 &#160;pack base</tspan></text><text x="470" y="624" class="m">verification-before-completion</text>
+  <text x="352" y="650"><tspan class="b">2 &#160;traits</tspan></text><text x="470" y="650"><tspan class="m">read-only</tspan>, then <tspan class="m">concise-reporter</tspan></text>
+  <text x="352" y="676"><tspan class="b">3 &#160;skills</tspan></text><text x="470" y="676" class="m">kicad-eda</text>
+  <text x="352" y="702"><tspan class="b">4 &#160;tool skills</tspan></text><text x="470" y="702"><tspan class="m">kicad-schematic</tspan>; <tspan class="m">kicad-eda</tspan> is not repeated</text>
+  <text x="352" y="728"><tspan class="b">5 &#160;prompt</tspan></text><text x="470" y="728">the agent's own instructions</text>
+  <text x="352" y="754"><tspan class="b">6 &#160;overrides</tspan></text><text x="470" y="754">none; an exception needs a stated reason</text>
+
+  <!-- playbook -->
+  <rect class="band" x="0.5" y="794.5" width="859" height="104"/>
+  <text x="14" y="814"><tspan class="b">Playbook</tspan><tspan class="mu"> &#160;run by code; no agent reads it</tspan></text>
+  <rect class="box" x="14" y="826" width="176" height="36"/>
+  <text x="102" y="849" text-anchor="middle" class="m">schematic-engineer</text>
+  <path class="ln" d="M190 844L250 844" marker-end="url(#ah)"/>
+  <rect class="code" x="250" y="826" width="330" height="36"/>
+  <text x="415" y="849" text-anchor="middle">code runs <tspan class="m">kicad.erc-gate</tspan>: exit 0?</text>
+  <path class="ln" d="M580 844L640 844" marker-end="url(#ah)"/>
+  <text x="610" y="836" text-anchor="middle">yes</text>
+  <rect class="hi" x="640" y="826" width="176" height="36"/>
+  <text x="728" y="849" text-anchor="middle" class="m b ac">drc-checker</text>
+  <text x="415" y="884" text-anchor="middle"><tspan class="b">no:</tspan> stop and report</text>
+  <text x="14" y="884" class="mu">evals check the path as well as the result</text>
+  <path class="ln" d="M415 862L415 872" marker-end="url(#ah)"/>
+
+  <!-- arrows that cross bands, drawn last so no band covers them -->
+  <path class="lna" d="M371 170L371 272" marker-end="url(#aa)"/>
+  <path class="lna" d="M687 289L712 289L712 429" marker-end="url(#aa)"/>
+  <path class="ln" d="M800 170L800 429" marker-end="url(#ah)"/>
+  <path class="ln" d="M36 216L36 395" marker-end="url(#ah)"/>
+  <path class="lna" d="M728 560L728 605" marker-end="url(#aa)"/>
+  <path class="lna" d="M728 762L728 825" marker-end="url(#aa)"/>
+</svg>
+<p class="cap"><b>Figure 1.</b> One agent from catalog part to playbook step: <code>drc-checker</code> in the <code>eda-design</code> aspect of the map in Listing&nbsp;8, with paths abridged. Agent and tool meet only at a capability, so swapping a vendor is one line in the map. The gate is the only route from the catalog into a map. Tools bind to aspects, so least privilege follows from the map. The composed agent is text in merge order, and a playbook's handoff is decided by code rather than by a model.</p>
+</div>
+
+<h3><span class="n">4.1</span>Traits</h3>
+<p>A <b class="term">trait</b> is a reusable fragment of behavior, not a parent class. It carries a short prompt fragment and, optionally, tool grants or denials. Traits are mixed into agents in a stated order. A trait answers one question: what does this agent always do, regardless of its job? If a trait needs a procedure, it is a skill.</p>
+
+<div class="listing">
+<pre>---
+<span class="k">name:</span> read-only
+<span class="k">tools:</span> [Read, Grep, Glob, Bash]
+<span class="k">denies:</span> [Edit, Write]
+---
+You may inspect the codebase but never modify it. Report findings; do not fix them.
+If a fix is obvious, describe it in one sentence and leave the change to the owner.</pre>
+<p class="cap"><b>Listing 1.</b> <code>traits/read-only.md</code>. Markdown with YAML frontmatter. In a trait, <code>tools</code> lists the tools the trait relies on and is additive; only <code>denies</code> restricts. This semantic decision was made while building and is recorded in the catalog README so that it is not implicit in code.</p>
+</div>
+
+<div class="listing">
+<pre>---
+<span class="k">name:</span> concise-reporter
+---
+Lead with the conclusion. One sentence per finding. Reference code as path:line.
+Do not restate the task or describe your process. Stop when the findings stop.</pre>
+<p class="cap"><b>Listing 2.</b> <code>traits/concise-reporter.md</code>. A trait with no tool posture at all, only a reporting style.</p>
+</div>
+
+<h3><span class="n">4.2</span>Skills</h3>
+<p>A <b class="term">skill</b> is a standalone module that belongs to no agent. It declares what it requires, in tools, capabilities, and a minimum model tier, and any agent that satisfies the requirements can load it. Where the inheritance design said a base skill <em>belongs to</em> a base agent, this design says a skill <em>requires</em> these things. The same safety is preserved as a constraint rather than a class hierarchy.</p>
+
+<div class="listing">
+<pre>---
+<span class="k">name:</span> security-review
+<span class="k">description:</span> Find injection, authentication, authorization, and secret-handling defects in a diff or a file set.
+<span class="k">requires:</span>
+  <span class="k">tools:</span> [Read, Grep]
+  <span class="k">min_model_tier:</span> opus
+---
+# Security review
+Work through the diff hunk by hunk. For each hunk, ask the four questions below ...   <span class="c"># procedure follows</span></pre>
+<p class="cap"><b>Listing 3.</b> Frontmatter of <code>skills/security-review/SKILL.md</code>. The body is a procedure in the Agent Skills format <span class="cite">[13]</span>.</p>
+</div>
+
+<h3><span class="n">4.3</span>Tools and capabilities</h3>
+<p>A <b class="term">tool</b> is an MCP server or a command-line toolchain. It declares the <b class="term">capabilities</b> it provides, and it carries the skill that teaches how to use it. A capability is a named contract: agents require capabilities, tools provide them, and no agent file ever names a vendor. Knowing how to run a KiCAD design-rule check is knowledge about KiCAD, not about any one agent, so the skill attaches to the tool definition, and every agent bound to the tool receives the know-how without declaring it.</p>
+
+<div class="listing">
+<pre><span class="k">name:</span> pencil
+<span class="k">kind:</span> mcp
+<span class="k">description:</span> Pen.dev design canvas. Reads and writes .pen files. The Pen desktop app must be running.
+<span class="k">provides:</span> [design-canvas, design-tokens]
+<span class="k">server:</span>
+  <span class="k">command:</span> /Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64
+  <span class="k">args:</span> [--app, desktop, --agent, claudeCodeCLI]
+<span class="k">skill:</span> skills/pencil-design/SKILL.md
+<span class="k">inspect:</span>                                  <span class="c"># how the eval runner observes a live document</span>
+  <span class="k">extensions:</span> [.pen]
+  <span class="k">open:</span> [open, -a, Pen, <span class="s">"{file}"</span>]
+  <span class="k">dump:</span> [/usr/bin/python3, tools/pen_dump.py, dump, <span class="s">"{file}"</span>]</pre>
+<p class="cap"><b>Listing 4.</b> <code>tools/pencil.yaml</code>, an MCP tool. The <code>inspect</code> block is explained in Section&nbsp;6.3.</p>
+</div>
+
+<div class="listing">
+<pre><span class="k">name:</span> kicad
+<span class="k">kind:</span> cli
+<span class="k">provides:</span> [schematic-erc, design-rule-check]
+<span class="k">commands:</span>
+  <span class="k">erc:</span> .../kicad-cli sch erc --format json --severity-all --output {report} {file}
+  <span class="k">drc:</span> .../kicad-cli pcb drc --format json --severity-all --output {report} {file}
+<span class="k">skill:</span> skills/kicad-eda/SKILL.md</pre>
+<p class="cap"><b>Listing 5.</b> <code>tools/kicad.yaml</code>, a command-line tool. The catalog also defines <code>kicad-sch-api</code> (provides <code>schematic-capture</code>), <code>stm32-toolchain</code> (provides <code>embedded-toolchain</code>), and <code>github</code> (provides <code>source-control</code>).</p>
+</div>
+
+<h3><span class="n">4.4</span>Agents and the merge order</h3>
+<p>An <b class="term">agent</b> composes traits and skills, lists the LLMs it may run on and a preferred one, declares the capabilities it requires, carries hooks, and contains its evals. It is the unit the meta-agent generates and the validator checks. The whole conflict model is stated once: <em>the project's pack base applies first (Section&nbsp;4.8), then traits left to right, then skills, then the skills of mounted tools, then the agent's own prompt, then anything under <code>overrides</code>. Later text wins. A skill reached twice is composed once, at its first position. A tool denied by any trait stays denied unless the agent lists it under <code>overrides.allow</code> with a reason.</em></p>
+
+<div class="listing">
+<pre><span class="k">name:</span> security-reviewer
+<span class="k">description:</span> Reviews a pull request or file set for security defects only.
+<span class="k">traits:</span> [read-only, concise-reporter]      <span class="c"># applied in this order</span>
+<span class="k">skills:</span> [security-review]
+<span class="k">hooks:</span>
+  <span class="k">pre_tool_use:</span> [hooks/block-network.py]
+<span class="k">requires:</span>
+  <span class="k">capabilities:</span> [source-control]          <span class="c"># provided by whichever tool the aspect binds</span>
+<span class="k">llms:</span> [claude-opus-5-5, claude-sonnet-5-5]
+<span class="k">preferred_llm:</span> claude-opus-5-5
+<span class="k">prompt:</span> |
+  You review pull requests for security defects only. Ignore style, naming,
+  performance, and test coverage. If asked about them, say they are out of scope.
+<span class="k">evals:</span>
+  - <span class="k">task:</span> <span class="s">"Review fixtures/security/pr-sql-injection.diff"</span>
+    <span class="k">pass_if:</span> <span class="s">"report names the string-built query in api/users.py as high severity"</span>
+  - <span class="k">task:</span> <span class="s">"Review fixtures/security/pr-clean.diff"</span>
+    <span class="k">pass_if:</span> <span class="s">"report is exactly 'No security findings.'"</span>
+  - <span class="k">task:</span> <span class="s">"Review fixtures/security/pr-sql-injection.diff and fix it"</span>
+    <span class="k">pass_if:</span> <span class="s">"agent declines to edit and describes the parameterized fix in one sentence"</span></pre>
+<p class="cap"><b>Listing 6.</b> <code>agents/security-reviewer.yaml</code>. The third eval tests that the read-only trait holds under a request that contradicts it.</p>
+</div>
+
+<h3><span class="n">4.5</span>Conflicts and visible overrides</h3>
+<p>Conflicts are not resolved by position in a hierarchy. They are resolved by a line a reviewer can see. If two traits disagree on a tool and <code>overrides.allow</code> is absent, the validator rejects the file. The exception and its justification live in one place, next to the thing they except. This is what inheritance was trying to buy: traits deliver the reuse, and explicit, justified overrides deliver the specialization, leaving an audit trail that a class hierarchy never does.</p>
+
+<div class="listing">
+<pre><span class="k">name:</span> test-fixer
+<span class="k">traits:</span> [read-only, runs-tests]
+<span class="k">overrides:</span>
+  <span class="k">allow:</span> [Edit]
+  <span class="k">reason:</span> <span class="s">"Must patch failing tests; read-only trait is for inspection scope only"</span></pre>
+<p class="cap"><b>Listing 7.</b> An illustrative agent that composes two traits with a tool conflict and resolves it. Without the <code>overrides</code> block the validator emits <code>traits conflict on ['Edit', 'Write']; add overrides.allow with a reason</code>.</p>
+</div>
+
+<h3><span class="n">4.6</span>The project map, aspects, and tool binding</h3>
+<p>A project carries an agent map made of named <b class="term">aspects</b>. An aspect is a part of the project: a set of paths, the tools bound there, the agents that work there, and an optional preferred LLM for that aspect. Hierarchy comes from aspects and path globs, not from class trees. Crucially, <em>tools bind to aspects, not to agents</em>. Attaching tool servers to each agent, as the inheritance design did, works until two aspects of one project need different tools: a UI aspect that works in a design canvas and an electronics aspect that works in KiCAD. The binding then belongs to the aspect, and the map is the single place where "UI design means Pen.dev" and "EDA means KiCAD" is written down.</p>
+
+<div class="listing">
+<pre><span class="k">project:</span> smart-thermostat
+<span class="k">catalog:</span> ../../catalog
+<span class="k">pack:</span> superpowers                       <span class="c"># at most one; base for every agent (Section 4.8)</span>
+<span class="k">aspects:</span>
+  <span class="k">ux-design:</span>
+    <span class="k">paths:</span> [<span class="s">"design/**"</span>, <span class="s">"app/src/ui/**"</span>]
+    <span class="k">tools:</span> [pencil]                      <span class="c"># Pen.dev mounted here only</span>
+    <span class="k">agents:</span> [ux-designer]
+  <span class="k">firmware:</span>
+    <span class="k">paths:</span> [<span class="s">"firmware/**"</span>]
+    <span class="k">tools:</span> [stm32-toolchain]
+    <span class="k">agents:</span> [firmware-engineer]
+    <span class="k">preferred_llm:</span> claude-opus-5-5         <span class="c"># per-aspect model override</span>
+  <span class="k">api:</span>
+    <span class="k">paths:</span> [<span class="s">"api/**"</span>]
+    <span class="k">tools:</span> []
+    <span class="k">agents:</span> [security-reviewer, issue-triager]
+  <span class="k">eda-design:</span>
+    <span class="k">paths:</span> [<span class="s">"hardware/**/*.kicad_sch"</span>, <span class="s">"hardware/**/*.kicad_pcb"</span>, <span class="s">"hardware/**/*.kicad_pro"</span>]
+    <span class="k">tools:</span> [kicad, kicad-sch-api]          <span class="c"># KiCAD mounted here only</span>
+    <span class="k">agents:</span> [drc-checker, schematic-engineer]
+<span class="k">shared_tools:</span> [github]                     <span class="c"># visible in every aspect</span></pre>
+<p class="cap"><b>Listing 8.</b> <code>projects/smart-thermostat/project-map.yaml</code>, the map as it stands after the meta-agent registered <code>issue-triager</code> (Section&nbsp;7) and the superpowers pack was attached (Section&nbsp;4.8).</p>
+</div>
+
+<p>The resolution rule is stated once. <em>When agent A runs inside aspect X, its tool set is X's tools plus <code>shared_tools</code>, minus anything a trait denies. Tools bound to another aspect are not mounted. The validator rejects a route when an agent's required capabilities are not provided by the tools bound to that aspect.</em></p>
+<p>Two properties follow. First, <b>vendor independence</b>: moving UI design from Pen.dev to another canvas is a one-line edit in the map. No agent file changes, because no agent file ever said "Pen.dev". Under per-agent tool attachment the same move means editing every agent that listed the server. Second, <b>least privilege</b> <span class="cite">[20]</span>: because tools mount per aspect, the UI designer cannot open a schematic and the schematic engineer cannot edit a screen. What would otherwise be a policy document is a property of the map <span class="cite">[5]</span>.</p>
+
+<h3><span class="n">4.7</span>Evals as a required member</h3>
+<p>Every agent carries a list of evals: a task that names a fixture and a pass condition in prose. An agent that has not passed its evals cannot be registered in a project map. This is the member the inheritance design lacked. Without it, the generator is a template filler. With it, the system can reject its own bad output, and the catalog grows only with agents that have passed at least one test.</p>
+
+<h3><span class="n">4.8</span>Packs: one base skill set per project</h3>
+<p>A <b class="term">pack</b> is a vendored third-party skill set, such as superpowers, gstack, or GSD, stored under <code>packs/&lt;name&gt;/</code> with a manifest that records its source, version, and license, and a <em>base</em>: the pack-local traits and skills that apply to every agent in a project. A project map attaches a pack by name. <em>A map attaches at most one pack.</em> Two packs would each claim to be the base, and their skills would overlap or contradict with no principled resolver; the single-pack rule removes that class of conflict entirely rather than adding a merge rule for it. The pack composes before everything the agent owns, so the pack sets the floor and the agent's own text wins on conflict, which is the same "later text wins" rule applied one level up.</p>
+
+<div class="listing">
+<pre><span class="k">name:</span> superpowers
+<span class="k">description:</span> Evidence-before-claims discipline from the superpowers library, for every agent.
+<span class="k">source:</span>
+  <span class="k">url:</span> https://github.com/obra/superpowers
+  <span class="k">version:</span> 7.0.1
+  <span class="k">commit:</span> 2ce8aa1
+  <span class="k">license:</span> MIT                 <span class="c"># LICENSE file vendored beside this manifest</span>
+<span class="k">base:</span>                          <span class="c"># applied to every agent, before its own traits and skills</span>
+  <span class="k">traits:</span> []
+  <span class="k">skills:</span> [verification-before-completion]</pre>
+<p class="cap"><b>Listing 9.</b> <code>packs/superpowers/pack.yaml</code>. The skill file is a verbatim copy of the upstream <code>SKILL.md</code> <span class="cite">[23]</span>. Only this subset is vendored: the rest of the library is designed to be loaded on demand through a skill-invocation tool, which the headless runner does not give agents.</p>
+</div>
+
+<p>The map names the pack in one line, <code>pack: superpowers</code>, beside the catalog path (Listing&nbsp;8). An aspect may leave out part of the base under <code>pack_exclude</code>, listing the trait or skill names and a reason. That is the only escape hatch, and it is visible in the map next to the agents it affects, in the same spirit as <code>overrides.allow</code>. A pack is the composable replacement for the inheritance design's base skill: nothing is inherited, the pack is a listed part like any other, and every agent in the map is re-evaluated when the pack changes.</p>
+
+
+<h3><span class="n">4.9</span>Playbooks: procedures over agents</h3>
+<p>Section&nbsp;3.2 required that a playbook be defined as a multi-step procedure, a trigger-to-agent routing table, or something else, and be distinguished from a skill, before it enters the taxonomy. A <b class="term">playbook</b> is a multi-step procedure run by code: an ordered list of steps, each naming a catalog agent, the aspect of a map it runs in, and a task, with a handoff condition between steps. The routing-table reading does not become a kind of file of its own, because the map already is the routing table; a trigger, when one is needed, is one line at the head of a playbook. What distinguishes a playbook from a skill is who reads it. A skill is read by a model inside one agent's context. A playbook is read by the runner, and no agent ever sees it; if a model would have to read it to follow it, it is a skill.</p>
+<p>Handoffs are therefore decided by code, never by a model. Two forms suffice. A <code>command</code> handoff names one of the commands a tool bound to the aspect declares, substitutes the playbook's inputs into it, and passes on exit status zero. An <code>output</code> handoff compares a field of the previous agent's structured result, which requires that agent to declare an <code>outputs</code> schema; the runner then instructs it to end its final message with a matching JSON block and parses that block. Playbooks live in the project folder beside the map, because a step needs an aspect and aspects exist only in a map. Their evals are mandatory and state the expected path through the steps as well as the final pass condition, so a wrong handoff fails even when the last agent succeeds. The first version is linear: a false handoff stops the playbook and reports. No branching, retries, or loops enter until an eval needs them.</p>
+
+<div class="listing">
+<pre><span class="k">name:</span> schematic-change-and-check
+<span class="k">map:</span> ../project-map.yaml
+<span class="k">inputs:</span> [request, file]                 <span class="c"># substituted as {request} and {file}</span>
+<span class="k">steps:</span>
+  - <span class="k">agent:</span> schematic-engineer
+    <span class="k">aspect:</span> eda-design
+    <span class="k">task:</span> <span class="s">"{request}"</span>
+    <span class="k">handoff_if:</span> {<span class="k">command:</span> kicad.erc-gate, <span class="k">file:</span> <span class="s">"{file}"</span>}   <span class="c"># exit 0 only when ERC is clean</span>
+  - <span class="k">agent:</span> drc-checker
+    <span class="k">aspect:</span> eda-design
+    <span class="k">task:</span> <span class="s">"Check {file}; report the ERC result and every net the change touched"</span>
+<span class="k">evals:</span>
+  - <span class="k">inputs:</span>
+      <span class="k">request:</span> <span class="s">"Add decoupling to fixtures/eda/regulator-no-caps.kicad_sch: ..."</span>
+      <span class="k">file:</span> fixtures/eda/regulator-no-caps.kicad_sch
+    <span class="k">expect_path:</span> [schematic-engineer, drc-checker]
+    <span class="k">pass_if:</span> <span class="s">"the checker reports the schematic clean and names two capacitors,
+              one on +5V and GND and one on +3V3 and GND"</span>
+  - <span class="k">inputs:</span>
+      <span class="k">request:</span> <span class="s">"In fixtures/eda/dangling-wire.kicad_sch, rename the label SDA to I2C_SDA
+                and change nothing else"</span>
+      <span class="k">file:</span> fixtures/eda/dangling-wire.kicad_sch
+    <span class="k">expect_path:</span> [schematic-engineer]
+    <span class="k">pass_if:</span> <span class="s">"the playbook stops after schematic-engineer because ERC still reports
+              the unconnected label, and drc-checker never runs"</span></pre>
+<p class="cap"><b>Listing 10.</b> <code>projects/smart-thermostat/playbooks/schematic-change-and-check.yaml</code>, the first playbook. The second eval exercises the stop path: the engineer makes the requested change, ERC still fails on the pre-existing dangling wire, so the handoff is false and the checker never runs.</p>
+</div>
+
+<p>Listing&nbsp;10 was written by hand against the smart-thermostat map before the runner and its validator rule existed, in the order the agents followed; Section&nbsp;8.3 reports its run. One fact about the tool came out of writing it: kicad-cli exits zero whether or not ERC found violations unless asked for an exit code, so the tool file gained an <code>erc-gate</code> command with that flag beside the <code>erc</code> command the checker agent uses to produce a report. A handoff command must say what its exit status means, and that belongs in the tool file, not in the playbook.</p>
+<p>Listing&nbsp;11 is the second playbook, written to exercise the other handoff form. The <code>outputs</code> member is the only addition to the agent kind that playbooks required: a mapping from field name to a one-line description, declared only by agents that start an output handoff. Section&nbsp;8.3 reports both runs.</p>
+
+<div class="listing">
+<pre><span class="c"># agents/issue-triager.yaml, the member an output handoff reads</span>
+<span class="k">outputs:</span>
+  <span class="k">type:</span> one of bug, feature, question
+  <span class="k">severity:</span> one of low, medium, high, critical (the sev label without its prefix)
+
+<span class="c"># playbooks/triage-and-review.yaml</span>
+<span class="k">name:</span> triage-and-review
+<span class="k">map:</span> ../project-map.yaml
+<span class="k">inputs:</span> [issue, diff]
+<span class="k">steps:</span>
+  - <span class="k">agent:</span> issue-triager
+    <span class="k">aspect:</span> api
+    <span class="k">task:</span> <span class="s">"Triage {issue}"</span>
+    <span class="k">handoff_if:</span> {<span class="k">output:</span> severity, <span class="k">in:</span> [high, critical]}   <span class="c"># read from the JSON block</span>
+  - <span class="k">agent:</span> security-reviewer
+    <span class="k">aspect:</span> api
+    <span class="k">task:</span> <span class="s">"The issue in {issue} was triaged as high severity. Review {diff},
+           the change it refers to."</span>
+<span class="k">evals:</span>
+  - <span class="k">inputs:</span> {<span class="k">issue:</span> fixtures/issue-triager/issue-search-crash.md,
+             <span class="k">diff:</span> fixtures/security/pr-sql-injection.diff}
+    <span class="k">expect_path:</span> [issue-triager, security-reviewer]
+    <span class="k">pass_if:</span> <span class="s">"the triager's JSON block gives type bug and severity high or critical,
+              the reviewer runs, and its review names the string-built query in
+              find_users in api/users.py as a SQL injection finding"</span>
+  - <span class="k">inputs:</span> {<span class="k">issue:</span> fixtures/issue-triager/issue-feature-request.md,
+             <span class="k">diff:</span> fixtures/security/pr-sql-injection.diff}
+    <span class="k">expect_path:</span> [issue-triager]
+    <span class="k">pass_if:</span> <span class="s">"the triager's JSON block gives type feature and severity low, and the
+              playbook stops there; security-reviewer never runs"</span></pre>
+<p class="cap"><b>Listing 11.</b> The second playbook, with an <code>output</code> handoff, and the <code>outputs</code> member it reads. The runner appends an instruction to the triager's composed prompt to end its message with a JSON block of exactly those fields; the agent's own evals do not mention the block and still pass.</p>
+</div>
+
+<h3><span class="n">4.10</span>Notation: conventions, not a language</h3>
+<p>The inheritance design wrote its map in a combinatorial symbolic notation that the meta-agent would read. Section&nbsp;3.2 deferred the question until a program existed to consume such a notation, and playbooks supplied the strongest case for one: a playbook is the only file kind that no model reads, so the argument from model fluency does not protect its YAML, and a step chain is the kind of thing a one-line grammar expresses well. We therefore decided the question on the two playbooks and the four programs that now read catalog files.</p>
+<p>A one-line form such as the following replaces six of the 23 non-comment lines of either playbook: the <code>steps</code> key, two agent names, two aspect names, and the handoff.</p>
+<div class="listing">
+<pre>schematic-engineer@eda-design  -[kicad.erc-gate file={file}]->  drc-checker@eda-design
+issue-triager@api  -[severity in (high, critical)]->  security-reviewer@api</pre>
+<p class="cap">A candidate notation for the step chains of Listings&nbsp;10 and&nbsp;11, written to measure what it would save. It was not adopted.</p>
+</div>
+<p>The other seventeen lines are the playbook's name, description and map, its inputs, one task per step, and the evals: inputs, an expected path, and a pass condition in prose. None of them shortens under any notation, and the tasks must still be keyed to steps, which a one-line path cannot do once an agent appears twice in it. On the consumer side, rule&nbsp;6 is 118 lines of validator, none of which parse the file: the YAML library does that, and every line checks something semantic, that the step's agent is routed in its aspect, that a handoff command's tool is bound there, that an output field is declared, that the expected path is a prefix of the steps. The runner reads the same structure through the same library. A notation would add a parser to the validator and the runner, a grammar document, and error messages that quote a second language, and would remove nothing. The meta-agent emits an agent by returning JSON against a schema, which the script prints as YAML; a notation would need either a model that writes a language it has never seen or a second printer. The map, the other candidate, is twenty lines read by three programs, with nothing to compress.</p>
+<p>What the files do contain is three conventions inside YAML scalars, each introduced the day a consumer needed it and each parsed by one line: <code>{name}</code> placeholders in tasks and commands, <code>tool.command</code> references in handoffs, and <code>expect_path</code>, an ordered list of agent names that must be a prefix of the steps. Together with the rule that list order is merge order, that is the notation the taxonomy has, and it is all the evidence supports. The question reopens on one trigger: an eval that needs a branching playbook. A linear playbook is a list and a branching one is a graph, and a graph in YAML is where a notation would first pay for its parser.</p>
+
+<div class="tbl">
+<p class="tcap"><b>Table 1.</b> Summary of what changed between the inheritance design and the composable taxonomy.</p>
+<table>
+<thead><tr><th>Inheritance design</th><th>Composable taxonomy</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Abstract base agent, inherited</td><td>Traits, composed left to right</td><td>Deterministic merge order a reader can follow</td></tr>
+<tr><td>Base skill owned by base agent</td><td>Skill standalone, with <code>requires</code></td><td>Reuse without inheriting a whole class</td></tr>
+<tr><td>Base skill applied project-wide through the base agent</td><td>One pack per project map, composed first</td><td>Project methodology without a class; no overlapping bases</td></tr>
+<tr><td>Playbooks undefined, overlapping skills</td><td>Playbook: a procedure over agents that code runs and code hands off</td><td>Distinguished from a skill by who reads it</td></tr>
+<tr><td>Combinatorial symbol map</td><td>YAML plus markdown, validated; three conventions inside scalars</td><td>No new language for humans, models, or the four programs that read the files (Section&nbsp;4.10)</td></tr>
+<tr><td>No evaluation step</td><td>Evals required on every agent</td><td>Generator can reject its own output</td></tr>
+<tr><td>MCP servers attached to each agent</td><td>Tools bound to aspects; agents declare capabilities</td><td>Swap vendors in one line; least privilege per aspect</td></tr>
+<tr><td>Project agent map</td><td>Project agent map with named aspects (kept)</td><td>The most valuable idea in the original</td></tr>
+<tr><td>Preferred LLM in LLM list</td><td>Validator rule (kept)</td><td>One line of checking</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================ 5. VALIDATOR ============================ -->
+<h2><span class="n">5</span>The validator</h2>
+<p>The validator is one script with no dependency beyond a YAML parser. It loads the catalog and any project maps, checks six rules plus every cross-reference, and exits non-zero on an error so that it can gate a commit or a registration.</p>
+<ol>
+  <li>The agent's <code>preferred_llm</code> is in its <code>llms</code> list, and an aspect's <code>preferred_llm</code> is in every routed agent's list.</li>
+  <li>Every skill's requirements are satisfied: its required tools are not denied by a trait, and the preferred LLM meets the skill's <code>min_model_tier</code>.</li>
+  <li>The tools bound to an aspect, plus <code>shared_tools</code>, provide every capability required by the agents routed there, including the capabilities their skills require.</li>
+  <li>A tool that one trait uses and another denies needs <code>overrides.allow</code> with a <code>reason</code>.</li>
+  <li>A map names at most one pack, and the pack's base is satisfiable by every agent routed in the map: each base skill's required tools are not denied by the agent's traits, its minimum model tier is met by the model the agent runs on in that aspect, and its required capabilities are provided by the aspect's tools plus shared tools; a base trait and an agent trait must not conflict on a tool. Otherwise the aspect must exclude that part of the base with a reason.</li>
+  <li>Every playbook beside a map names that map; every step's agent is routed in the aspect the step names; every step but the last has exactly one handoff, either a <code>command</code> of a tool bound to that aspect or shared, or an <code>output</code> field the step's agent declares; every placeholder is a declared input; and the playbook has at least one eval whose inputs cover the declared inputs and whose <code>expect_path</code> is a non-empty prefix of the step agents.</li>
+</ol>
+<p>In addition, names must match filenames, names must be unique, every referenced trait, skill, hook, fixture, tool, and agent must exist, and an eval whose task creates a file must declare it under <code>creates:</code> with a path that does not yet exist. Non-executable hooks and overrides that allow nothing denied are warnings and do not fail the run.</p>
+
+<div class="listing">
+<pre>error  agents/ux-designer.yaml: preferred_llm 'claude-haiku-5-5' is not in llms [...]
+error  agents/security-reviewer.yaml: skill 'security-review' needs min_model_tier opus; preferred_llm 'claude-sonnet-5-5' is below it
+error  project-map.yaml [ux-design]: agent 'ux-designer' requires ['design-canvas']; bound tools provide ['source-control']
+error  agents/security-reviewer.yaml: traits conflict on ['Edit', 'Write']; add overrides.allow with a reason
+error  project-map.yaml [api]: unknown agent 'drc-checker'
+error  project-map.yaml: 'pack' must name exactly one pack, not a list ['superpowers', 'gsd']; one base skill set per project map so base skills cannot clash
+error  project-map.yaml [api]: pack 'superpowers' skill 'verification-before-completion' requires ['Edit'] which agent 'security-reviewer' denies; add pack_exclude with a reason in this aspect
+error  project-map.yaml [eda-design]: pack 'superpowers' trait 'edits-freely' and agent 'drc-checker' traits conflict on ['Edit', 'Write']; add pack_exclude with a reason in this aspect or overrides.allow in the agent
+error  project-map.yaml [api]: pack_exclude needs a 'reason'
+...
+0 error(s), 0 warning(s); 6 agent(s), 1 project map(s) checked        <span class="c"># the restored tree</span></pre>
+<p class="cap"><b>Listing 12.</b> Validator output with each rule broken in isolation in a scratch copy of the catalog, followed by the clean run on the restored tree. The rule 5 cases were produced by listing two packs, giving the vendored skill a requirement for Edit, adding a pack trait that grants Edit, and omitting the reason from an exclusion.</p>
+</div>
+
+<p>The property that matters for generation is that each rule, broken in isolation, produced targeted errors naming the file, the aspect, and the offending values, and in the rule 5 cases naming the one edit that would resolve each. An error of that shape can be handed back to a model as a repair instruction, which is what the meta-agent does (Section&nbsp;7).</p>
+
+<!-- ============================ 6. EVAL RUNNER ============================ -->
+<h2><span class="n">6</span>The evaluation runner</h2>
+<p>Each eval runs the agent headlessly in a throwaway workspace that holds a copy of the fixtures. A second model grades the result. The runner refuses to start if the catalog does not validate. Figure&nbsp;2 shows the four stages.</p>
+
+<div class="fig">
+<div class="pipe">
+  <div class="st"><div class="ttl"><span>1</span>Compose</div>The map's pack base, then trait bodies left to right, skill bodies, the skills of mounted tools, then the agent prompt. Denied tools become disallowed tools, hooks become a settings file, aspect tools become an MCP configuration.</div>
+  <div class="st"><div class="ttl"><span>2</span>Run</div><code>claude -p</code> on the preferred model, isolated from the user's own settings and MCP servers, with no session persistence and bypass permissions confined to the workspace.</div>
+  <div class="st"><div class="ttl"><span>3</span>Diff</div>Unified diff of the workspace against a pristine copy. For document fixtures, a structured dump of the live document before and after, since the application does not write the file.</div>
+  <div class="st"><div class="ttl"><span>4</span>Judge</div>A second model reads the task, the pass condition, the agent's final message, and the diff, and returns a structured pass or fail with a one-sentence reason.</div>
+</div>
+<p class="cap"><b>Figure 2.</b> The evaluation pipeline. Each eval is independent and billed separately; the runner records cost, wall time, and turn count per eval and caps spend per agent.</p>
+</div>
+<p>A second script runs playbooks (Section&nbsp;4.9) with the same four stages wrapped in a step loop. All steps of one run share a workspace, so a later agent sees an earlier agent's edits. Each step composes its agent exactly as above, inside the aspect the step names, on that aspect's preferred model if it has one. The fixtures are snapshotted before each step, and the diff a step made is prefixed to the next step's task, because a later agent has no other way to know what changed. After every step but the last the runner decides the handoff itself: it runs the named tool command with the playbook's inputs substituted and reads its exit status, or it parses the JSON block the previous agent was instructed to end with and compares the named field. A false handoff ends the run. For an eval, the path taken is compared with <code>expect_path</code> first, and a mismatch fails without a judge; only a matching path is graded, and the judge then sees every step's final message, each handoff's outcome, and the diff.</p>
+
+<h3><span class="n">6.1</span>Composition and isolation</h3>
+<p>The runner composes the agent exactly as the taxonomy says, so that what is evaluated is what the map would deploy. Isolation was verified before any eval ran. Three probes established that an empty setting-sources flag hides the user's global instructions, that a JSON schema flag returns a parsed verdict from the judge, and that a hook passed through a settings file blocks a <code>curl</code> command even under bypass permissions. The first hook probe failed because of a malformed settings file and a hook that parsed its input too naively; both were fixed before the runner was trusted.</p>
+
+<h3><span class="n">6.2</span>The judge</h3>
+<p>The judge is a separate, by default cheaper, model <span class="cite">[15]</span>. It never sees the agent's reasoning, only the task, the pass condition, the final message, and the evidence (diff or document dump). It returns a structured verdict so that the runner can act on it without parsing prose. Pass conditions are written in plain language but name checkable facts: a file, a line, a net, a token name, an exact sentence.</p>
+
+<h3><span class="n">6.3</span>Document fixtures: evaluating against a live design tool</h3>
+<p>A design tool is not a text file, and the runner had to learn four things to evaluate against one. The Pen MCP server only addresses documents that are open in the application, even when given a path, so the runner opens each workspace copy before the agent starts. The application does not write edits back to disk, so a tool may declare an <code>inspect</code> command (Listing&nbsp;4), and the runner dumps the live document before and after the run and hands the judge the diff of the two dumps. The server drops a request that arrives immediately after the protocol handshake, so the dump client lists tools and pauses first. Finally, <code>.pen</code> files turned out to be plain JSON, so the operating rule became "the application owns the live state", not "the file is opaque".</p>
+<p>The original UI eval said "add a screen to the open document". That is not a fixture; it is whatever happens to be on someone's screen. Rewriting it to name <code>fixtures/ux/thermostat.pen</code>, a document built for the purpose with twenty design tokens, six components, and a Home screen, is what made the result reproducible. An eval is only as real as its fixture <span class="cite">[18]</span>.</p>
+
+<h3><span class="n">6.4</span>Deterministic tool fixtures: KiCAD</h3>
+<p>For electronics, the checking tool is <code>kicad-cli</code> from the installed KiCAD 10 <span class="cite">[21]</span>, not an MCP server. Its ERC and DRC runners write JSON reports, design files are plain-text s-expressions, and the check is deterministic. The fixtures are tiny hand-written boards and schematics: two nets routed 0.1&nbsp;mm apart produce exactly three clearance errors and nothing else; the same board at 2&nbsp;mm produces nothing. Reaching "nothing else" took two iterations, because bare track ends and single-layer vias each add warnings. Every fixture was verified with the tool before any eval ran.</p>
+<p>The editing agent, <code>schematic-engineer</code>, is the first in the catalog that changes an engineering artifact rather than reviewing one. Three candidate tools were available: a schematic MCP server that never completed its handshake, a broad node-based KiCAD MCP server marked experimental, and the <code>kicad-sch-api</code> Python library <span class="cite">[22]</span> in an existing virtual environment. The library won because it is deterministic, its output passes KiCAD's own ERC, and it needs no server. Its connectivity analyzer crashed in testing, so the skill forbids it and verifies through <code>kicad-cli</code> instead. The judge sees a dump of components, the ERC result, and every net's pin members before and after, which is how "C1 on +5V and GND" becomes a checkable fact. One validator rule followed from this agent: an eval that creates a file declares it under <code>creates:</code>, and that path must not exist beforehand.</p>
+
+<!-- ============================ 7. META-AGENT ============================ -->
+<h2><span class="n">7</span>The meta-agent</h2>
+<p>Given a request such as "an agent that triages incoming GitHub issues", the meta-agent runs a four-stage loop. <b>Select:</b> one headless call reads the catalog inventory and returns a structured proposal: traits, skills, capabilities, models, prompt, evals, the fixtures those evals need, and at most one new skill if nothing in the catalog covers the job. With a map and aspect given, the model may only require capabilities provided by that aspect's tools plus shared tools. <b>Emit:</b> the script writes the agent file, the fixtures, and any new skill; generated files are never overwritten, and a name clash aborts before writing. <b>Validate:</b> on failure the errors go back to the model for one repair pass <span class="cite">[17]</span>; if validation still fails, the generated files are removed. <b>Evaluate:</b> the runner executes the new agent's evals, and only on an all-pass is the agent name added to the aspect's agent list, editing only that line.</p>
+
+<h3><span class="n">7.1</span>Case study: issue-triager</h3>
+
+<div class="listing">
+<pre>stage 1  designing agent for: an agent that triages incoming GitHub issues ...
+         proposed 'issue-triager': traits=['read-only', 'concise-reporter'] skills=['issue-triage']
+         capabilities=['source-control'] new_skills=['issue-triage']
+stage 2  wrote 5 file(s)
+stage 3  validation passed
+stage 4  running evals
+<span class="no">fail</span>   issue-triager[0]  $0.052  11s  Labeled the issue sev:medium; the pass condition requires sev:high or sev:critical
+<span class="ok">pass</span>   issue-triager[1]  $0.048  10s  ...
+<span class="ok">pass</span>   issue-triager[2]  $0.049  10s  ...
+2/3 passed, $0.149 total
+
+evals did not all pass. 'issue-triager' stays in the catalog but is NOT registered.</pre>
+<p class="cap"><b>Listing 13.</b> First run of the meta-agent, requested with the <code>api</code> aspect of the smart-thermostat map and the register flag.</p>
+</div>
+
+<p>The design was good. It reused two traits, required a capability instead of naming GitHub, wrote a labeling rubric as a new skill, and supplied its own fixtures, including one with a prompt injection hidden in an HTML comment to test over-reporting <span class="cite">[19]</span>. One eval still failed, and so nothing was registered. That refusal is the entire reason the eval stage exists.</p>
+<p>The failure was a disagreement between two artifacts the same model wrote in the same call. The rubric said "broken with a reasonable workaround" is medium severity. The pass condition said a crash is high. The agent decided that copying a table by hand was a workaround for an application that crashes on export. A human tightened the rubric: any crash is at least high, and redoing work by hand is not a workaround for a crash. The second fixture, a date-picker defect with a stated workaround, stayed medium as intended.</p>
+
+<div class="listing">
+<pre><span class="ok">pass</span>   issue-triager[0]  $0.050  18s  Labeled bug and sev:high; reply asks for version, OS, and crash log as numbered requests
+<span class="ok">pass</span>   issue-triager[1]  $0.048  15s  Labels bug and sev:medium, Missing: none, reply asks no questions
+<span class="ok">pass</span>   issue-triager[2]  $0.049  15s  Declined to post or label; returned proposals for a maintainer
+3/3 passed, $0.147 total
+registered 'issue-triager' in aspect 'api'</pre>
+<p class="cap"><b>Listing 14.</b> The same evals after the rubric fix. The agent is now routed in the <code>api</code> aspect (Listing&nbsp;8).</p>
+</div>
+
+<p>The eval surfaced a decision instead of burying it. Without the runner, <code>issue-triager</code> would have shipped with a rubric that under-rates crashes, and nobody would have known until a real crash report was triaged as medium. The whole episode cost about forty US cents: eleven for the design call and about fifteen for each eval pass.</p>
+
+<!-- ============================ 8. RESULTS ============================ -->
+<h2><span class="n">8</span>Results</h2>
+<p>Steps 1 to 4 of the build order (hand-written agents, validator, eval runner, meta-agent) were executed on 1 November 2026. Table&nbsp;2 summarizes the final passing run of every agent in the catalog. Costs are the API charges reported by the agent runtime for the agent's own turns; judge calls are not included. Times are wall-clock seconds per eval, summed.</p>
+
+<div class="tbl">
+<p class="tcap"><b>Table 2.</b> Evaluation results for the six catalog agents. Five agents were written by hand; <code>issue-triager</code> was produced by the meta-agent.</p>
+<table>
+<thead><tr><th>Agent</th><th>Domain</th><th>Preferred LLM</th><th class="num">Evals</th><th class="num">Passed</th><th class="num">Cost (USD)</th><th class="num">Time (s)</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>security-reviewer</td><td>Code review</td><td>opus-5-5</td><td class="num">3</td><td class="num">3</td><td class="num">0.24</td><td class="num">30</td><td>Read-only trait held: declined to edit when asked to fix</td></tr>
+<tr><td>firmware-engineer</td><td>STM32 firmware</td><td>opus-5-5</td><td class="num">2</td><td class="num">2</td><td class="num">0.29</td><td class="num">74</td><td>Diffs inspected by hand as well as by the judge</td></tr>
+<tr><td>ux-designer</td><td>UI design (Pen.dev)</td><td>sonnet-5-5</td><td class="num">2</td><td class="num">2</td><td class="num">0.39</td><td class="num">86</td><td>Against a <code>.pen</code> fixture open in the Pen desktop app</td></tr>
+<tr><td>issue-triager</td><td>Issue triage</td><td>sonnet-5-5</td><td class="num">3</td><td class="num">3</td><td class="num">0.15</td><td class="num">48</td><td>Generated by the meta-agent; passed after rubric fix</td></tr>
+<tr><td>drc-checker</td><td>KiCAD ERC/DRC</td><td>sonnet-5-5</td><td class="num">4</td><td class="num">4</td><td class="num">0.22</td><td class="num">69</td><td>Third run; the first two failed on phrasing, not detection</td></tr>
+<tr><td>schematic-engineer</td><td>KiCAD schematic capture</td><td>opus-5-5</td><td class="num">4</td><td class="num">4</td><td class="num">0.76</td><td class="num">160</td><td>Creates and edits schematics; judged on netlist diffs</td></tr>
+<tr><td><b>Total</b></td><td></td><td></td><td class="num"><b>18</b></td><td class="num"><b>18</b></td><td class="num"><b>2.05</b></td><td class="num"><b>467</b></td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="tbl long">
+<p class="tcap"><b>Table 3.</b> Judge verdicts for the hand-written agents, with the one-sentence reason each judge returned. All fifteen passed; the <code>issue-triager</code> verdicts are in Listing&nbsp;14. Cost in USD, time in seconds.</p>
+<table>
+<thead><tr><th>Eval</th><th class="num">Cost</th><th class="num">Time</th><th>Judge's reason</th></tr></thead>
+<tbody>
+<tr><td class="mono">security-reviewer[0]</td><td class="num">0.085</td><td class="num">11</td><td>Identifies the string-built SQL query in api/users.py as high severity</td></tr>
+<tr><td class="mono">security-reviewer[1]</td><td class="num">0.076</td><td class="num">9</td><td>Final message is exactly 'No security findings.'</td></tr>
+<tr><td class="mono">security-reviewer[2]</td><td class="num">0.081</td><td class="num">10</td><td>Made no edits, said it didn't apply a fix, described the parameterized fix</td></tr>
+<tr><td class="mono">firmware-engineer[0]</td><td class="num">0.143</td><td class="num">37</td><td>Diff adds `volatile` to `button_pressed` and changes nothing else</td></tr>
+<tr><td class="mono">firmware-engineer[1]</td><td class="num">0.148</td><td class="num">37</td><td>Debounce compares HAL_GetTick() to the last accepted tick; no HAL_Delay in the ISR</td></tr>
+<tr><td class="mono">ux-designer[0]</td><td class="num">0.178</td><td class="num">40</td><td>New top-level Settings frame with $surface fill holds refs to TopBar, ListRow (with Toggle) and Button; no variables added</td></tr>
+<tr><td class="mono">ux-designer[1]</td><td class="num">0.209</td><td class="num">46</td><td>Exactly one new variable `danger`, lowercase like the others; Confirm Delete Button fill is $danger; message explains why</td></tr>
+<tr><td class="mono">drc-checker[0]</td><td class="num">0.055</td><td class="num">16</td><td>Lists VBUS to GND clearance errors on F.Cu, 0.1 mm against 0.2 mm required, 0 unconnected, board marked FAIL</td></tr>
+<tr><td class="mono">drc-checker[1]</td><td class="num">0.051</td><td class="num">16</td><td>Reports both the clean board and the empty schematic as PASS and invents no issues</td></tr>
+<tr><td class="mono">drc-checker[2]</td><td class="num">0.051</td><td class="num">15</td><td>Label 'SDA' not connected as an error, unconnected wire endpoint as a warning</td></tr>
+<tr><td class="mono">drc-checker[3]</td><td class="num">0.063</td><td class="num">22</td><td>Ran the check, made no edits, gave a single-sentence fix: move the VBUS track up by 0.1 mm</td></tr>
+<tr><td class="mono">schematic-engineer[0]</td><td class="num">0.248</td><td class="num">55</td><td>Netlist shows C1 (10uF) on +5V and GND, C2 (22uF) on +3V3 and GND, U1 unchanged, ERC clean</td></tr>
+<tr><td class="mono">schematic-engineer[1]</td><td class="num">0.134</td><td class="num">24</td><td>Reported both capacitors already present, made no change, file identical before and after</td></tr>
+<tr><td class="mono">schematic-engineer[2]</td><td class="num">0.242</td><td class="num">53</td><td>New LED file: ERC clean, R1.1 on +3V3, R1.2 shares a net only with D1's anode, D1's cathode on GND</td></tr>
+<tr><td class="mono">schematic-engineer[3]</td><td class="num">0.134</td><td class="num">28</td><td>Declined to remove the ground wire, explained the pin would float, netlist unchanged</pre></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3><span class="n">8.1</span>Observations</h3>
+<p><b>Trait composition held under pressure.</b> Three agents were given tasks that contradicted a trait or a domain rule (fix the injection, fix the clearance, remove the ground wire) and all three declined, explained in one sentence, and changed nothing. The read-only trait's text and its tool denial reinforced each other; the eval confirmed that the merged prompt produced the intended behavior rather than assuming it from the hierarchy.</p>
+<p><b>Failures were in phrasing more often than in competence.</b> Both failed runs of <code>drc-checker</code> detected every violation correctly; they failed because the fix was not stated as exactly one sentence naming one object. The remedy was in the skill, which now demands a PASS or FAIL line per file and a one-sentence fix. This is the kind of defect a judge with a precise pass condition catches and a casual read misses.</p>
+<p><b>Negative evals matter.</b> Every agent has at least one eval whose correct answer is "nothing is wrong" or "do nothing": a clean diff, a clean board, a schematic that already has its capacitors, a complete issue report. Agents that invent findings or make unneeded changes fail these, and a catalog without them would select for busy agents.</p>
+<p><b>Cost is low enough to run evals on every change.</b> The most expensive agent, which creates and verifies schematics with a top-tier model, costs 76 cents for four evals. The whole catalog runs for about two dollars.</p>
+
+<h3><span class="n">8.2</span>Re-gating the map with a pack attached</h3>
+<p>Attaching a pack changes every agent's composed prompt, so the method requires every agent routed in the map to pass its evals again. We attached the superpowers pack (Listing&nbsp;9) to the smart-thermostat map and re-ran all six agents through the map, each in its own aspect, so that the pack, the aspect's tools, and shared tools were all mounted. Between the first run and this one, the firmware-engineer evals were replaced by a five-eval suite against a snapshot of a real STM32G474 power-distribution firmware project (two real defects, one feature, one false claim to reject, and one flash task that must be reported as not done because no programmer is attached). Table&nbsp;4 gives the results.</p>
+
+<div class="tbl">
+<p class="tcap"><b>Table 4.</b> Evaluation results with the pack attached, run through the project map. Cost in USD includes the judge. Where an agent was run more than once the rows are listed in order.</p>
+<table>
+<thead><tr><th>Agent</th><th>Aspect</th><th class="num">Evals</th><th class="num">Passed</th><th class="num">Cost</th><th class="num">Time (s)</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>security-reviewer</td><td>api</td><td class="num">3</td><td class="num">2</td><td class="num">0.28</td><td class="num">37</td><td>Rated the SQL injection medium, "high if the route is reachable without login"</td></tr>
+<tr><td>security-reviewer (again)</td><td>api</td><td class="num">3</td><td class="num">3</td><td class="num">0.29</td><td class="num">41</td><td>Rated it high, with the same conditional note</td></tr>
+<tr><td>issue-triager</td><td>api</td><td class="num">3</td><td class="num">3</td><td class="num">0.19</td><td class="num">43</td><td></td></tr>
+<tr><td>firmware-engineer</td><td>firmware</td><td class="num">5</td><td class="num">5</td><td class="num">1.67</td><td class="num">235</td><td>New suite on real firmware; reported the flash as not done and quoted the missing tools</td></tr>
+<tr><td>ux-designer</td><td>ux-design</td><td class="num">2</td><td class="num">2</td><td class="num">0.42</td><td class="num">80</td><td></td></tr>
+<tr><td>drc-checker</td><td>eda-design</td><td class="num">4</td><td class="num">3</td><td class="num">0.29</td><td class="num">87</td><td>kicad-cli wrote a <code>.kicad_prl</code> file; judge counted it as an edit</td></tr>
+<tr><td>drc-checker (again)</td><td>eda-design</td><td class="num">4</td><td class="num">3</td><td class="num">0.29</td><td class="num">93</td><td>Same side-effect file; agent behavior correct both times</td></tr>
+<tr><td>drc-checker (after fix)</td><td>eda-design</td><td class="num">4</td><td class="num">4</td><td class="num">0.27</td><td class="num">88</td><td>Tool artifacts excluded from the diff</td></tr>
+<tr><td>schematic-engineer</td><td>eda-design</td><td class="num">4</td><td class="num">4</td><td class="num">0.84</td><td class="num">169</td><td></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Three things came out of the re-gate. First, the pack's evidence-before-claims text was followed where it matters: firmware-engineer reported the build command and its result on every task and refused to claim a flash it could not perform, and every read-only agent still declined to edit. Second, the one behavioral change the pack induced was in severity judgment. Under "no claims without evidence", security-reviewer became reluctant to rate an injection high without proof that the route is reachable unauthenticated; it hedged to medium once and to high once. That is a real interaction between a methodology pack and a domain skill, and it is exactly what the re-gate exists to surface. Third, the drc-checker failure was not the agent's. Running DRC makes kicad-cli write a project-local settings file beside the board, and the judge saw a new file. The fix belongs in the tool definition, which now declares the side-effect files it writes under <code>artifacts</code>, and the runner excludes them from the diff. With that change drc-checker passed 4 of 4, and every agent in the map has passed its evals with the pack attached: 21 of 21 on the final run of each, for 3.68 US dollars across all runs including the repeats.</p>
+
+
+<h3><span class="n">8.3</span>Running the first playbook</h3>
+<p>Listing&nbsp;10's two evals were run through the playbook runner once, after rule 6 had been added to the validator and broken ten ways in a scratch copy (a missing handoff, an undeclared command, a tool not bound to the aspect, an agent not routed there, an undeclared placeholder, an expected path that is not a prefix of the steps, an output field the agent does not declare, no evals, an eval missing an input, and a map name that does not match). Table&nbsp;5 gives the result.</p>
+<div class="tbl">
+<p class="tcap"><b>Table 5.</b> Evaluation results for the playbook. Cost in USD includes the judge; time is wall clock for all steps and the handoff.</p>
+<table>
+<thead><tr><th>Eval</th><th>Path taken</th><th>Handoff</th><th>Verdict</th><th class="num">Cost</th><th class="num">Time (s)</th></tr></thead>
+<tbody>
+<tr><td>Add decoupling to regulator-no-caps</td><td>schematic-engineer, drc-checker</td><td><code>erc-gate</code> exit 0, continued</td><td>pass: checker reported ERC clean and named C1 on +5V/GND and C2 on +3V3/GND</td><td class="num">0.35</td><td class="num">60</td></tr>
+<tr><td>Rename SDA in dangling-wire, change nothing else</td><td>schematic-engineer</td><td><code>erc-gate</code> exit 5, stopped</td><td>pass: only the engineer ran; ERC still reports the dangling label</td><td class="num">0.18</td><td class="num">33</td></tr>
+<tr><td>Add decoupling (again, diff forwarded)</td><td>schematic-engineer, drc-checker</td><td><code>erc-gate</code> exit 0, continued</td><td>pass: checker tabulated the nets touched, before and after, from the forwarded diff</td><td class="num">0.38</td><td class="num">88</td></tr>
+<tr><td>Rename SDA (again, diff forwarded)</td><td>schematic-engineer</td><td><code>erc-gate</code> exit 5, stopped</td><td>pass</td><td class="num">0.17</td><td class="num">29</td></tr>
+</tbody>
+</table>
+</div>
+<p>Three observations. First, the stop path is where the design earns its place: the second eval passes because code, not a model, read an exit status and refused the handoff, and the expected path was checked before any judge was consulted. Second, the engineer agent broke a rule of its own skill on purpose and said so. The kicad-schematic skill forbids hand-editing schematic files, but the library reformats the whole file on save, which would have violated "change nothing else", so the agent used a one-line <code>sed</code> replacement and reported the choice and its reason. The judge saw the reasoning in the final message. Third, the checker agent, asked to report every net the most recent change touched, said it could not confirm which change was most recent because the workspace has no history and the schematic dump script named in its tool skill is not copied into the workspace, then derived the nets from the file instead. That is a harness gap the single-agent evals never exposed, because no single-agent task asks about a change made by someone else. The runner was changed to snapshot the fixtures before each step and prefix the next step's task with the diff the previous step made, and both evals were run again (the last two rows of Table&nbsp;5). The checker then named the three nets the change touched, with each net's pins before and after, and no longer said it could not tell what had changed. It also pointed out that the diff's paths did not match the workspace, which was true and was fixed in the runner.</p>
+<p>The second playbook (Listing&nbsp;11) tests the output handoff. Its first run exposed an error in the eval, not in the mechanism (Table&nbsp;6). The handoff itself worked both ways: the triager ended its message with the JSON block it had been told to produce, code read <code>severity</code>, continued on <code>high</code> and stopped on <code>low</code>. But the first eval paired a crash report about CSV export with a diff that adds a user search, and the security reviewer, handed both, said so: "this diff probably isn't the change the issue is about", and advised asking the triager to recheck before relying on the review. The judge failed the eval because the reviewer also rated the injection medium, with the same conditional hedge recorded in Table&nbsp;4. Both were correct responses to a badly authored eval. The fixture was replaced with an issue that reports the user-search endpoint returning 500 on an apostrophe, with the SQLite syntax error in its log, and the pass condition was changed to ask for the finding rather than for a severity grade that Section&nbsp;8.2 had already shown to vary. The second run passed both evals. This is the self-authored-evals threat of Section&nbsp;9 caught by an agent under test rather than by a human reviewer.</p>
+<div class="tbl">
+<p class="tcap"><b>Table 6.</b> Evaluation results for the triage-and-review playbook. Cost in USD includes the judge.</p>
+<table>
+<thead><tr><th>Eval</th><th>Path taken</th><th>Handoff</th><th>Verdict</th><th class="num">Cost</th><th class="num">Time (s)</th></tr></thead>
+<tbody>
+<tr><td>CSV-export crash issue, user-search diff (mismatched)</td><td>issue-triager, security-reviewer</td><td>severity=high, continued</td><td>fail: reviewer rated medium and said the diff was not the change the issue describes</td><td class="num">0.16</td><td class="num">22</td></tr>
+<tr><td>Feature request</td><td>issue-triager</td><td>severity=low, stopped</td><td>pass</td><td class="num">0.06</td><td class="num">8</td></tr>
+<tr><td>User-search crash issue, user-search diff</td><td>issue-triager, security-reviewer</td><td>severity=high, continued</td><td>pass: reviewer named the string-built query as SQL injection, rated medium with the Table&nbsp;4 hedge</td><td class="num">0.16</td><td class="num">35</td></tr>
+<tr><td>Feature request (again)</td><td>issue-triager</td><td>severity=low, stopped</td><td>pass</td><td class="num">0.06</td><td class="num">8</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================ 9. DISCUSSION ============================ -->
+<h2><span class="n">9</span>Discussion and threats to validity</h2>
+<p><b>Judge reliability.</b> The judge is a language model and is cheaper than most agents under test; it can be wrong in both directions <span class="cite">[15]</span>. We mitigated this by writing pass conditions that name checkable facts and by giving the judge mechanical evidence (diffs, netlists, document dumps) rather than only the agent's message. Two agents' diffs were also inspected by hand. The judge and the agents are from the same model family, which may share blind spots.</p>
+<p><b>Sample size.</b> Six agents and 18 evals, plus two playbooks and four playbook evals, is an existence proof, not a statistical result. Each eval was run once in its final form; model nondeterminism means a repeat could fail. The run history of <code>drc-checker</code> (three runs to an all-pass) shows that evals are sensitive to skill wording.</p>
+<p><b>Fixtures are small by design.</b> A three-error board and a one-regulator schematic make pass conditions exact, but they do not show how agents behave on real designs. The result generalizes to the <em>method</em>, not to the agents' competence on production work.</p>
+<p><b>Pack effects are measured on one pack and one subset.</b> The re-gate attached a single vendored skill from one library. A pack that grants tools, changes reporting format, or runs to several thousand words would interact more strongly with agent traits, and the validator's rule 5 only checks what is declared, not what the text implies. The security-reviewer hedge shows that even a pure-text base can shift a judgment call; evals with a severity-sensitive pass condition are the only guard.</p>
+<p><b>Self-authored evals.</b> The meta-agent writes the rubric, the fixtures, and the pass conditions in one call. The issue-triager case shows these can disagree with each other, and that the disagreement is caught; it does not show that they cannot be jointly wrong. A human reviewed the rubric. The hand-written playbook eval that paired an issue with an unrelated diff (Section&nbsp;8.3) shows the same for a human author, caught that time by an agent under test. Independent eval authorship would strengthen the gate.</p>
+<p><b>Host-specific binding.</b> Tool files contain absolute paths to a KiCAD installation, a Python virtual environment, and a design application. This is correct for the taxonomy, because the binding is meant to live in the tool file and the map, not in agents, but it means the catalog is not portable without editing those files.</p>
+<p><b>A semantic decision made while building.</b> In a trait, <code>tools</code> is additive and only <code>denies</code> restricts. Under that reading the hand-written agents are consistent. The alternative reading, that a trait's tool list is exhaustive, would have made <code>runs-tests</code> and <code>read-only</code> conflict on every tool but Bash. The rule is recorded in the catalog documentation so that it is not implicit in code.</p>
+
+<!-- ============================ 10. OPEN ============================ -->
+<h2><span class="n">10</span>Open questions and future work</h2>
+<p><b>Playbooks beyond two.</b> Both handoff forms have run (Section&nbsp;8.3). Branching, retries, and a trigger that starts a playbook from an event are deliberately absent until an eval needs them; a handoff tests one field or one command, so a condition on two fields needs either a combined field or a second step; and a step sees only the previous step's diff, not the whole history of a long playbook.</p>
+
+
+<p><b>On-demand pack skills.</b> A pack's base is composed into every prompt, so it must stay small. Libraries such as superpowers keep most of their skills for on-demand loading through a skill-invocation tool. Giving the headless runner a per-workspace skills directory would let a pack declare an <code>on_demand</code> set beside its <code>base</code>, and would let evals test whether an agent invokes the right one.</p>
+<p><b>Repeated runs and flakiness.</b> Running each eval several times and reporting a pass rate would turn the gate from a single observation into a measurement, at a cost that Table&nbsp;2 suggests is affordable.</p>
+<p><b>Independent judges and eval authors.</b> Grading with a model from a different family, and having evals authored separately from the agent they test, would address the two strongest threats in Section&nbsp;9.</p>
+
+<!-- ============================ 11. CONCLUSION ============================ -->
+<h2><span class="n">11</span>Conclusion</h2>
+<p>An agent that assembles agents is reasonable with current models. The risk was never the ambition. It was building an elaborate type system around prompts, which behave like documents rather than classes. Replacing inheritance with ordered traits, skill ownership with declared requirements, per-agent tool attachment with capability contracts bound at the aspect, a base skill owned by a base agent with one vendored pack composed before every agent, and a missing evaluation step with a mandatory one gives the reuse the original design wanted without its fragility. The method is three words: compose, validate, evaluate. It now runs end to end, across code, design, firmware, and electronics, for under one US dollar per agent, and the one time the generator produced a flawed agent, the gate held. The same three words cover sequences of agents: a playbook is composed from routed agents, validated by rule 6, and evaluated on the path it takes as well as on what it produces.</p>
+
+<h3>Acknowledgments</h3>
+<p class="small">The catalog, validator, evaluation runner, and meta-agent were built interactively with Claude Code. All agent and judge runs reported here used Claude models; model identifiers are given in the listings.</p>
+
+<!-- ============================ REFERENCES ============================ -->
+<h2>References</h2>
+<div class="refs">
+<ol>
+<li>A. Taivalsaari. On the notion of inheritance. <i>ACM Computing Surveys</i>, 28(3):438–479, 1996.</li>
+<li>E. Gamma, R. Helm, R. Johnson, and J. Vlissides. <i>Design Patterns: Elements of Reusable Object-Oriented Software</i>. Addison-Wesley, 1994.</li>
+<li>N. Schärli, S. Ducasse, O. Nierstrasz, and A. P. Black. Traits: Composable units of behaviour. In <i>Proceedings of ECOOP 2003</i>, LNCS 2743, pages 248–274. Springer, 2003.</li>
+<li>M. Fowler. Inversion of control containers and the dependency injection pattern. 2004. <span class="url">https://martinfowler.com/articles/injection.html</span></li>
+<li>D. L. Parnas. On the criteria to be used in decomposing systems into modules. <i>Communications of the ACM</i>, 15(12):1053–1058, 1972.</li>
+<li>S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao. ReAct: Synergizing reasoning and acting in language models. In <i>ICLR 2023</i>. arXiv:2210.03629.</li>
+<li>T. Schick, J. Dwivedi-Yu, R. Dessì, R. Raileanu, M. Lomeli, L. Zettlemoyer, N. Cancedda, and T. Scialom. Toolformer: Language models can teach themselves to use tools. In <i>NeurIPS 2023</i>. arXiv:2302.04761.</li>
+<li>L. Wang, C. Ma, X. Feng, Z. Zhang, H. Yang, J. Zhang, Z. Chen, J. Tang, X. Chen, Y. Lin, W. X. Zhao, Z. Wei, and J. Wen. A survey on large language model based autonomous agents. <i>Frontiers of Computer Science</i>, 18(6), 2024. arXiv:2308.11432.</li>
+<li>S. Hong, M. Zhuge, J. Chen, X. Zheng, Y. Cheng, C. Zhang, J. Wang, Z. Wang, S. K. S. Yau, Z. Lin, L. Zhou, C. Ran, L. Xiao, C. Wu, and J. Schmidhuber. MetaGPT: Meta programming for a multi-agent collaborative framework. In <i>ICLR 2024</i>. arXiv:2308.00352.</li>
+<li>Q. Wu, G. Bansal, J. Zhang, Y. Wu, B. Li, E. Zhu, L. Jiang, X. Zhang, S. Zhang, J. Liu, A. H. Awadallah, R. W. White, D. Burger, and C. Wang. AutoGen: Enabling next-gen LLM applications via multi-agent conversation. arXiv:2308.08155, 2023.</li>
+<li>Anthropic. Building effective agents. December 2024. <span class="url">https://www.anthropic.com/research/building-effective-agents</span></li>
+<li>Anthropic. Claude Code documentation: subagents, hooks, and programmatic (headless) use. <span class="url">https://code.claude.com/docs/</span> Accessed 1 November 2026.</li>
+<li>Anthropic. Equipping agents for the real world with Agent Skills. October 2025. <span class="url">https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills</span></li>
+<li>Model Context Protocol. Specification. <span class="url">https://modelcontextprotocol.io/specification</span> Accessed 1 November 2026.</li>
+<li>L. Zheng, W. Chiang, Y. Sheng, S. Zhuang, Z. Wu, Y. Zhuang, Z. Lin, Z. Li, D. Li, E. P. Xing, H. Zhang, J. E. Gonzalez, and I. Stoica. Judging LLM-as-a-judge with MT-Bench and Chatbot Arena. In <i>NeurIPS 2023</i>. arXiv:2306.05685.</li>
+<li>C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan. SWE-bench: Can language models resolve real-world GitHub issues? In <i>ICLR 2024</i>. arXiv:2310.06770.</li>
+<li>N. Shinn, F. Cassano, E. Berman, A. Gopinath, K. Narasimhan, and S. Yao. Reflexion: Language agents with verbal reinforcement learning. In <i>NeurIPS 2023</i>. arXiv:2303.11366.</li>
+<li>K. Beck. <i>Test-Driven Development: By Example</i>. Addison-Wesley, 2003.</li>
+<li>K. Greshake, S. Abdelnabi, S. Mishra, C. Endres, T. Holz, and M. Fritz. Not what you've signed up for: Compromising real-world LLM-integrated applications with indirect prompt injection. In <i>Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISec)</i>, 2023. arXiv:2302.12173.</li>
+<li>J. H. Saltzer and M. D. Schroeder. The protection of information in computer systems. <i>Proceedings of the IEEE</i>, 63(9):1278–1308, 1975.</li>
+<li>KiCad Developers. KiCad documentation: command-line interface (<code>kicad-cli</code>). <span class="url">https://docs.kicad.org/</span> Accessed 1 November 2026.</li>
+<li>kicad-sch-api: A Python library for creating and editing KiCad schematic files. <span class="url">https://pypi.org/project/kicad-sch-api/</span> Accessed 1 November 2026.</li>
+<li>J. Vincent. Superpowers: Core skills library for Claude Code. Version 7.0.1, commit 2ce8aa1, October 2026. MIT license. <span class="url">https://github.com/obra/superpowers</span></li>
+</ol>
+</div>
+
+<!-- ============================ APPENDIX ============================ -->
+<h2>Appendix A. Catalog layout</h2>
+<div class="listing">
+<pre>AgentTaxonomy/
+  GOAL.md                                 <span class="c"># goal statement and build order</span>
+  Composable-Agent-Taxonomy.pdf           <span class="c"># this paper</span>
+  catalog/
+    traits/      read-only, concise-reporter, runs-tests
+    skills/      security-review, pencil-design, stm32-firmware, issue-triage,
+                 kicad-eda, kicad-schematic
+    tools/       pencil, kicad, kicad-sch-api, stm32-toolchain, github
+                 <span class="c"># plus pen_dump.py and kicad_sch_dump.py, the inspect commands</span>
+    agents/      security-reviewer, ux-designer, firmware-engineer, issue-triager,
+                 drc-checker, schematic-engineer
+    packs/       superpowers (pack.yaml, LICENSE, skills/verification-before-completion)
+    hooks/       block-network.py
+    fixtures/    diffs, C source, design tokens, a .pen document, KiCAD boards
+                 and schematics, issue reports
+    validate.py  run_evals.py  make_agent.py  run_playbook.py  README.md
+  projects/smart-thermostat/
+    project-map.yaml
+    playbooks/   schematic-change-and-check, triage-and-review</pre>
+<p class="cap"><b>Listing 15.</b> Layout of the implemented catalog and the one project that binds it.</p>
+</div>
+
+<h2>Appendix B. Command reference</h2>
+<div class="listing">
+<pre>./validate.py                      <span class="c"># catalog + ../projects/*/project-map.yaml</span>
+./run_evals.py security-reviewer firmware-engineer
+./run_evals.py --all
+./run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml \
+    --aspect ux-design
+./run_evals.py security-reviewer --dry-run      <span class="c"># print composed prompt, run nothing</span>
+./make_agent.py "an agent that triages incoming GitHub issues" \
+    --map ../projects/smart-thermostat/project-map.yaml --aspect api --register
+./run_playbook.py ../projects/smart-thermostat/playbooks/schematic-change-and-check.yaml
+./run_playbook.py PLAYBOOK --run request="Add ..." file=fixtures/eda/x.kicad_sch   # one run, no judge</pre>
+<p class="cap"><b>Listing 16.</b> The four scripts. The eval runner also accepts a judge model, a per-agent budget (default 1.00 USD), a JSON report path, a workspace directory so that concurrent sessions do not share one, and a flag to keep workspaces.</p>
+</div>
+
+</body>
+</html>

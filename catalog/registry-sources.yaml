@@ -1,0 +1,121 @@
+# Trusted import sources. registry.py sync fetches them into ~/.local/share/kitbash/registry.db (outside the vault);
+# this file is the only registry state the vault holds, so the database is rebuildable from it alone.
+sources:
+  - name: anthropics-skills
+    kind: git-skills
+    url: https://github.com/anthropics/skills
+    commit: ca45fc496a3436251f191354091d557da31c15b5
+    layout: skills/{name}/SKILL.md          # where a skill lives in the repo, same convention as packs
+    pinned: 2026-11-02
+  - name: mcp-registry
+    kind: mcp-registry
+    api: https://registry.modelcontextprotocol.io/v0
+    namespaces:                              # exact prefix before '/'; the registry's own search is a substring match
+      - io.github.github                     # GitHub's official server
+      - io.github.modelcontextprotocol       # reference servers' namespace; empty on the registry as of 2026-11-02
+      - io.github.microsoft                  # vendor-owned namespaces below, added 2026-11-02; bind needs a provides tag
+      - io.github.upstash
+      - io.github.aws
+      - io.github.awslabs
+      - io.github.hashicorp
+      - io.github.grafana
+      - io.github.mongodb-js
+      - io.github.redis
+      - io.github.getsentry
+      - io.github.vercel
+      - com.vercel
+      - com.notion
+      - com.stripe
+      - com.atlassian
+    names:                                   # tool name to use when the last segment of a registry name is not unique
+      com.notion/mcp: notion-mcp
+      com.stripe/mcp: stripe-mcp
+    provides:                                # curator's capability tags, by Kitbash tool name (last segment of the registry name)
+      github-mcp-server: [source-control]
+      playwright-mcp: [browser-automation]
+      context7: [library-docs]
+      atlassian-mcp-server: [issue-tracking, wiki-docs]
+      notion-mcp: [knowledge-base]
+      stripe-mcp: [payments]
+      vercel-mcp: [deploy-hosting]
+      next-devtools-mcp: [nextjs-devtools]
+      aws-mcp: [cloud-infra]
+      terraform-mcp-server: [infra-as-code]
+      sentry-mcp: [error-monitoring]
+      mcp-grafana: [observability-dashboards]
+      mongodb-mcp-server: [document-database]
+      mcp-redis: [key-value-store]
+      redis-mcp: [key-value-store]
+      upstash-mcp-server: [key-value-store, message-queue, vector-search]
+      EnterpriseMCP: [identity-directory]
+      # untagged on purpose (2026-11-02): mcp-server (Upstash, unmaintained), mcp-proxy-for-aws (duplicate of aws-mcp),
+      # awesome-copilot (Copilot customizations), mcp-server-for-oscal (compliance niche)
+  # anthropics/claude-plugins-official, one source per plugin because a source takes one layout. Left out on
+  # 2026-11-02: frontend-design and skill-creator (same names as anthropics/skills, rule R3), hookify (skill name
+  # differs from its folder), example-plugin and playground (demos), external_plugins (access/configure x3).
+  - name: plugins-official-claude-code-setup
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/claude-code-setup/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-claude-md-management
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/claude-md-management/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-claude-security
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/claude-security/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-cwc-makers
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/cwc-makers/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-math-olympiad
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/math-olympiad/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-math-proof
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/math-proof/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-mcp-server-dev
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/mcp-server-dev/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-plugin-dev
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/plugin-dev/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-project-artifact
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/project-artifact/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-receipts
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/receipts/skills/{name}/SKILL.md
+    pinned: 2026-11-02
+  - name: plugins-official-session-report
+    kind: git-skills
+    url: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    layout: plugins/session-report/skills/{name}/SKILL.md
+    pinned: 2026-11-02

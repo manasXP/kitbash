@@ -1,0 +1,9 @@
+name: stm32-toolchain
+kind: cli
+description: arm-none-eabi GCC, STM32CubeProgrammer, and the project build script.
+provides: [embedded-toolchain]
+commands:
+  build: ./scripts/build.sh
+  flash: ./scripts/flash.sh
+  test: ./scripts/test.sh
+skill: skills/stm32-firmware/SKILL.md

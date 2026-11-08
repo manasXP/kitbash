@@ -1,0 +1,13 @@
+diff --git a/api/users.py b/api/users.py
+--- a/api/users.py
++++ b/api/users.py
+@@ -12,6 +12,12 @@ def get_user(conn, user_id):
+     return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+ 
++def find_users(conn, name):
++    # quick search for the admin page
++    query = "SELECT id, email FROM users WHERE name LIKE '%" + name + "%'"
++    return conn.execute(query).fetchall()
++
+ def delete_user(conn, user_id):
+     conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
