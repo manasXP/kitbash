@@ -1,8 +1,13 @@
 # Third-party notices
 
-The MIT License in `LICENSE` does not cover the files below. They keep the terms stated in their own file headers.
+The MIT License in `LICENSE` does not cover the files below. They keep their own licenses, included unmodified from upstream.
 
-- `catalog/fixtures/firmware/pdu/Drivers/`: STMicroelectronics and Arm driver and CMSIS code.
-- `catalog/fixtures/firmware/pdu/Core/Src/startup_stm32g474retx.s` and `catalog/fixtures/firmware/pdu/Core/Src/system_stm32g4xx.c`: vendor startup and system files.
+The firmware fixture at `catalog/fixtures/firmware/pdu/` includes vendor code from [STM32CubeG4](https://github.com/STMicroelectronics/STM32CubeG4) `v1.6.0`:
+
+| Files | Component and pinned commit | License | License file |
+|---|---|---|---|
+| `Drivers/STM32G4xx_HAL_Driver/` | [stm32g4xx_hal_driver](https://github.com/STMicroelectronics/stm32g4xx_hal_driver) `63c724f` | BSD-3-Clause | `Drivers/STM32G4xx_HAL_Driver/LICENSE.md` |
+| `Drivers/CMSIS/Device/ST/STM32G4xx/`, `Core/Src/system_stm32g4xx.c`, `Core/Src/startup_stm32g474retx.s` | [cmsis_device_g4](https://github.com/STMicroelectronics/cmsis_device_g4) `f4ee399` | Apache-2.0 | `Drivers/CMSIS/Device/ST/STM32G4xx/LICENSE.md` |
+| `Drivers/CMSIS/Include/` | Arm CMSIS, as shipped in STM32CubeG4 `v1.6.0` | Apache-2.0 | `Drivers/CMSIS/LICENSE.txt` |
 
 Packs in `catalog/packs/` record the upstream source and license of each third-party skill set. Those skills are fetched from upstream and keep their own licenses.
