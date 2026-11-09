@@ -2,7 +2,7 @@
 """Validate an agent catalog and the project maps that bind it.
 
 Usage:
-    validate.py                       # catalog containing this script + ../projects/*/project-map.yaml
+    validate.py                       # catalog containing this script + ../projects/*/ and ../private/projects/*/project-map.yaml
     validate.py path/to/project-map.yaml [...]
     validate.py --catalog DIR         # catalog only, no maps
 
@@ -795,7 +795,8 @@ def main(argv):
         if not maps:
             catalogs[here] = load_catalog(here, rep)
             check_catalog(catalogs[here], rep)
-            maps = sorted(glob.glob(os.path.join(here, "..", "projects", "*", "project-map.yaml")))
+            maps = sorted(glob.glob(os.path.join(here, "..", "projects", "*", "project-map.yaml")) +
+                          glob.glob(os.path.join(here, "..", "private", "projects", "*", "project-map.yaml")))
 
     for m in maps:
         check_project_map(os.path.normpath(m), rep, catalogs)

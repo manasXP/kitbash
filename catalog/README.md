@@ -1,6 +1,6 @@
 # Agent catalog
 
-Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `registry.py`.
+Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `release.py`, `registry.py`.
 Projects live outside the catalog and bind it through `project-map.yaml`. Its `catalog:` is resolved against the
 map's real location (symbolic links are followed, so a map linked into a project keeps working) or may be absolute,
 with `~` expanded; `playbooks/` is likewise looked up beside the real file. A project may also hold `playbooks/`,
@@ -40,7 +40,7 @@ beyond YAML. The notation that exists is three conventions inside scalars: `{nam
 commands, `tool.command` references in handoffs, and `expect_path` as an ordered list that must be a prefix of
 the steps. List order is merge order. Reopen only if an eval needs a branching playbook.
 
-All five scripts need PyYAML. On macOS the system interpreter has it: `/usr/bin/python3 <script>`.
+All the scripts need PyYAML. On macOS the system interpreter has it: `/usr/bin/python3 <script>`.
 
 ## Validator
 
@@ -209,7 +209,6 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 ./deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
 ./deploy.py MAP --target DIR --dry-run     # print the files, write nothing
 ./deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
-./deploy.py MAP --target DIR --plugin      # one plugin per repo under DIR (prototype)
 ```
 
 Writes the map into a real project's `.claude/`. Each (aspect, agent) pair becomes one Claude Code subagent,
@@ -225,15 +224,38 @@ produces, and refuses to overwrite a file it did not write unless `--force` is g
 (rule 6 included) or nothing is written. Tool files carry host-specific paths (KiCAD, Pen, a venv), so a deploy
 is for this machine; the agent files inline them as they stand.
 
-`--plugin` (prototype, 9 Nov 2026) groups aspects by the git checkout holding their paths, which may be absolute and
-outside DIR, and writes each group to `<repo>/.claude/skills/<repo>/` with the same agent bodies. Its manifest is
-`DIR/.claude/kitbash-plugins.json`, so a classic deploy in the same DIR stays in place. A plugin gives per-repo tool
-scope, not per-agent, and loads only when a session starts at the repo root, not in a subfolder. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks go to
-the plugin's `hooks/hooks.json` behind `hooks/only-for-agents.py`, which matches `agent_type` (`<repo>:<agent>`), and
-a map that binds an MCP tool is refused. Such a plugin loads only once that exact folder is trusted: `claude -p` or a
-trusted parent is not enough, and nothing warns that it did not load. Tested on the five Epicura repos on 9 Nov 2026:
-each loaded as `<plugin>@skills-dir` once trusted, and in `epicura-cloud` the hook blocked `security-reviewer` and left
-the main session alone.
+## Release
+
+```
+./release.py build PROJECT      # regenerate PROJECT/build/; touches no target repo
+./release.py evals PROJECT      # bills: run the evals of every agent without a current pass (--max-total, default $30)
+./release.py check PROJECT      # readiness to publish, and drift between targets and the build
+./release.py publish PROJECT    # open a PR in each target repo that differs (--dry-run to list)
+```
+
+Release is how a project's plugins and CLAUDE files reach its repos. Project content is private, so it lives in a
+private repo checked out at `private/projects/`, which this repo gitignores; the catalog and these scripts stay public.
+A project folder holds `project-map.yaml`, `playbooks/`, `release.yaml`, `claude/` (hand-written CLAUDE files) and
+`build/`. The options of `release.yaml` are in the docstring of `release.py`.
+
+`build` generates `build/plugins/<plugin>/`, one plugin per git repo, grouping aspects by the checkout holding their
+paths, which may be absolute and outside the target. The agent bodies are the same text `deploy.py` writes.
+`build/lock.json` records, per (aspect, agent), a hash of the agent file, its hooks and its evals, and `evals` records
+the result against that hash, so any change invalidates the pass. Fixtures are not in the hash.
+
+Merging a PR in the private repo is the approval: its diff is exactly what each agent will receive, beside the eval
+result for that text. `publish` refuses unless that repo is clean and level with `origin/main`, a fresh build matches
+the committed one, and every agent has a passing result for its current hash. It then opens one PR per target repo
+from a throwaway worktree, so checkouts stay as they are. A destination outside any git repo, such as a project's docs
+workspace, is written directly. Tested end to end against scratch remotes, including each refusal.
+
+A plugin gives per-repo tool scope, not per-agent, and loads only when a session starts at the repo root, not in a
+subfolder. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks go to the plugin's `hooks/hooks.json`
+behind `hooks/only-for-agents.py`, which matches `agent_type` (`<plugin>:<agent>`), and a map that binds an MCP tool is
+refused. A plugin cannot carry a `CLAUDE.md`, so those are separate destinations. It loads only once that exact folder
+is trusted: `claude -p` or a trusted parent is not enough, and nothing warns that it did not load. `publish` never sets
+trust. Tested on the five Epicura repos on 9 Nov 2026: each loaded as `<plugin>@skills-dir` once trusted, and in
+`epicura-cloud` the hook blocked `security-reviewer` and left the main session alone.
 
 ## Firmware fixture
 
