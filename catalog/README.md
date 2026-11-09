@@ -210,6 +210,7 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 ./deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
 ./deploy.py MAP --target DIR --dry-run     # print the files, write nothing
 ./deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
+./deploy.py MAP --target DIR --plugin      # one plugin per repo under DIR (prototype)
 ```
 
 Writes the map into a real project's `.claude/`. Each (aspect, agent) pair becomes one Claude Code subagent,
@@ -224,6 +225,16 @@ name and its `paths`, which is what Claude Code reads when deciding which subage
 produces, and refuses to overwrite a file it did not write unless `--force` is given. The map must validate
 (rule 6 included) or nothing is written. Tool files carry host-specific paths (KiCAD, Pen, a venv), so a deploy
 is for this machine; the agent files inline them as they stand.
+
+`--plugin` (prototype, 9 Nov 2026) groups aspects by the git checkout holding their paths, which may be absolute and
+outside DIR, and writes each group to `<repo>/.claude/skills/<repo>/` with the same agent bodies. Its manifest is
+`DIR/.claude/kitbash-plugins.json`, so a classic deploy in the same DIR stays in place. A plugin gives per-repo tool
+scope, not per-agent, and loads only when a session starts at the repo root, not in a subfolder. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks go to
+the plugin's `hooks/hooks.json` behind `hooks/only-for-agents.py`, which matches `agent_type` (`<repo>:<agent>`), and
+a map that binds an MCP tool is refused. Such a plugin loads only once that exact folder is trusted: `claude -p` or a
+trusted parent is not enough, and nothing warns that it did not load. Tested with `--plugin-dir` on a scratch mirror
+of the Epicura repos: the hook blocked `security-reviewer` and left the main session and `backend-engineer` alone.
+Loading from `.claude/skills/` in a trusted folder has not been run.
 
 ## Firmware fixture
 
