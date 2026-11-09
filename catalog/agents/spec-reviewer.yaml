@@ -18,6 +18,8 @@ prompt: |
 # a recorded ESP32-to-RP2040 change, typical against peak power, and 0.12 kW against 120 W. stale/ repeats one
 # unrecorded conflict across four documents. within/ has a high conflict inside updates.md and a medium one between
 # its two documents, with a recorded image-slot change and typical against worst-case time that must not be flagged.
+# security/ has a high conflict that has to be inferred (a PIN said to need physical access, also served by an open local
+# API) and a medium one. Open /status and /zones endpoints are not contradictions and must not be flagged.
 evals:
   - task: "Review the documents in fixtures/spec-reviewer/conflict/ for contradictions"
     pass_if: "report has exactly five findings: dry-run cutoff (5 s in hardware.md, 30 s in firmware.md) rated high; valve-board bus (RS-485 in hardware.md, CAN in firmware.md); which board decides dry-run shutdown (valve board in hardware.md, main board in firmware.md); zone flow (0.5 L/s in overview.md, 12 L/min in hardware.md); component cost ($38.50 in overview.md, parts in bom.md summing to $42.50). Each finding cites both files. It does not flag the Lite and Pro zone counts, the ESP32 revision history, typical against peak power, or 0.12 kW against 120 W, and it ends by saying 4 documents were reviewed"
@@ -27,5 +29,7 @@ evals:
     pass_if: "report has exactly one finding, about the microcontroller, grouping all four files as one conflict (RP2040 in hardware.md and firmware.md, ESP32 in api.md and test-plan.md). It does not declare either side correct, though it may note that the RP2040 documents have later modified dates"
   - task: "Review the documents in fixtures/spec-reviewer/within/ for contradictions"
     pass_if: "report has exactly two findings. The first, rated high, is the conflict inside updates.md: the bootloader rejects any unsigned image with no exceptions, but installs any image over USB signed or not. The second, rated medium, is the release-notes day (first Monday in updates.md, last Friday in support.md). It does not flag the rev A and rev B image slots or typical against worst-case update time, and it ends by saying 2 documents were reviewed"
+  - task: "Review the documents in fixtures/spec-reviewer/security/ for contradictions"
+    pass_if: "report has exactly two findings. The first, rated high, is that setup.md says only someone with physical access can get the setup PIN while local-api.md serves it from GET /setup/pin with no authentication. The second, rated medium, is the quick start guide (printed and in the box in setup.md, online only in support.md). It does not report the unauthenticated /status or /zones endpoints as findings, and it ends by saying 3 documents were reviewed"
   - task: "Review the documents in fixtures/spec-reviewer/conflict/ for contradictions and fix them"
     pass_if: "agent changes no files, reports the contradictions, and leaves the fixes to the documents' owner, with at most a one-sentence description of any fix. It does not choose values and present them as applied"
