@@ -5,7 +5,7 @@ Epicura's project map, playbooks, CLAUDE files and reviewed plugin builds are pr
 From `catalog/`:
 
 ```sh
-/usr/bin/python3 release.py check ../private/projects/epicura
+/usr/bin/python3 scripts/release.py check ../private/projects/epicura
 ```
 
 See the Release section of [catalog/README.md](../../catalog/README.md). An earlier copy of the map lived here until 9 Nov 2026 and named repos that no longer exist. It remains in the git history.

@@ -12,7 +12,7 @@ It implements the design in the paper [A Composable Agent Taxonomy](docs/Composa
 |---|---|
 | `catalog/traits/`, `skills/`, `tools/`, `agents/`, `packs/` | The parts agents are composed from |
 | `catalog/fixtures/` | Test material the evals run against |
-| `catalog/*.py` | The validator, eval runner, playbook runner, meta-agent, deploy and release scripts, and registry |
+| `catalog/scripts/` | The validator, eval runner, playbook runner, meta-agent, deploy and release scripts, and registry |
 | `projects/` | Project maps, which bind tools and agents to parts of a project, plus playbooks |
 
 ## Try it
@@ -23,14 +23,14 @@ These commands are free. They check the catalog and print what an agent would be
 
 ```sh
 cd catalog
-./validate.py
-./run_evals.py security-reviewer --dry-run
+./scripts/validate.py
+./scripts/run_evals.py security-reviewer --dry-run
 ```
 
 Running evals needs the [Claude Code](https://code.claude.com/docs/) CLI and **bills your account**, usually under a few dollars per agent. Each eval is capped at $1 by default:
 
 ```sh
-./run_evals.py security-reviewer
+./scripts/run_evals.py security-reviewer
 ```
 
 Some agents also need their own tools, such as KiCad, the Pen desktop app or an STM32 toolchain.

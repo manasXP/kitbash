@@ -8,21 +8,21 @@ Not built yet: map synthesis, a `/kitbash` skill and `csv-index` registry source
 
 ## Commands
 
-There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`: on this machine `./validate.py` and plain `python3` resolve to an interpreter without PyYAML and fail. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
+There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`: on this machine `./scripts/validate.py` and plain `python3` resolve to an interpreter without PyYAML and fail. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
 
 Free, no model call:
 
 ```sh
-/usr/bin/python3 validate.py                       # catalog + maps in ../projects/ and ../private/projects/; exit 1 on any error
-/usr/bin/python3 validate.py PATH/TO/project-map.yaml                # one map, which may live outside this repo
-/usr/bin/python3 run_evals.py security-reviewer --dry-run           # print composed prompt and command
-/usr/bin/python3 run_playbook.py PLAYBOOK --dry-run
-/usr/bin/python3 deploy.py MAP --target DIR --dry-run                # DIR must already exist
-/usr/bin/python3 release.py build ../private/projects/NAME           # regenerate build/; touches no target repo
-/usr/bin/python3 release.py check ../private/projects/NAME           # readiness to publish, and drift in target repos
-/usr/bin/python3 release.py publish ../private/projects/NAME --dry-run
-/usr/bin/python3 registry.py search "pdf forms" [--kind skill|mcp]
-/usr/bin/python3 registry.py sync [NAME ...]       # network, no model; under two minutes
+/usr/bin/python3 scripts/validate.py                       # catalog + maps in ../projects/ and ../private/projects/; exit 1 on any error
+/usr/bin/python3 scripts/validate.py PATH/TO/project-map.yaml                # one map, which may live outside this repo
+/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run           # print composed prompt and command
+/usr/bin/python3 scripts/run_playbook.py PLAYBOOK --dry-run
+/usr/bin/python3 scripts/deploy.py MAP --target DIR --dry-run                # DIR must already exist
+/usr/bin/python3 scripts/release.py build ../private/projects/NAME           # regenerate build/; touches no target repo
+/usr/bin/python3 scripts/release.py check ../private/projects/NAME           # readiness to publish, and drift in target repos
+/usr/bin/python3 scripts/release.py publish ../private/projects/NAME --dry-run
+/usr/bin/python3 scripts/registry.py search "pdf forms" [--kind skill|mcp]
+/usr/bin/python3 scripts/registry.py sync [NAME ...]       # network, no model; under two minutes
 ```
 
 A clean validator run ends with 0 errors and 3 warnings: gstack, gsd and super-board have empty pack bases on purpose.
@@ -30,11 +30,11 @@ A clean validator run ends with 0 errors and 3 warnings: gstack, gsd and super-b
 These bill the user's account through the `claude` CLI. `--budget` caps each agent run or playbook step (default $1.00), and the judge gets $0.20:
 
 ```sh
-/usr/bin/python3 run_evals.py security-reviewer    # one agent is the smallest unit; there is no per-eval selector
-/usr/bin/python3 run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT   # with pack and MCP tools
-/usr/bin/python3 run_playbook.py PLAYBOOK          # runs the playbook's evals
-/usr/bin/python3 release.py evals ../private/projects/NAME   # every agent without a current pass; stops starting agents at --max-total, default $30
-/usr/bin/python3 make_agent.py "..."               # also bills with --dry-run, which still makes the design call
+/usr/bin/python3 scripts/run_evals.py security-reviewer    # one agent is the smallest unit; there is no per-eval selector
+/usr/bin/python3 scripts/run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT   # with pack and MCP tools
+/usr/bin/python3 scripts/run_playbook.py PLAYBOOK          # runs the playbook's evals
+/usr/bin/python3 scripts/release.py evals ../private/projects/NAME   # every agent without a current pass; stops starting agents at --max-total, default $30
+/usr/bin/python3 scripts/make_agent.py "..."               # also bills with --dry-run, which still makes the design call
 ```
 
 Some evals need the real tool: KiCad, the Pen desktop app, the FreeCAD app with its addon, or an STM32 toolchain. `catalog/README.md` has the per-fixture requirements.

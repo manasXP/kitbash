@@ -1,6 +1,6 @@
 # Agent catalog
 
-Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `release.py`, `registry.py`.
+Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, and `scripts/` holding `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `release.py`, `registry.py`. Run the scripts from this directory.
 Projects live outside the catalog and bind it through `project-map.yaml`. Its `catalog:` is resolved against the
 map's real location (symbolic links are followed, so a map linked into a project keeps working) or may be absolute,
 with `~` expanded; `playbooks/` is likewise looked up beside the real file. A project may also hold `playbooks/`,
@@ -45,9 +45,9 @@ All the scripts need PyYAML. On macOS the system interpreter has it: `/usr/bin/p
 ## Validator
 
 ```
-./validate.py                                  # this catalog + ../projects/*/project-map.yaml
-./validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field
-./validate.py --catalog DIR                    # catalog only
+./scripts/validate.py                                  # this catalog + ../projects/*/project-map.yaml
+./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field
+./scripts/validate.py --catalog DIR                    # catalog only
 ```
 
 Exit status 1 on any error. Warnings are printed but do not fail the run.
@@ -83,10 +83,10 @@ composed; R7 a sources file with no database is a warning, and imports are then 
 ## Registry
 
 ```
-./registry.py sources                       # trusted sources and their sync state
-./registry.py sync [NAME ...]               # fetch every source (or the named ones) into the database
-./registry.py search "pdf forms" [--kind skill|mcp] [--limit N] [--json]
-./registry.py show pdf                      # license, resources, checkout path; for a server: config and secret names
+./scripts/registry.py sources                       # trusted sources and their sync state
+./scripts/registry.py sync [NAME ...]               # fetch every source (or the named ones) into the database
+./scripts/registry.py search "pdf forms" [--kind skill|mcp] [--limit N] [--json]
+./scripts/registry.py show pdf                      # license, resources, checkout path; for a server: config and secret names
 ```
 
 Skills and MCP servers imported in bulk from trusted sources live in a SQLite registry, not in the catalog. The
@@ -143,10 +143,10 @@ replaces the browsing step with a local search once the datasets are bought.
 ## Eval runner
 
 ```
-./run_evals.py security-reviewer firmware-engineer
-./run_evals.py --all
-./run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
-./run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
+./scripts/run_evals.py security-reviewer firmware-engineer
+./scripts/run_evals.py --all
+./scripts/run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
+./scripts/run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
 ```
 
 Each eval runs `claude -p` in a fresh workspace under `.evals/` holding a copy of `fixtures/`.
@@ -188,10 +188,10 @@ localhost:9875) for the agent's MCP calls to work. `fixtures/mech/bracket.FCStd`
 ## Playbook runner
 
 ```
-./run_playbook.py ../projects/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
-./run_playbook.py PLAYBOOK --run request="Add ..." file=fixtures/eda/x.kicad_sch            # one run, no judge
-./run_playbook.py ../projects/smart-thermostat/playbooks/triage-and-review.yaml              # output handoff
-./run_playbook.py PLAYBOOK --dry-run                                                        # print, run nothing
+./scripts/run_playbook.py ../projects/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
+./scripts/run_playbook.py PLAYBOOK --run request="Add ..." file=fixtures/eda/x.kicad_sch            # one run, no judge
+./scripts/run_playbook.py ../projects/smart-thermostat/playbooks/triage-and-review.yaml              # output handoff
+./scripts/run_playbook.py PLAYBOOK --dry-run                                                        # print, run nothing
 ```
 
 A playbook is read by this script, never by a model. All steps of one run share a workspace, so a later agent
@@ -207,9 +207,9 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 ## Deploy
 
 ```
-./deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
-./deploy.py MAP --target DIR --dry-run     # print the files, write nothing
-./deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
+./scripts/deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+./scripts/deploy.py MAP --target DIR --dry-run     # print the files, write nothing
+./scripts/deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
 ```
 
 Writes the map into a real project's `.claude/`. Each (aspect, agent) pair becomes one Claude Code subagent,
@@ -228,10 +228,10 @@ is for this machine; the agent files inline them as they stand.
 ## Release
 
 ```
-./release.py build PROJECT      # regenerate PROJECT/build/; touches no target repo
-./release.py evals PROJECT      # bills: run the evals of every agent without a current pass (--max-total, default $30)
-./release.py check PROJECT      # readiness to publish, and drift between targets and the build
-./release.py publish PROJECT    # open a PR in each target repo that differs (--dry-run to list)
+./scripts/release.py build PROJECT      # regenerate PROJECT/build/; touches no target repo
+./scripts/release.py evals PROJECT      # bills: run the evals of every agent without a current pass (--max-total, default $30)
+./scripts/release.py check PROJECT      # readiness to publish, and drift between targets and the build
+./scripts/release.py publish PROJECT    # open a PR in each target repo that differs (--dry-run to list)
 ```
 
 Release is how a project's plugins and CLAUDE files reach its repos. Project content is private, so it lives in a
@@ -320,10 +320,10 @@ and water), and an empty `out/` the evals write into. Written 2 Nov 2026.
 ## Meta-agent
 
 ```
-./make_agent.py "an agent that triages incoming GitHub issues"
-./make_agent.py "..." --map ../projects/smart-thermostat/project-map.yaml --aspect api --register
-./make_agent.py "..." --dry-run        # print the proposal, write nothing
-./make_agent.py "..." --no-evals       # stop after validation
+./scripts/make_agent.py "an agent that triages incoming GitHub issues"
+./scripts/make_agent.py "..." --map ../projects/smart-thermostat/project-map.yaml --aspect api --register
+./scripts/make_agent.py "..." --dry-run        # print the proposal, write nothing
+./scripts/make_agent.py "..." --no-evals       # stop after validation
 ```
 
 Four stages. One headless Claude call (`--model`, default claude-opus-5-5) reads the catalog

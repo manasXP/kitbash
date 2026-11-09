@@ -186,8 +186,8 @@
 
 <h2>How to use this guide</h2>
 <p>New to Kitbash? Read chapters 2 to 4 and run the commands as you go. Part II is a set of independent tasks, so go straight to the one you need. Part III is for looking things up. Commands are marked by cost:</p>
-<div class="code free"><div class="cap">Free: no model call</div><pre>/usr/bin/python3 validate.py</pre></div>
-<div class="code bill"><div class="cap">Bills your account through the claude CLI</div><pre>/usr/bin/python3 run_evals.py security-reviewer</pre></div>
+<div class="code free"><div class="cap">Free: no model call</div><pre>/usr/bin/python3 scripts/validate.py</pre></div>
+<div class="code bill"><div class="cap">Bills your account through the claude CLI</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer</pre></div>
 
 <h2>What exists today</h2>
 <table>
@@ -224,15 +224,15 @@ cd kitbash/catalog
 /usr/bin/python3 -m pip install --user pyyaml               # only if the line above failed</pre></div>
 
 <div class="note"><b class="h">Which Python to use</b>
-Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/python3</code>, the macOS system interpreter. Plain <code>python3</code> or <code>./validate.py</code> can resolve to a different interpreter without PyYAML and fail with <code>No module named 'yaml'</code>. On other systems, use any Python 3.9 or later that has PyYAML and substitute its path.</div>
+Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/python3</code>, the macOS system interpreter. Plain <code>python3</code> or <code>./scripts/validate.py</code> can resolve to a different interpreter without PyYAML and fail with <code>No module named 'yaml'</code>. On other systems, use any Python 3.9 or later that has PyYAML and substitute its path.</div>
 
 <h2>Check that it works</h2>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py</pre></div>
 <p>The first run fetches the pinned skill packs. The last line of a clean first run looks like this:</p>
 <div class="code out"><div class="cap">Output on a fresh clone</div><pre>0 error(s), 4 warning(s); 11 agent(s), 1 project map(s), 2 playbook(s) checked</pre></div>
 <p>Three of the warnings are permanent and harmless: the <code>gsd</code>, <code>gstack</code> and <code>super-board</code> packs have empty bases on purpose. The fourth says the registry isn't synced. Clear it now with:</p>
-<div class="code free"><div class="cap">Free: uses the network, no model. Takes under two minutes.</div><pre>/usr/bin/python3 registry.py sync
-/usr/bin/python3 validate.py</pre></div>
+<div class="code free"><div class="cap">Free: uses the network, no model. Takes under two minutes.</div><pre>/usr/bin/python3 scripts/registry.py sync
+/usr/bin/python3 scripts/validate.py</pre></div>
 <div class="code out"><div class="cap">Output once synced: this is the clean state</div><pre>0 error(s), 3 warning(s); 11 agent(s), 1 project map(s), 2 playbook(s) checked</pre></div>
 
 <h2>What costs money</h2>
@@ -251,7 +251,7 @@ Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/
 <table>
   <thead><tr><th style="width:45%">Location</th><th>Contents</th></tr></thead>
   <tbody>
-  <tr><td><code>catalog/</code></td><td>Parts, fixtures and scripts</td></tr>
+  <tr><td><code>catalog/</code></td><td>Parts and fixtures, with the scripts in <code>catalog/scripts/</code></td></tr>
   <tr><td><code>projects/&lt;name&gt;/</code></td><td>Project maps and playbooks you can publish</td></tr>
   <tr><td><code>private/projects/&lt;name&gt;/</code></td><td>A separate private repo for project content. Git ignores this folder.</td></tr>
   <tr><td><code>~/.cache/kitbash/packs/</code>, <code>sources/</code></td><td>Pinned checkouts of packs and imported skills</td></tr>
@@ -266,7 +266,7 @@ Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/
 
 <h3 class="step"><span class="s">Step 1.</span> See what an agent is made of</h3>
 <p><code>--dry-run</code> prints the exact prompt an agent receives, then the commands that would run for each eval, without calling a model.</p>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run</pre></div>
 <div class="code out"><div class="cap">Output, shortened</div><pre>===== security-reviewer: composed system prompt =====
 ## Trait: read-only
 You may inspect the codebase but never modify it. Report findings; do not fix them.
@@ -284,30 +284,30 @@ You review pull requests for security defects only. Ignore style, naming, ...
 
 <h3 class="step"><span class="s">Step 2.</span> See what a project adds</h3>
 <p>Add a map and an aspect, and the agent is composed the way that project would run it.</p>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run \
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run \
   --map ../projects/smart-thermostat/project-map.yaml --aspect api</pre></div>
 <p>The prompt now starts with <code>## Pack superpowers, skill: verification-before-completion</code>, because that map attaches the <code>superpowers</code> pack and a pack's text comes first.</p>
 
 <h3 class="step"><span class="s">Step 3.</span> Search for parts you could import</h3>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 registry.py search "pdf forms" --limit 2
-/usr/bin/python3 registry.py show github-mcp-server</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/registry.py search "pdf forms" --limit 2
+/usr/bin/python3 scripts/registry.py show github-mcp-server</pre></div>
 <div class="code out"><div class="cap">Output of the search, shortened</div><pre>skill  pdf                          anthropics-skills  Use this skill whenever the user ...
 skill  canvas-design                anthropics-skills  Create beautiful visual art in ...</pre></div>
 
 <h3 class="step"><span class="s">Step 4.</span> Trace a multi-step playbook</h3>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_playbook.py --dry-run \
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/run_playbook.py --dry-run \
   ../projects/smart-thermostat/playbooks/triage-and-review.yaml</pre></div>
 <p>The prompts are long. Look for the lines that start with <code>=====</code> and <code>-----</code>. They show each step's agent, model, task, tools and the condition for moving on, such as <code>{'output': 'severity', 'in': ['high', 'critical']}</code>.</p>
 
 <h3 class="step"><span class="s">Step 5.</span> Preview a deploy</h3>
 <div class="code free"><div class="cap">Free: the target folder must exist, but nothing is written to it</div><pre>mkdir -p /tmp/kitbash-demo
-/usr/bin/python3 deploy.py ../projects/smart-thermostat/project-map.yaml \
+/usr/bin/python3 scripts/deploy.py ../projects/smart-thermostat/project-map.yaml \
   --target /tmp/kitbash-demo --dry-run</pre></div>
 <p>You see the complete text of every file a deploy would write, ending with <code>(dry run, nothing written; 7 file(s) for /tmp/kitbash-demo)</code>.</p>
 
 <h3 class="step"><span class="s">Step 6.</span> Run a real eval</h3>
 <p>This is the one step that spends money. <code>security-reviewer</code> is a good first choice because its evals need no external tools. One agent is the smallest unit you can run.</p>
-<div class="code bill"><div class="cap">Bills: three evals, at most $3.60 at the default caps</div><pre>/usr/bin/python3 run_evals.py security-reviewer</pre></div>
+<div class="code bill"><div class="cap">Bills: three evals, at most $3.60 at the default caps</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer</pre></div>
 <p>Each eval prints one line, then a total. This shows the format, with capitals in place of real values:</p>
 <div class="code out"><div class="cap">Output format</div><pre>pass   security-reviewer[0]  $COST  SECONDSs  REASON FROM THE JUDGE
 pass   security-reviewer[1]  $COST  SECONDSs  REASON FROM THE JUDGE
@@ -391,11 +391,11 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 <h1 class="flow" id="c5">5. Evaluate an agent</h1>
 <p class="lead">Evals are how an agent earns its place in a project. Don't route an agent in a map until its evals pass.</p>
 
-<div class="code free"><div class="cap">Free: preview first</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run</pre></div>
-<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 run_evals.py security-reviewer                     # one agent
-/usr/bin/python3 run_evals.py security-reviewer issue-triager       # several
-/usr/bin/python3 run_evals.py security-reviewer --budget 0.50 --report results.json
-/usr/bin/python3 run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT</pre></div>
+<div class="code free"><div class="cap">Free: preview first</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run</pre></div>
+<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer                     # one agent
+/usr/bin/python3 scripts/run_evals.py security-reviewer issue-triager       # several
+/usr/bin/python3 scripts/run_evals.py security-reviewer --budget 0.50 --report results.json
+/usr/bin/python3 scripts/run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT</pre></div>
 
 <h2>What happens during a run</h2>
 <ol class="steps">
@@ -491,11 +491,11 @@ evals:
 <p>These three evals follow a useful pattern: one task with a defect to find, one clean input that must produce no false alarm, and one that tests a boundary the agent must hold.</p>
 
 <h3 class="step"><span class="s">Step 5.</span> Validate and read the composed prompt</h3>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py
-/usr/bin/python3 run_evals.py docs-reviewer --dry-run</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py
+/usr/bin/python3 scripts/run_evals.py docs-reviewer --dry-run</pre></div>
 
 <h3 class="step"><span class="s">Step 6.</span> Run the evals</h3>
-<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 run_evals.py docs-reviewer</pre></div>
+<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 scripts/run_evals.py docs-reviewer</pre></div>
 <p>If an eval fails, read the judge's reason and decide what is wrong. It might be the agent, the skill or the pass condition. Rerun with <code>--keep</code> if you need to see the workspace. Once all pass, you can route the agent in a map (<a href="#c8">chapter 8</a>).</p>
 <div class="note"><b class="h">A real failure: when the pass condition is wrong</b>
 The third eval first required the agent to &ldquo;describe the fix in one sentence&rdquo;, and it failed. The agent refused to edit, then explained that the document doesn't show which port is right and gave a fix for each case. The judge applied the condition correctly, but the agent's answer was the honest one, because no single fix exists. So the condition changed, not the agent. Tightening the agent would have taught it to guess. When an eval fails, read the agent's message as well as the judge's reason.</div>
@@ -531,11 +531,14 @@ skill: null                    # or skills/NAME/SKILL.md, to teach agents how to
 <!-- ============================================================ 7 -->
 <h1 class="flow" id="c7">7. Create an agent from a description</h1>
 <p class="lead"><code>make_agent.py</code> is the meta-agent. Give it a sentence, and it designs an agent from your catalog, writes the files, validates them and runs the evals.</p>
-<div class="code bill"><div class="cap">Every line bills, including --dry-run</div><pre>/usr/bin/python3 make_agent.py "an agent that triages GitHub issues" --dry-run   # write nothing
-/usr/bin/python3 make_agent.py "..." --no-evals             # stop after validation
-/usr/bin/python3 make_agent.py "..."                        # full run, not added to any map
-/usr/bin/python3 make_agent.py "..." --search "pdf forms"   # also offer matching imported skills
-/usr/bin/python3 make_agent.py "..." --map MAP --aspect ASPECT --register   # add on an all-pass</pre></div>
+<div class="code bill"><div class="cap">Every line bills, including --dry-run</div><pre>/usr/bin/python3 scripts/make_agent.py "an agent that triages GitHub issues" \
+    --dry-run                                            # write nothing
+/usr/bin/python3 scripts/make_agent.py "..." --no-evals  # stop after validation
+/usr/bin/python3 scripts/make_agent.py "..."             # full run, not added to any map
+/usr/bin/python3 scripts/make_agent.py "..." \
+    --search "pdf forms"                                 # also offer matching imported skills
+/usr/bin/python3 scripts/make_agent.py "..." \
+    --map MAP --aspect ASPECT --register                 # add on an all-pass</pre></div>
 
 <h2>The four stages</h2>
 <table class="keep">
@@ -581,10 +584,10 @@ aspects:
     tools: [python-toolchain]
     agents: [security-reviewer, issue-triager, backend-engineer]
 shared_tools: [github]          # visible in every aspect</pre></div>
-<div class="code free"><div class="cap">Free: check one map. It may live outside this repo.</div><pre>/usr/bin/python3 validate.py ../projects/acme/project-map.yaml</pre></div>
-<div class="code bill"><div class="cap">Bills: evaluate each agent the way this project will run it</div><pre>/usr/bin/python3 run_evals.py docs-reviewer \
+<div class="code free"><div class="cap">Free: check one map. It may live outside this repo.</div><pre>/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml</pre></div>
+<div class="code bill"><div class="cap">Bills: evaluate each agent the way this project will run it</div><pre>/usr/bin/python3 scripts/run_evals.py docs-reviewer \
   --map ../projects/acme/project-map.yaml --aspect docs
-/usr/bin/python3 run_evals.py security-reviewer \
+/usr/bin/python3 scripts/run_evals.py security-reviewer \
   --map ../projects/acme/project-map.yaml --aspect backend</pre></div>
 
 <div class="note"><b class="h">The validator doesn't check eval results</b>
@@ -625,9 +628,9 @@ It confirms that the map is consistent, not that its agents have passed. Running
 <p class="lead">The registry holds parts imported in bulk from trusted sources. Once synced, an imported skill or server works by name, just like a catalog file.</p>
 
 <h2>Find and use a part</h2>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 registry.py sources                       # trusted sources and their sync state
-/usr/bin/python3 registry.py search "pdf forms" --kind skill --limit 5
-/usr/bin/python3 registry.py show pdf                      # license, resources, checkout path</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/registry.py sources   # trusted sources and their sync state
+/usr/bin/python3 scripts/registry.py search "pdf forms" --kind skill --limit 5
+/usr/bin/python3 scripts/registry.py show pdf  # license, resources, checkout path</pre></div>
 <p>To use a <strong>skill</strong>, add its name to an agent's <code>skills</code> list and rerun that agent's evals. Only the <code>SKILL.md</code> text is composed. If the skill also ships scripts or other files, the validator warns you that they won't be available. <code>deploy.py</code> warns when an agent composes a skill with a proprietary license, such as Anthropic's docx, pdf, pptx and xlsx skills, and writes it anyway.</p>
 <p>To use an <strong>MCP server</strong>, bind it in a map like any other tool:</p>
 <div class="code"><pre>tools: [context7]</pre></div>
@@ -655,7 +658,7 @@ It confirms that the map is consistent, not that its agents have passed. Running
   <li><strong>Search the registry first.</strong> It may already be there.</li>
   <li><strong>Vet the candidate.</strong> Shallow-clone it and check its layout, frontmatter, that each name matches its folder, its license and any name collisions.</li>
   <li><strong>Add it to the sources file.</strong> Use one of the forms below.</li>
-  <li><strong>Sync:</strong> <code>/usr/bin/python3 registry.py sync NAME</code>. Any edit to this file, including <code>provides</code> or <code>names</code>, needs a sync, or the validator reports the source as stale.</li>
+  <li><strong>Sync:</strong> <code>/usr/bin/python3 scripts/registry.py sync NAME</code>. Any edit to this file, including <code>provides</code> or <code>names</code>, needs a sync, or the validator reports the source as stale.</li>
 </ol>
 <div class="code"><div class="cap">A skill repo, pinned to a full 40-character commit</div><pre>- name: anthropics-skills
   kind: git-skills
@@ -735,21 +738,22 @@ evals:
 <p>After the first step, each task is prefixed with the diff the previous step made, so the next agent knows what changed.</p>
 
 <h2>Run one</h2>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py ../projects/acme/project-map.yaml   # also checks its playbooks
-/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --dry-run</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml   # also checks its playbooks
+/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml \
+    --dry-run</pre></div>
 <div class="code bill"><div class="cap">Bills. --budget is per step, default $1.00.</div><pre># Run its evals. A wrong path fails without calling the judge.
-/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml
+/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml
 
 # One real run with your own inputs, and no judge
-/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --run \
+/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --run \
   issue=fixtures/issue-triager/issue-search-crash.md diff=fixtures/security/pr-sql-injection.diff</pre></div>
 <p>Each run also reports its handoffs, such as <code>handoff after issue-triager: continue (...)</code>, and the path it took. Add <code>--keep</code> to keep the shared workspace.</p>
 
 <!-- ============================================================ 11 -->
 <h1 class="flow" id="c11">11. Deploy to a project</h1>
 <p class="lead"><code>deploy.py</code> writes a map's agents straight into a project's <code>.claude/</code> folder. It suits your own machine and maps that bind MCP tools. For anything that needs review, use a release (<a href="#c12">chapter 12</a>).</p>
-<div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 deploy.py ../projects/acme/project-map.yaml --target ~/code/acme --dry-run
-/usr/bin/python3 deploy.py ../projects/acme/project-map.yaml --target ~/code/acme</pre></div>
+<div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme --dry-run
+/usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme</pre></div>
 <div class="code out"><div class="cap">Output</div><pre>wrote    .claude/agents/docs-reviewer.md
 wrote    .claude/agents/security-reviewer.md
 wrote    .claude/kitbash/hooks/block-network.py
@@ -821,13 +825,13 @@ eval_budget: {docs-reviewer: 2.50}  # optional: per-run budget by agent, default
 <p>Aspect <code>paths</code> are relative to <code>target</code> or absolute. Each aspect's paths must sit inside one Git repo, because Kitbash generates one plugin per repo.</p>
 
 <h2>Run a release</h2>
-<div class="code free"><div class="cap">1. Free: generate build/. This touches no target repo.</div><pre>/usr/bin/python3 release.py build ../private/projects/acme</pre></div>
-<div class="code bill"><div class="cap">2. Bills: run the evals of every agent without a current pass. Stops starting agents at $30 by default.</div><pre>/usr/bin/python3 release.py evals ../private/projects/acme
-/usr/bin/python3 release.py evals ../private/projects/acme \
+<div class="code free"><div class="cap">1. Free: generate build/. This touches no target repo.</div><pre>/usr/bin/python3 scripts/release.py build ../private/projects/acme</pre></div>
+<div class="code bill"><div class="cap">2. Bills: run the evals of every agent without a current pass. Stops starting agents at $30 by default.</div><pre>/usr/bin/python3 scripts/release.py evals ../private/projects/acme
+/usr/bin/python3 scripts/release.py evals ../private/projects/acme \
   --only docs/docs-reviewer --max-total 5 --jobs 1</pre></div>
 <p><strong>3. Review and approve.</strong> Commit <code>build/</code> and open a pull request in the private repo. Its diff is exactly what each agent will receive, and <code>build/lock.json</code> holds the eval results for that text. Merging is the approval. Then update your local <code>main</code>.</p>
-<div class="code free"><div class="cap">4. Free: check readiness, then preview</div><pre>/usr/bin/python3 release.py check ../private/projects/acme
-/usr/bin/python3 release.py publish ../private/projects/acme --dry-run</pre></div>
+<div class="code free"><div class="cap">4. Free: check readiness, then preview</div><pre>/usr/bin/python3 scripts/release.py check ../private/projects/acme
+/usr/bin/python3 scripts/release.py publish ../private/projects/acme --dry-run</pre></div>
 <div class="code out"><div class="cap">Output of check when the project is ready and hasn't been published</div><pre>ready to publish
 
 targets differ from the build:
@@ -836,7 +840,7 @@ targets differ from the build:
   write  .claude/skills/acme/.claude-plugin/plugin.json
   write  CLAUDE.md</pre></div>
 <p><code>check</code> exits with status 1 here, because the targets still differ. That's normal before a publish. Read the words, not just the exit status.</p>
-<div class="code"><div class="cap">5. Opens one PR per target repo. This is outward-facing, so run it only when you mean to.</div><pre>/usr/bin/python3 release.py publish ../private/projects/acme</pre></div>
+<div class="code"><div class="cap">5. Opens one PR per target repo. This is outward-facing, so run it only when you mean to.</div><pre>/usr/bin/python3 scripts/release.py publish ../private/projects/acme</pre></div>
 <p><strong>6. Merge the PRs</strong> in the target repos. Once they're merged, <code>check</code> reports <code>targets match the build</code>. A destination outside any Git repo, such as a docs workspace, is written directly during <code>publish</code>.</p>
 <p><strong>7. Trust each repo folder.</strong> Start Claude Code interactively at the root of each repo and accept the trust prompt.</p>
 
@@ -1110,42 +1114,46 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <div class="cheat two">
 <p style="font-size:8.6pt">Run from <code>catalog/</code>. <code>py</code> here means <code>/usr/bin/python3</code>. Green is free, amber bills.</p>
 <h2>Check</h2>
-<div class="code free"><pre>py validate.py
-py validate.py ../projects/NAME/project-map.yaml</pre></div>
+<div class="code free"><pre>py scripts/validate.py
+py scripts/validate.py \
+    ../projects/NAME/project-map.yaml</pre></div>
 <h2>Look inside</h2>
-<div class="code free"><pre>py run_evals.py AGENT --dry-run
-py run_evals.py AGENT --dry-run \
+<div class="code free"><pre>py scripts/run_evals.py AGENT --dry-run
+py scripts/run_evals.py AGENT --dry-run \
    --map MAP --aspect ASPECT
-py run_playbook.py PLAYBOOK --dry-run
-py deploy.py MAP --target DIR --dry-run</pre></div>
+py scripts/run_playbook.py PLAYBOOK --dry-run
+py scripts/deploy.py MAP --target DIR --dry-run</pre></div>
 <h2>Evaluate</h2>
-<div class="code bill"><pre>py run_evals.py AGENT
-py run_evals.py AGENT --map MAP --aspect ASPECT
-py run_evals.py AGENT --budget 0.50 --keep
-py run_playbook.py PLAYBOOK</pre></div>
+<div class="code bill"><pre>py scripts/run_evals.py AGENT
+py scripts/run_evals.py AGENT \
+    --map MAP --aspect ASPECT
+py scripts/run_evals.py AGENT --budget 0.50 --keep
+py scripts/run_playbook.py PLAYBOOK</pre></div>
 <h2>Create an agent</h2>
-<div class="code bill"><pre>py make_agent.py "REQUEST" --dry-run
-py make_agent.py "REQUEST" --no-evals
-py make_agent.py "REQUEST" --search "TERMS"
-py make_agent.py "REQUEST" \
+<div class="code bill"><pre>py scripts/make_agent.py "REQUEST" --dry-run
+py scripts/make_agent.py "REQUEST" --no-evals
+py scripts/make_agent.py "REQUEST" \
+    --search "TERMS"
+py scripts/make_agent.py "REQUEST" \
    --map MAP --aspect ASPECT --register</pre></div>
 <h2>Find and import parts</h2>
-<div class="code free"><pre>py registry.py sources
-py registry.py search "TERMS" --kind skill
-py registry.py show NAME
-py registry.py sync [SOURCE]</pre></div>
+<div class="code free"><pre>py scripts/registry.py sources
+py scripts/registry.py search "TERMS" --kind skill
+py scripts/registry.py show NAME
+py scripts/registry.py sync [SOURCE]</pre></div>
 <h2>Run a playbook once</h2>
-<div class="code bill"><pre>py run_playbook.py PLAYBOOK --run KEY=VALUE ...</pre></div>
+<div class="code bill"><pre>py scripts/run_playbook.py PLAYBOOK \
+    --run KEY=VALUE ...</pre></div>
 <h2>Deploy</h2>
-<div class="code free"><pre>py deploy.py MAP --target DIR
-py deploy.py MAP --target DIR --force</pre></div>
+<div class="code free"><pre>py scripts/deploy.py MAP --target DIR
+py scripts/deploy.py MAP --target DIR --force</pre></div>
 <h2>Release</h2>
-<div class="code free"><pre>py release.py build PROJECT</pre></div>
-<div class="code bill"><pre>py release.py evals PROJECT</pre></div>
+<div class="code free"><pre>py scripts/release.py build PROJECT</pre></div>
+<div class="code bill"><pre>py scripts/release.py evals PROJECT</pre></div>
 <div class="code"><pre># review and merge in the private repo</pre></div>
-<div class="code free"><pre>py release.py check PROJECT
-py release.py publish PROJECT --dry-run
-py release.py publish PROJECT</pre></div>
+<div class="code free"><pre>py scripts/release.py check PROJECT
+py scripts/release.py publish PROJECT --dry-run
+py scripts/release.py publish PROJECT</pre></div>
 <div class="code"><pre># merge the PRs, then trust each repo folder</pre></div>
 </div>
 

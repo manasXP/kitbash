@@ -2,7 +2,7 @@
 """Validate an agent catalog and the project maps that bind it.
 
 Usage:
-    validate.py                       # catalog containing this script + ../projects/*/ and ../private/projects/*/project-map.yaml
+    validate.py                       # catalog above this script + ../projects/*/ and ../private/projects/*/project-map.yaml
     validate.py path/to/project-map.yaml [...]
     validate.py --catalog DIR         # catalog only, no maps
 
@@ -788,7 +788,7 @@ def check_pack_against_agent(where, pack_name, pack, ex_traits, ex_skills, ag, a
 def main(argv):
     rep = Report()
     catalogs = {}
-    here = os.path.dirname(os.path.abspath(__file__))
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     if "--catalog" in argv:
         cat_dir = os.path.abspath(argv[argv.index("--catalog") + 1])

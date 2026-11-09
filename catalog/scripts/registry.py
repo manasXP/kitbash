@@ -32,7 +32,7 @@ import urllib.request
 
 import validate as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OFFICIAL = "io.modelcontextprotocol.registry/official"
 
 DDL = """
@@ -276,7 +276,7 @@ def sync_mcp(db, name, src, rep):
 
 def cmd_sources(opts):
     rep = Log()
-    sources = V.load_sources(HERE, rep)
+    sources = V.load_sources(CATALOG, rep)
     db = open_db() if os.path.exists(V.REGISTRY_DB) else None
     synced = {r["name"]: r for r in db.execute("SELECT * FROM sources")} if db else {}
     for name, src in sources.items():
@@ -297,7 +297,7 @@ def cmd_sources(opts):
 
 def cmd_sync(opts):
     rep = Log()
-    sources = V.load_sources(HERE, rep)
+    sources = V.load_sources(CATALOG, rep)
     if rep.errors:
         return 1
     names = opts.names or list(sources)

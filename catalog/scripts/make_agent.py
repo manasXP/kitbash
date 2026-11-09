@@ -37,7 +37,7 @@ import yaml
 
 import validate as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KNOWN_MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]
 ISOLATION = ["--no-session-persistence", "--setting-sources", "", "--strict-mcp-config", "--tools", ""]
 
@@ -156,7 +156,7 @@ PREVIOUS PROPOSAL:
 
 def claude_json(args, timeout=600):
     proc = subprocess.run(["claude", "-p", *args, "--output-format", "json"],
-                          cwd=HERE, capture_output=True, text=True, timeout=timeout)
+                          cwd=CATALOG, capture_output=True, text=True, timeout=timeout)
     try:
         return json.loads(proc.stdout)
     except json.JSONDecodeError:
@@ -217,7 +217,7 @@ def planned_files(p):
 def write_files(files):
     written = []
     for rel, content in files.items():
-        path = os.path.join(HERE, rel)
+        path = os.path.join(CATALOG, rel)
         if os.path.exists(path) and not rel.startswith("fixtures/"):
             sys.exit(f"refusing to overwrite existing {rel}")
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -240,20 +240,20 @@ def remove_files(paths):
 def validate_all(map_path, aspect, agent_name):
     """Catalog rules plus, if a map is given, the map with the new agent routed into the aspect."""
     rep = V.Report()
-    cat = V.load_catalog(HERE, rep)
+    cat = V.load_catalog(CATALOG, rep)
     V.check_catalog(cat, rep)
     if map_path:
         pm = yaml.safe_load(open(map_path))
         agents = pm["aspects"][aspect].setdefault("agents", [])
         if agent_name not in agents:
             agents.append(agent_name)
-        pm["catalog"] = os.path.relpath(HERE, V.map_dir(map_path))
+        pm["catalog"] = os.path.relpath(CATALOG, V.map_dir(map_path))
         tmp = tempfile.NamedTemporaryFile("w", suffix=".yaml", dir=V.map_dir(map_path),
                                           delete=False)
         yaml.safe_dump(pm, tmp, sort_keys=False)
         tmp.close()
         try:
-            V.check_project_map(tmp.name, rep, {HERE: cat})
+            V.check_project_map(tmp.name, rep, {CATALOG: cat})
         finally:
             os.remove(tmp.name)
         rep.errors = [e.replace(tmp.name, map_path) for e in rep.errors]
@@ -297,7 +297,7 @@ def main():
         ap.error("--register needs --map and --aspect")
 
     rep = V.Report()
-    cat = V.load_catalog(HERE, rep)
+    cat = V.load_catalog(CATALOG, rep)
     V.check_catalog(cat, rep)
     if rep.errors:
         sys.exit("catalog does not validate; fix it first:\n" + "\n".join(rep.errors))
@@ -361,17 +361,17 @@ def main():
         cost += out.get("total_cost_usd", 0)
 
     for w in written:
-        print(f"         {os.path.relpath(w, HERE)}")
+        print(f"         {os.path.relpath(w, CATALOG)}")
     if opts.no_evals:
         print(f"\ndone without evals. design cost ${cost:.3f}")
         return 0
 
     # Stage 4: evaluate, then register
-    cmd = [sys.executable, os.path.join(HERE, "run_evals.py"), proposal["name"]]
+    cmd = [sys.executable, os.path.join(CATALOG, "scripts", "run_evals.py"), proposal["name"]]
     if opts.map:
         cmd += ["--map", opts.map, "--aspect", opts.aspect]
     print("stage 4  running evals")
-    rc = subprocess.call(cmd, cwd=HERE)
+    rc = subprocess.call(cmd, cwd=CATALOG)
     if rc != 0:
         print(f"\nevals did not all pass. '{proposal['name']}' stays in the catalog but is NOT registered. "
               f"Inspect with: run_evals.py {proposal['name']} --keep")

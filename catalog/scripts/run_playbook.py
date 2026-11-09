@@ -40,7 +40,7 @@ import yaml
 import run_evals as R
 import validate as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def fill(text, values):
@@ -225,7 +225,7 @@ def main():
     pm = yaml.safe_load(open(map_path))
     cat_dir = V.catalog_dir(map_path, pm["catalog"])
     cat = V.load_catalog(cat_dir, V.Report())
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(HERE, ".evals")
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
     os.makedirs(opts.workdir, exist_ok=True)
 
     if opts.run is not None:

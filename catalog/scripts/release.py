@@ -41,7 +41,7 @@ import yaml
 import deploy as D
 import validate as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def git(repo, *args, data=False, check=True):
@@ -223,9 +223,9 @@ def evals(p, opts):
         if os.path.exists(report):
             os.remove(report)
         budget = str((p.cfg.get("eval_budget") or {}).get(ag, 1.0))
-        proc = subprocess.Popen([sys.executable, os.path.join(HERE, "run_evals.py"), ag, "--map", p.map, "--aspect", asp,
+        proc = subprocess.Popen([sys.executable, os.path.join(CATALOG, "scripts", "run_evals.py"), ag, "--map", p.map, "--aspect", asp,
                                  "--budget", budget, "--workdir", workdir, "--report", report],
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=HERE)
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=CATALOG)
         for line in proc.stdout:
             print(f"{key}: {line.rstrip()}", flush=True)
         proc.wait()

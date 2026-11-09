@@ -36,7 +36,7 @@ import time
 
 import validate as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JUDGE_SCHEMA = json.dumps({
     "type": "object",
     "properties": {"pass": {"type": "boolean"}, "reason": {"type": "string"}},
@@ -286,7 +286,7 @@ def main():
         ap.error("--map and --aspect go together")
 
     rep = V.Report()
-    cat = V.load_catalog(HERE, rep)
+    cat = V.load_catalog(CATALOG, rep)
     V.check_catalog(cat, rep)
     if rep.errors:
         print("\n".join(f"error    {e}" for e in rep.errors))
@@ -302,7 +302,7 @@ def main():
     tool_names, pack = aspect_context(opts.map, opts.aspect, cat) if opts.map else ([], None)
     opts.tool_names = tool_names
     mcp = mcp_config(tool_names, cat)
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(HERE, ".evals")
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
     os.makedirs(opts.workdir, exist_ok=True)
 
     results = []
