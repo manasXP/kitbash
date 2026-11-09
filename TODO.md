@@ -76,5 +76,14 @@ were tested from a local clone in a throwaway CLAUDE_CONFIG_DIR, with evals fake
 - Rewrite the guide's setup chapter around the plugin and .kitbash/.
 - Point the guide's commands at catalog/scripts/.
 - Check: the guide checker runs against the plugin layout.
+- Done 10 Nov 2026. The README has the install commands and the /kitbash:kitbash flow. Guide chapter 2 covers
+  installing the plugin, the skill's steps, the .kitbash/ folder, and running a clone's scripts inside a project.
+  Chapter 1, the deploy gate in chapter 12, chapter 15 and chapter 18 no longer claim the skill is missing, that
+  PyYAML must be installed, or that deploy never checks evals. The guide's commands already used catalog/scripts/.
+- The checker (kept outside the repo) now calls scripts/ paths and keeps its files out of /tmp. A new section
+  runs claude plugin validate on a git archive of HEAD, installs it both ways the guide prints (source swapped for
+  the archive) under scratch config dirs, and runs the three in-project commands in a scratch project. 68 checks
+  pass. Three lines are flagged as over 99 characters, all from before this step: two validator errors in
+  chapter 5 that wrap, and one 100-character command that fits.
 
 The fixtures ship as they are, about 10 MB per install, and stay read-only in the cache. Each eval already copies them into its own workspace.

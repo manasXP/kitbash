@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Kitbash assembles AI agents from a catalog of reusable parts, validates them, and runs their evals before they can join a project. `GOAL.md` is the spec, with dated decisions and the build order. `catalog/README.md` is the full reference for merge order, validator rules and every flag. `docs/Composable-Agent-Taxonomy.pdf` is the paper behind the design.
 
-Not built yet: map synthesis, a `/kitbash` skill and `csv-index` registry sources. Project maps are written by hand.
+Not built yet: map synthesis in the scripts and `csv-index` registry sources. Project maps are written by hand, or drafted by Claude through the plugin's `/kitbash` skill (`skills/kitbash/SKILL.md`).
 
 ## Commands
 
