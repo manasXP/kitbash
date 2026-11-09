@@ -80,7 +80,7 @@ were tested from a local clone in a throwaway CLAUDE_CONFIG_DIR, with evals fake
   installing the plugin, the skill's steps, the .kitbash/ folder, and running a clone's scripts inside a project.
   Chapter 1, the deploy gate in chapter 12, chapter 15 and chapter 18 no longer claim the skill is missing, that
   PyYAML must be installed, or that deploy never checks evals. The guide's commands already used catalog/scripts/.
-- The checker (kept outside the repo) now calls scripts/ paths and keeps its files out of /tmp. A new section
+- The checker, now docs/check_guide.py (run: /usr/bin/python3 docs/check_guide.py WORKDIR, after committing), calls scripts/ paths and keeps its files out of /tmp. A new section
   runs claude plugin validate on a git archive of HEAD, installs it both ways the guide prints (source swapped for
   the archive) under scratch config dirs, and runs the three in-project commands in a scratch project. 68 checks
   pass. Three lines are flagged as over 99 characters, all from before this step: two validator errors in
