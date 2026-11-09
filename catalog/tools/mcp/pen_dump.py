@@ -14,9 +14,10 @@ import subprocess
 import sys
 import time
 
-import yaml
-
 HERE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.dirname(os.path.dirname(HERE))
+sys.path.insert(0, os.path.join(CATALOG, "scripts"))
+import validate as V  # noqa: E402  for PyYAML (or its vendored copy) and the tool file's host values
 
 DUMP_JS = r"""
 const v = GetVariables().variables || {};
@@ -38,7 +39,7 @@ Get((n, c) => {
 
 class Pen:
     def __init__(self):
-        cfg = yaml.safe_load(open(os.path.join(HERE, "pencil.yaml")))["server"]
+        cfg = V.expand(V.yaml.safe_load(open(os.path.join(HERE, "pencil.yaml"))), CATALOG)["server"]
         self.p = subprocess.Popen([cfg["command"], *(cfg.get("args") or [])],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
         self.n = 0

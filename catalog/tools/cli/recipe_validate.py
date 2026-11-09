@@ -8,7 +8,7 @@ Imports `epicura_recipe` from the checked-out engine (EPICURA_RECIPE_ENGINE, def
 device's: pydantic schema, action and dispenser constraints, line-numbered errors.
 Prints one line per file. Exit 0 when every file is valid, 5 when any is invalid
 (a gate for playbook handoffs), 2 when the engine cannot be imported.
-Run with /usr/bin/python3, the interpreter that has pydantic and PyYAML.
+Run with an interpreter that has pydantic and PyYAML; tools/cli/recipe-validator.yaml uses KITBASH_PYTHON.
 """
 import os
 import sys

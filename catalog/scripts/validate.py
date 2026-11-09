@@ -45,8 +45,9 @@ import sys
 
 try:
     import yaml
-except ImportError:
-    sys.exit("validate.py needs PyYAML. Install with: python3 -m pip install pyyaml")
+except ImportError:  # no PyYAML installed: use the pure-Python copy in vendor/ (PyYAML 6.0.3, MIT)
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor"))
+    import yaml
 
 MODEL_TIERS = ["haiku", "sonnet", "opus", "fable"]
 PACK_CACHE = os.path.expanduser("~/.cache/kitbash/packs")
@@ -55,6 +56,30 @@ REGISTRY_DB = os.path.expanduser("~/.local/share/kitbash/registry.db")
 SOURCES_FILE = "registry-sources.yaml"
 SOURCE_KINDS = {"git-skills", "mcp-registry"}
 TOOL_KINDS = {"mcp", "cli"}
+HOST_VALUE = re.compile(r"\$\{(KITBASH_CATALOG|KITBASH_PYTHON)\}|\$\{([A-Za-z_][A-Za-z0-9_]*):-([^}]*)\}")
+
+
+def expand(value, cat, home=True):
+    """Resolve the host-specific values in a catalog file's text, or in every string of a loaded YAML value.
+    ${KITBASH_CATALOG} is the catalog directory and ${KITBASH_PYTHON} the interpreter running Kitbash unless
+    KITBASH_PYTHON is set. ${NAME:-default} is the environment variable NAME, else the default, whose leading ~
+    is expanded when home is true: tool values reach a process with no shell, skill text is read by one.
+    Any other ${...}, such as a secret reference in a server config, is left as written."""
+    if isinstance(value, dict):
+        return {k: expand(v, cat, home) for k, v in value.items()}
+    if isinstance(value, list):
+        return [expand(v, cat, home) for v in value]
+    if not isinstance(value, str):
+        return value
+
+    def sub(m):
+        if m.group(1) == "KITBASH_CATALOG":
+            return cat
+        if m.group(1) == "KITBASH_PYTHON":
+            return os.environ.get("KITBASH_PYTHON") or sys.executable
+        default = m.group(3)
+        return os.environ.get(m.group(2)) or (os.path.expanduser(default) if home else default)
+    return HOST_VALUE.sub(sub, value)
 
 
 class Report:
@@ -299,7 +324,8 @@ def load_catalog(cat, rep):
         "dir": cat,
         "traits": load_named(glob.glob(f"{cat}/traits/*.md"), load_frontmatter, rep, stem),
         "skills": load_named(glob.glob(f"{cat}/skills/*/SKILL.md"), load_frontmatter, rep, skill_dir),
-        "tools": load_named(glob.glob(f"{cat}/tools/*/*.yaml"), load_yaml, rep, stem),
+        "tools": {n: (expand(d, cat), p) for n, (d, p) in
+                  load_named(glob.glob(f"{cat}/tools/*/*.yaml"), load_yaml, rep, stem).items()},
         "agents": load_named(glob.glob(f"{cat}/agents/*.yaml"), load_yaml, rep, stem),
         "packs": packs,
     }

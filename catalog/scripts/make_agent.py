@@ -33,9 +33,8 @@ import subprocess
 import sys
 import tempfile
 
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
 import yaml
-
-import validate as V
 
 CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KNOWN_MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"]

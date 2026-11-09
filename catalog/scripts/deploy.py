@@ -35,10 +35,9 @@ import stat
 import sys
 import time
 
-import yaml
-
 import run_evals as R
-import validate as V
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
+import yaml
 
 MANIFEST = ".claude/kitbash.json"
 HOOK_DIR = ".claude/kitbash/hooks"

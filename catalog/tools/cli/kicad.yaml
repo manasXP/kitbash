@@ -3,12 +3,12 @@ kind: cli
 description: KiCAD 10 command-line tool. Runs ERC on schematics and DRC on boards and writes JSON reports. Design files are plain text s-expressions and can be read directly.
 provides: [schematic-erc, design-rule-check]
 commands:
-  cli: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
-  erc: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli sch erc --format json --severity-all --output {report} {file}
-  drc: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli pcb drc --format json --severity-all --output {report} {file}
+  cli: ${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli}
+  erc: ${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli} sch erc --format json --severity-all --output {report} {file}
+  drc: ${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli} pcb drc --format json --severity-all --output {report} {file}
   # Gate forms for playbook handoffs: identical, but exit 5 when violations exist. Without the flag kicad-cli exits 0 either way.
-  erc-gate: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli sch erc --format json --severity-all --exit-code-violations --output {report} {file}
-  drc-gate: /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli pcb drc --format json --severity-all --exit-code-violations --output {report} {file}
+  erc-gate: ${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli} sch erc --format json --severity-all --exit-code-violations --output {report} {file}
+  drc-gate: ${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli} pcb drc --format json --severity-all --exit-code-violations --output {report} {file}
 # An editing MCP server also exists on this machine (~/.claude/KiCAD-MCP-Server, node) but is configured
 # per project, not globally. Add it as a second tool when an agent needs to modify designs.
 skill: skills/kicad-eda/SKILL.md

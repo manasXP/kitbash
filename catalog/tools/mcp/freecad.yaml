@@ -9,4 +9,4 @@ skill: skills/mechanical-design/SKILL.md
 inspect:
   extensions: [.FCStd]
   open: [open, -a, FreeCAD, "{file}"]
-  dump: [/usr/bin/python3, tools/mcp/fcstd_dump.py, "{file}"]   # reads the file on disk, so the agent must save
+  dump: ["${KITBASH_PYTHON}", tools/mcp/fcstd_dump.py, "{file}"]   # reads the file on disk, so the agent must save

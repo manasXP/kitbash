@@ -7,8 +7,8 @@ requires:
 ---
 # Schematic capture with kicad-sch-api
 
-Interpreter: `~/Desktop/Design-Studio/KiCAD/.venv/bin/python`, with
-`KICAD_SYMBOL_DIR=/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols` set.
+Interpreter: `${KICAD_SCH_PYTHON:-~/Desktop/Design-Studio/KiCAD/.venv/bin/python}`, with
+`KICAD_SYMBOL_DIR=${KICAD_SYMBOL_DIR:-/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols}` set.
 Write a short Python script per change and run it; do not hand-edit `.kicad_sch` text.
 
 ## Reading before changing

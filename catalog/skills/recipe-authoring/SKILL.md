@@ -13,7 +13,7 @@ else is done by the user before cooking starts.
 
 ## Getting the source
 
-- A URL: run `/usr/bin/python3 "/Users/manaspradhan/Library/Mobile Documents/iCloud~md~obsidian/Documents/ClaudeNotes/__Agents/Kitbash/catalog/tools/cli/yt_transcript.py" URL --out transcript.txt`.
+- A URL: run `${KITBASH_PYTHON} "${KITBASH_CATALOG}/tools/cli/yt_transcript.py" URL --out transcript.txt`.
   Exit 2 means no caption track and exit
   3 means the fetch failed (unavailable video, rate limit, no network). In both cases stop,
   quote the error, write no recipe, and say what the user can supply instead. Never
@@ -78,7 +78,7 @@ are allowed as **pre-prep** and go in the report, never in the stages.
 
 ## Validation and reporting
 
-Run `/usr/bin/python3 "/Users/manaspradhan/Library/Mobile Documents/iCloud~md~obsidian/Documents/ClaudeNotes/__Agents/Kitbash/catalog/tools/cli/recipe_validate.py" FILE` on every file you write and fix every
+Run `${KITBASH_PYTHON} "${KITBASH_CATALOG}/tools/cli/recipe_validate.py" FILE` on every file you write and fix every
 error it prints before reporting. Report, in this order: the file path and the validator's
 VALID line; the pre-prep list per tray and box (what the user loads where); every guess
 (quantity, temperature, box assignment, misheard ingredient); every step left out and why.

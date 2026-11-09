@@ -3,9 +3,7 @@ kind: cli
 description: Validates Epicura device recipe YAML with the recipe engine's own pydantic parser (actions, dispenser fields, ranges), reporting field paths and line numbers.
 provides: [recipe-validation]
 commands:
-  validate: /usr/bin/python3 "/Users/manaspradhan/Library/Mobile Documents/iCloud~md~obsidian/Documents/ClaudeNotes/__Agents/Kitbash/catalog/tools/cli/recipe_validate.py" {file}
+  validate: '"${KITBASH_PYTHON}" "${KITBASH_CATALOG}/tools/cli/recipe_validate.py" {file}'
   # Gate form for playbook handoffs: same command; exit 5 when any file is invalid, 2 when the engine is not importable.
-  validate-gate: /usr/bin/python3 "/Users/manaspradhan/Library/Mobile Documents/iCloud~md~obsidian/Documents/ClaudeNotes/__Agents/Kitbash/catalog/tools/cli/recipe_validate.py" {file}
-env:
-  EPICURA_RECIPE_ENGINE: /Users/manaspradhan/code/Epicura/epicura-cm5/services/recipe-engine   # the checkout whose schema is enforced
+  validate-gate: '"${KITBASH_PYTHON}" "${KITBASH_CATALOG}/tools/cli/recipe_validate.py" {file}'
 skill: skills/recipe-authoring/SKILL.md

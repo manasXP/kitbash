@@ -8,7 +8,7 @@ Not built yet: map synthesis, a `/kitbash` skill and `csv-index` registry source
 
 ## Commands
 
-There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`: on this machine `./scripts/validate.py` and plain `python3` resolve to an interpreter without PyYAML and fail. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
+There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`. Any Python 3.9 or later runs the scripts, because they fall back to the pure-Python PyYAML in `scripts/vendor/`. On this machine, though, only `/usr/bin/python3` has pydantic, which the recipe validator needs, and tool commands run under the interpreter that runs Kitbash. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
 
 Free, no model call:
 
@@ -67,7 +67,7 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 - **Evals that create files** list them under `creates:`, and those paths must not already exist.
 - **After editing `registry-sources.yaml`**, including `provides` or `names`, run `registry.py sync` or the validator reports the source as stale. Capabilities for an imported server are always tagged by hand, never inferred. Only tagged servers can be bound.
 - **Before writing a project map**, ask which pack to attach and where the code root is. A project's code is usually separate from its docs workspace and spans several repos, so inventory every repo and map them all.
-- **Tool and skill files contain host-specific absolute paths**, and deployed agent files inline them as they stand. A deploy is only valid for this machine.
+- **Never write a host-specific path into a catalog file.** Use `${KITBASH_CATALOG}`, `${KITBASH_PYTHON}` or `${NAME:-default}` (an environment variable, else the macOS default; `catalog/README.md` has the rules). Deployed agent files inline the resolved values, so a deploy is still only valid for the machine that made it.
 - **`--keep` leaves workspaces in `catalog/.evals/`**, which is not gitignored. Use `--workdir` when two sessions run at once.
 - **`private/` and `_html/Composable-Agent-Taxonomy.html`** (the PDF's source) are gitignored. The PDF is tracked.
 - **Check the maps directly for what's routed.** `GOAL.md` and `catalog/README.md` are partly dated narrative and can lag them. For example, `mechanical-engineer` is in the catalog but not routed in any map.

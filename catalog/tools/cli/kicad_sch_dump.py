@@ -17,7 +17,7 @@ import subprocess
 import sys
 import tempfile
 
-KICAD_CLI = "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
+KICAD_CLI = os.environ.get("KICAD_CLI") or "/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli"
 
 
 def parse_sexpr(text):

@@ -36,10 +36,9 @@ import tempfile
 import threading
 import time
 
-import yaml
-
 import deploy as D
-import validate as V
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
+import yaml
 
 CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

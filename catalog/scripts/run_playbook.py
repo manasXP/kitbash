@@ -35,10 +35,9 @@ import sys
 import tempfile
 import time
 
-import yaml
-
 import run_evals as R
-import validate as V
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
+import yaml
 
 CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

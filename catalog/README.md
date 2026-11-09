@@ -40,7 +40,21 @@ beyond YAML. The notation that exists is three conventions inside scalars: `{nam
 commands, `tool.command` references in handoffs, and `expect_path` as an ordered list that must be a prefix of
 the steps. List order is merge order. Reopen only if an eval needs a branching playbook.
 
-All the scripts need PyYAML. On macOS the system interpreter has it: `/usr/bin/python3 <script>`.
+The scripts run on any Python 3.9 or later. They use an installed PyYAML, else the pure-Python copy in
+`scripts/vendor/` (PyYAML 6.0.3, MIT licensed).
+
+Catalog files name host-specific values instead of writing them out, and the loader resolves them in tool files and
+in the catalog's own trait and skill text (pack and imported text is composed as written):
+
+- `${KITBASH_CATALOG}` is the catalog directory, wherever it is checked out or installed.
+- `${KITBASH_PYTHON}` is the interpreter running Kitbash, or the `KITBASH_PYTHON` environment variable when set.
+- `${NAME:-default}` is the environment variable `NAME`, else the default, which is the usual macOS location, such as
+  `${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli}`. A leading `~` in a default is expanded in
+  tool files, whose values reach a process with no shell, and kept in skill text, which a shell reads.
+
+Any other `${...}`, such as a secret reference in a server config, is left for Claude Code. The variables in use are
+`KICAD_CLI`, `KICAD_SYMBOL_DIR`, `KICAD_SCH_PYTHON`, `PEN_MCP_SERVER`, `ANDROID_HOME`, `JAVA_HOME` and
+`DEVELOPER_DIR`.
 
 ## Validator
 
@@ -222,8 +236,8 @@ mounted; `mcpServers` inlines the aspect's MCP tools, connected only while that 
 name and its `paths`, which is what Claude Code reads when deciding which subagent to use. A manifest at
 `.claude/kitbash.json` lists the written files; the next deploy overwrites those, removes any the map no longer
 produces, and refuses to overwrite a file it did not write unless `--force` is given. The map must validate
-(rule 6 included) or nothing is written. Tool files carry host-specific paths (KiCAD, Pen, a venv), so a deploy
-is for this machine; the agent files inline them as they stand.
+(rule 6 included) or nothing is written. Tool and skill files name host-specific paths (KiCAD, Pen, a venv) as
+placeholders, and the agent files inline the values they resolve to, so a deploy is for the machine that made it.
 
 ## Release
 
@@ -312,7 +326,7 @@ then auto-generated, strips WebVTT tags and the rolling duplicate lines, and pri
 no captions, 3 means yt-dlp failed. YouTube rate-limits caption fetches (HTTP 429 after two in a row on 2 Nov 2026),
 so the recipe-author evals that hit a URL accept an honest failure report. `tools/cli/recipe_validate.py` imports
 `epicura_recipe` from the real checkout (`EPICURA_RECIPE_ENGINE`) and exits 5 on an invalid file, so it doubles as a
-playbook gate; it needs `/usr/bin/python3`, the interpreter with pydantic. `fixtures/recipes/` holds the real Kanda
+playbook gate; it runs under `${KITBASH_PYTHON}`, which must have pydantic (on this machine, `/usr/bin/python3`). `fixtures/recipes/` holds the real Kanda
 Poha caption track, a hand-written infeasible medu vada transcript, copies of the project's five recipes for the
 dispenser convention (ASD boxes 1 cumin, 2 mustard, 3 turmeric, 4 chili, 5 salt, 6 urad dal; two CID trays; SLD oil
 and water), and an empty `out/` the evals write into. Written 2 Nov 2026.

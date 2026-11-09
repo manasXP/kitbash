@@ -3,6 +3,6 @@ kind: cli
 description: Plain-text transcript of a YouTube (or any yt-dlp-supported) video from its caption track, with minute markers. No download of the video itself; no speech-to-text, so a video without captions is reported, not guessed.
 provides: [video-transcript]
 commands:
-  transcript: /usr/bin/python3 "/Users/manaspradhan/Library/Mobile Documents/iCloud~md~obsidian/Documents/ClaudeNotes/__Agents/Kitbash/catalog/tools/cli/yt_transcript.py" {url} --out {file}
+  transcript: '"${KITBASH_PYTHON}" "${KITBASH_CATALOG}/tools/cli/yt_transcript.py" {url} --out {file}'
   # exit 2: no caption track; exit 3: yt-dlp failed (unavailable video, no network)
 skill: null

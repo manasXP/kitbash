@@ -59,6 +59,9 @@ def compose(agent, cat, tool_names, pack=None):
     pack is (name, data, excluded trait names, excluded skill names) or None. Its base comes first,
     so that the agent's own text wins on conflict."""
     parts, denied, allowed = [], set(), set()
+
+    def own(path):  # the catalog's own files may hold host-specific values; pack and imported text is as written
+        return V.expand(body(path), cat["dir"], home=False) if path.startswith(cat["dir"] + os.sep) else body(path)
     if pack:
         name, pk, ex_traits, ex_skills = pack
         pk_traits, pk_skills = V.pack_base(pk)
@@ -76,19 +79,19 @@ def compose(agent, cat, tool_names, pack=None):
     for t in V.as_list(agent.get("traits")):
         data, path = cat["traits"][t]
         denied |= set(V.as_list(data.get("denies")))
-        parts.append(f"## Trait: {t}\n{body(path)}")
+        parts.append(f"## Trait: {t}\n{own(path)}")
     composed = set()  # a skill reached twice is composed once, at its first position
     for s in V.as_list(agent.get("skills")):
         _, path = cat["skills"][s]
         composed.add(os.path.realpath(path))
-        parts.append(f"## Skill: {s}\n{body(path)}")
+        parts.append(f"## Skill: {s}\n{own(path)}")
     for name in tool_names:
         data, _ = cat["tools"][name]
         if data.get("skill"):
             path = os.path.join(cat["dir"], data["skill"])
             if os.path.realpath(path) not in composed:
                 composed.add(os.path.realpath(path))
-                parts.append(f"## Tool skill: {name}\n{body(path)}")
+                parts.append(f"## Tool skill: {name}\n{own(path)}")
     parts.append(f"## Agent: {agent['name']}\n{agent['prompt'].strip()}")
     overrides = agent.get("overrides") or {}
     if overrides.get("allow"):

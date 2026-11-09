@@ -5,12 +5,12 @@ provides: [schematic-capture]
 commands:
   # Existing virtualenv that has kicad-sch-api 0.5.x installed. A durable alternative is a dedicated
   # venv: python3 -m venv .venv-eda && .venv-eda/bin/pip install kicad-sch-api
-  python: ~/Desktop/Design-Studio/KiCAD/.venv/bin/python
+  python: ${KICAD_SCH_PYTHON:-~/Desktop/Design-Studio/KiCAD/.venv/bin/python}
 env:
-  KICAD_SYMBOL_DIR: /Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols
+  KICAD_SYMBOL_DIR: ${KICAD_SYMBOL_DIR:-/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols}
 # A broader node-based KiCAD MCP server also exists (~/.claude/KiCAD-MCP-Server) with schematic and PCB
 # tools; it is not used here because the library is deterministic and needs no server.
 skill: skills/kicad-schematic/SKILL.md
 inspect:
   extensions: [.kicad_sch]
-  dump: [/usr/bin/python3, tools/cli/kicad_sch_dump.py, "{file}"]
+  dump: ["${KITBASH_PYTHON}", tools/cli/kicad_sch_dump.py, "{file}"]
