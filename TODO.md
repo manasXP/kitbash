@@ -86,4 +86,17 @@ were tested from a local clone in a throwaway CLAUDE_CONFIG_DIR, with evals fake
   pass. Three lines are flagged as over 99 characters, all from before this step: two validator errors in
   chapter 5 that wrap, and one 100-character command that fits.
 
+7. GitHub install, after merging PR #10 (10 Nov 2026, Claude Code 2.1.321).
+- Both documented forms work from clean scratch config dirs: claude plugin install kitbash --marketplace
+  manasXP/kitbash, and marketplace add then install kitbash@kitbash. Each leaves kitbash@kitbash 0.1.0 enabled,
+  with the marketplace listed as GitHub (manasXP/kitbash).
+- The install copies the repo into plugins/cache/kitbash/kitbash/0.1.0/: about 12 MB, no .git. From that copy,
+  inside a scratch project with a .kitbash/ map, the validator ends 0 error(s), 3 warning(s), the eval dry run
+  composes with hook paths in the cache, and the deploy dry run refuses the unevaluated agent.
+- A Haiku -p session with the GitHub-installed plugin ($0.007) invoked /kitbash:kitbash. ${CLAUDE_PLUGIN_ROOT}
+  was the cache path. Read and ls of the cached catalog, the validator and the deploy dry run all ran, with no
+  permission denials. One of them was a compound cd into the project && python3 command.
+- Before a merge, a branch can be tested the same way with claude plugin marketplace add "manasXP/kitbash#BRANCH".
+- gh pr merge 10 --merge answered 502 Bad Gateway, but the merge went through. Check gh pr view before retrying.
+
 The fixtures ship as they are, about 10 MB per install, and stay read-only in the cache. Each eval already copies them into its own workspace.
