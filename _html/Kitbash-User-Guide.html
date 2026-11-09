@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kitbash User Guide</title>
+<meta name="description" content="How to assemble, validate, evaluate and deploy AI agents with Kitbash.">
+<meta name="keywords" content="Kitbash, agents, Claude Code, evals, project maps, playbooks">
+<style>
+  @page {
+    size: A4;
+    margin: 21mm 19mm 21mm 19mm;
+    @top-right { content: string(chapter, start); font: 8pt Charter, Georgia, serif; color: #6a7078; }
+    @bottom-left { content: "Kitbash User Guide"; font: 8pt Charter, Georgia, serif; color: #6a7078; }
+    @bottom-right { content: counter(page) " / " counter(pages); font: 8pt Charter, Georgia, serif; color: #6a7078; }
+  }
+  @page cover { @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+
+  :root { --ink: #1d2126; --muted: #5d646d; --rule: #d6d9dd; --tint: #f4f5f6; --accent: #0d5c6b; --accent-tint: #e8f2f4;
+          --free: #2c7a4b; --free-tint: #eaf5ee; --bill: #a65a00; --bill-tint: #fdf3e4; --warn: #a3322a; --warn-tint: #fbecea; }
+
+  html { font-family: Charter, Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.42; color: var(--ink); }
+  body { margin: 0; }
+  p { margin: 0 0 6.5pt; }
+  ul, ol { margin: 0 0 7pt; padding-left: 15pt; }
+  li { margin-bottom: 2.5pt; }
+  a { color: inherit; text-decoration: none; }
+  strong { font-weight: 700; }
+
+  .cover { page: cover; }
+  .cover .kicker { font-size: 10pt; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8pt; font-weight: 700; }
+  .cover h1.title { font-size: 31pt; line-height: 1.08; margin: 0 0 9pt; break-before: auto; string-set: none; border: 0; padding: 0; bookmark-level: none; }
+  .cover .sub { font-size: 12.5pt; line-height: 1.34; color: var(--muted); margin: 0 0 6pt; max-width: 135mm; }
+  .cover .date { font-size: 9.5pt; color: var(--muted); margin: 0 0 15pt; padding-bottom: 12pt; border-bottom: 1.2pt solid var(--ink); }
+  .toc-part { font-size: 8.5pt; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 9pt 0 2.5pt; }
+  .toc { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; padding: 1.5pt 0; border-bottom: .4pt solid var(--rule); font-size: 10pt; }
+  .toc a { display: block; }
+  .toc a::after { content: target-counter(attr(href), page); float: right; color: var(--muted); }
+  .toc .n { display: inline-block; width: 16pt; color: var(--muted); }
+
+  h1 { font-size: 19pt; line-height: 1.15; margin: 0 0 9pt; padding-bottom: 5pt; border-bottom: 1.2pt solid var(--ink); break-before: page; string-set: chapter content(); break-after: avoid; }
+  h1.flow { break-before: auto; margin-top: 20pt; }
+  h2 { font-size: 12.2pt; line-height: 1.2; margin: 12pt 0 4.5pt; break-after: avoid; }
+  h3 { font-size: 10pt; margin: 9pt 0 2.5pt; break-after: avoid; }
+  .lead { font-size: 11pt; line-height: 1.38; color: #333a42; margin-bottom: 9pt; }
+
+  code, pre, .mono { font-family: Menlo, "DejaVu Sans Mono", monospace; }
+  code { font-size: .84em; background: var(--tint); padding: 0 1.8pt; border-radius: 1.5pt; }
+  pre { font-size: 7.75pt; line-height: 1.37; margin: 0; padding: 5.5pt 7pt; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--tint); }
+  pre code { background: none; padding: 0; font-size: 1em; }
+
+  .code { margin: 3pt 0 8pt; break-inside: avoid; border-left: 2.4pt solid #aab0b7; }
+  .code.long { break-inside: auto; }
+  .code .cap { font-family: Charter, Georgia, serif; font-size: 8pt; font-weight: 700; padding: 2.2pt 7pt 0; background: var(--tint); color: var(--muted); break-after: avoid; }
+  .code.free { border-left-color: var(--free); } .code.free .cap { color: var(--free); background: var(--free-tint); } .code.free pre { background: var(--free-tint); }
+  .code.bill { border-left-color: var(--bill); } .code.bill .cap { color: var(--bill); background: var(--bill-tint); } .code.bill pre { background: var(--bill-tint); }
+  .code.out pre { color: #3b4149; }
+
+  .note { margin: 5pt 0 9pt; padding: 5.5pt 8pt; border-left: 2.4pt solid var(--accent); background: var(--accent-tint); break-inside: avoid; font-size: 9.4pt; }
+  .note.warn { border-left-color: var(--warn); background: var(--warn-tint); }
+  .note.bill { border-left-color: var(--bill); background: var(--bill-tint); }
+  .note p:last-child, .note ul:last-child { margin-bottom: 0; }
+  .note b.h { display: block; margin-bottom: 1pt; }
+
+  table { width: 100%; border-collapse: collapse; margin: 3pt 0 9pt; font-size: 8.8pt; line-height: 1.33; }
+  thead { display: table-header-group; }
+  th { text-align: left; font-weight: 700; border-bottom: 1pt solid var(--ink); padding: 2.5pt 5pt 2.5pt 0; vertical-align: bottom; }
+  td { border-bottom: .4pt solid var(--rule); padding: 2.8pt 6pt 2.8pt 0; vertical-align: top; }
+  tr { break-inside: avoid; }
+  table.keep { break-inside: avoid; }
+  td code, th code { font-size: .86em; overflow-wrap: anywhere; }
+  td.nw code { overflow-wrap: normal; white-space: nowrap; }
+  .tag { font-size: 7.6pt; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+  .tag.free { color: var(--free); } .tag.bill { color: var(--bill); }
+
+  .fig { margin: 6pt 0 10pt; break-inside: avoid; }
+  .fig svg { width: 100%; height: auto; display: block; }
+  .fig .figcap { font-size: 8.4pt; color: var(--muted); margin-top: 3pt; }
+
+  ol.steps { list-style: none; padding-left: 0; counter-reset: st; }
+  ol.steps > li { counter-increment: st; padding-left: 17pt; position: relative; margin-bottom: 4pt; }
+  ol.steps > li::before { content: counter(st); position: absolute; left: 0; top: .5pt; width: 12pt; height: 12pt; line-height: 12pt; border-radius: 6pt; background: var(--accent); color: #fff; font-size: 7.6pt; font-weight: 700; text-align: center; }
+  h3.step { margin-top: 10pt; font-size: 10.4pt; }
+  h3.step .s { color: var(--accent); }
+  .two { column-count: 2; column-gap: 7mm; }
+  .cheat h2 { font-size: 10pt; margin: 8pt 0 2.5pt; color: var(--accent); }
+  .cheat pre { font-size: 7.2pt; line-height: 1.34; padding: 3.5pt 6pt; }
+  .cheat .code { margin: 0 0 3pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="kicker">Kitbash</p>
+  <h1 class="title">User Guide</h1>
+  <p class="sub">Assemble AI agents from reusable parts, prove they work, and put them in your projects.</p>
+  <p class="date">Written against the repository as of 9 November 2026</p>
+
+  <div class="toc-part">Part I: Start here</div>
+  <ul class="toc">
+    <li><a href="#c1"><span class="n">1</span>What Kitbash does</a></li>
+    <li><a href="#c2"><span class="n">2</span>Set up</a></li>
+    <li><a href="#c3"><span class="n">3</span>A quick tour</a></li>
+    <li><a href="#c4"><span class="n">4</span>Core concepts</a></li>
+  </ul>
+  <div class="toc-part">Part II: Tasks</div>
+  <ul class="toc">
+    <li><a href="#c5"><span class="n">5</span>Evaluate an agent</a></li>
+    <li><a href="#c6"><span class="n">6</span>Create an agent by hand</a></li>
+    <li><a href="#c7"><span class="n">7</span>Create an agent from a description</a></li>
+    <li><a href="#c8"><span class="n">8</span>Write a project map</a></li>
+    <li><a href="#c9"><span class="n">9</span>Import skills and MCP servers</a></li>
+    <li><a href="#c10"><span class="n">10</span>Chain agents with a playbook</a></li>
+    <li><a href="#c11"><span class="n">11</span>Deploy to a project</a></li>
+    <li><a href="#c12"><span class="n">12</span>Publish through a reviewed release</a></li>
+  </ul>
+  <div class="toc-part">Part III: Reference</div>
+  <ul class="toc">
+    <li><a href="#c13"><span class="n">13</span>What's in the catalog</a></li>
+    <li><a href="#c14"><span class="n">14</span>Command reference</a></li>
+    <li><a href="#c15"><span class="n">15</span>File formats</a></li>
+    <li><a href="#c16"><span class="n">16</span>Validator rules</a></li>
+    <li><a href="#c17"><span class="n">17</span>Troubleshooting</a></li>
+    <li><a href="#c18"><span class="n">18</span>Cheat sheet</a></li>
+  </ul>
+</section>
+
+<!-- ============================================================ 1 -->
+<h1 id="c1">1. What Kitbash does</h1>
+<p class="lead">Kitbash builds AI agents out of small, reusable parts and tests them before they join a project. You describe an agent as a list of parts. Kitbash checks that the parts fit, runs the agent against test tasks, and writes the result into your project as Claude Code subagents or plugins.</p>
+
+<ul>
+  <li><strong>Reuse.</strong> One skill or behaviour rule serves many agents, so you improve it in one place.</li>
+  <li><strong>Early errors.</strong> The validator rejects a bad combination before any model is called, so mistakes cost nothing.</li>
+  <li><strong>Evidence.</strong> Every agent carries test tasks called evals, and a second model grades the results. A release refuses any agent without a current pass.</li>
+  <li><strong>Least privilege.</strong> Tools attach to a part of your project, not to an agent. An agent working on firmware never sees the tools for your design files.</li>
+  <li><strong>Easy swaps.</strong> Agents ask for a capability such as <code>source-control</code>, never a vendor. Changing the tool behind it is a one-line edit.</li>
+</ul>
+
+<div class="fig">
+<svg viewBox="0 0 640 176" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Catalog parts and a project map go through validation and evals, then out through deploy or release.">
+  <g font-family="Charter, Georgia, serif" font-size="12" fill="#1d2126">
+    <rect x="1" y="14" width="128" height="62" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="65" y="36" text-anchor="middle" font-weight="700">Catalog</text>
+    <text x="65" y="52" text-anchor="middle" font-size="10" fill="#5d646d">traits, skills, tools,</text>
+    <text x="65" y="65" text-anchor="middle" font-size="10" fill="#5d646d">agents, packs</text>
+    <rect x="1" y="100" width="128" height="62" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="65" y="122" text-anchor="middle" font-weight="700">Project map</text>
+    <text x="65" y="138" text-anchor="middle" font-size="10" fill="#5d646d">binds tools and agents</text>
+    <text x="65" y="151" text-anchor="middle" font-size="10" fill="#5d646d">to parts of a project</text>
+
+    <path d="M129 45 L148 45 L148 88 L164 88 M129 131 L148 131 L148 88" fill="none" stroke="#5d646d" stroke-width="1.2"/>
+    <polygon points="172,88 164,84 164,92" fill="#5d646d"/>
+
+    <rect x="172" y="50" width="122" height="76" rx="4" fill="#eaf5ee" stroke="#2c7a4b"/>
+    <text x="233" y="72" text-anchor="middle" font-weight="700">Validate</text>
+    <text x="233" y="87" text-anchor="middle" font-size="10" fill="#5d646d">Do the parts fit?</text>
+    <text x="233" y="103" text-anchor="middle" font-size="9" font-family="Menlo, monospace">validate.py</text>
+    <text x="233" y="117" text-anchor="middle" font-size="9.5" font-weight="700" fill="#2c7a4b">Free</text>
+
+    <line x1="294" y1="88" x2="312" y2="88" stroke="#5d646d" stroke-width="1.2"/>
+    <polygon points="320,88 312,84 312,92" fill="#5d646d"/>
+
+    <rect x="320" y="50" width="122" height="76" rx="4" fill="#fdf3e4" stroke="#a65a00"/>
+    <text x="381" y="72" text-anchor="middle" font-weight="700">Evaluate</text>
+    <text x="381" y="87" text-anchor="middle" font-size="10" fill="#5d646d">Does it do the job?</text>
+    <text x="381" y="103" text-anchor="middle" font-size="9" font-family="Menlo, monospace">run_evals.py</text>
+    <text x="381" y="117" text-anchor="middle" font-size="9.5" font-weight="700" fill="#a65a00">Bills your account</text>
+
+    <path d="M442 88 L456 88 M456 45 L456 131 M456 45 L468 45 M456 131 L468 131" fill="none" stroke="#5d646d" stroke-width="1.2"/>
+    <polygon points="476,45 468,41 468,49" fill="#5d646d"/>
+    <polygon points="476,131 468,127 468,135" fill="#5d646d"/>
+
+    <rect x="476" y="14" width="163" height="62" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="557" y="34" text-anchor="middle" font-weight="700">Deploy</text>
+    <text x="557" y="49" text-anchor="middle" font-size="9" font-family="Menlo, monospace">deploy.py</text>
+    <text x="557" y="65" text-anchor="middle" font-size="10" fill="#5d646d">writes into .claude/ now</text>
+    <rect x="476" y="100" width="163" height="62" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="557" y="120" text-anchor="middle" font-weight="700">Release</text>
+    <text x="557" y="135" text-anchor="middle" font-size="9" font-family="Menlo, monospace">release.py</text>
+    <text x="557" y="151" text-anchor="middle" font-size="10" fill="#5d646d">opens PRs after your review</text>
+  </g>
+</svg>
+<div class="figcap">Figure 1. The path from parts to a working agent in your project.</div>
+</div>
+
+<h2>How to use this guide</h2>
+<p>New to Kitbash? Read chapters 2 to 4 and run the commands as you go. Part II is a set of independent tasks, so go straight to the one you need. Part III is for looking things up. Commands are marked by cost:</p>
+<div class="code free"><div class="cap">Free: no model call</div><pre>/usr/bin/python3 validate.py</pre></div>
+<div class="code bill"><div class="cap">Bills your account through the claude CLI</div><pre>/usr/bin/python3 run_evals.py security-reviewer</pre></div>
+
+<h2>What exists today</h2>
+<table>
+  <thead><tr><th style="width:49%">Available now</th><th>Not built yet</th></tr></thead>
+  <tbody>
+  <tr><td>Catalog, validator, eval runner</td><td>Automatic project maps. You write maps by hand.</td></tr>
+  <tr><td>Meta-agent that designs a new agent from a sentence</td><td>A <code>/kitbash</code> skill. You run each script yourself.</td></tr>
+  <tr><td>Playbook runner, registry of imported parts</td><td>A <code>csv-index</code> registry source for listing datasets.</td></tr>
+  <tr><td>Direct deploy and reviewed release</td><td>MCP tools in plugins. <code>release.py</code> refuses a map that binds one, so use <code>deploy.py</code> for those maps.</td></tr>
+  </tbody>
+</table>
+
+<div class="note warn"><b class="h">Kitbash is not fully portable yet</b>
+Some tool and skill files contain absolute paths from the author's Mac, such as <code>/Applications/KiCad/...</code>. Edit them before using those tools on another machine. Deployed agent files inline these paths, so a deploy is valid only on the machine that ran it.</div>
+
+<!-- ============================================================ 2 -->
+<h1 class="flow" id="c2">2. Set up</h1>
+<h2>What you need</h2>
+<table>
+  <thead><tr><th style="width:31%">Requirement</th><th>Needed for</th></tr></thead>
+  <tbody>
+  <tr><td>Python 3.9 or later with PyYAML</td><td>Every script</td></tr>
+  <tr><td>Git, with network access</td><td>The first fetch of a pack or import source, and <code>registry.py sync</code></td></tr>
+  <tr><td><a href="https://code.claude.com/docs/">Claude Code</a> CLI (<code>claude</code>)</td><td>Evals, playbooks and <code>make_agent.py</code></td></tr>
+  <tr><td>GitHub CLI (<code>gh</code>), signed in</td><td><code>release.py publish</code>, and agents that use the <code>github</code> tool</td></tr>
+  <tr><td>Domain tools such as KiCad or an STM32 toolchain</td><td>Only the agents that use them. See <a href="#c13">chapter 13</a>.</td></tr>
+  </tbody>
+</table>
+
+<h2>Install</h2>
+<div class="code free"><div class="cap">Free: run once</div><pre>git clone https://github.com/manasXP/kitbash.git
+cd kitbash/catalog
+/usr/bin/python3 -c "import yaml; print(yaml.__version__)"  # prints a version if installed
+/usr/bin/python3 -m pip install --user pyyaml               # only if the line above failed</pre></div>
+
+<div class="note"><b class="h">Which Python to use</b>
+Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/python3</code>, the macOS system interpreter. Plain <code>python3</code> or <code>./validate.py</code> can resolve to a different interpreter without PyYAML and fail with <code>No module named 'yaml'</code>. On other systems, use any Python 3.9 or later that has PyYAML and substitute its path.</div>
+
+<h2>Check that it works</h2>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py</pre></div>
+<p>The first run fetches the pinned skill packs. The last line of a clean first run looks like this:</p>
+<div class="code out"><div class="cap">Output on a fresh clone</div><pre>0 error(s), 4 warning(s); 11 agent(s), 1 project map(s), 2 playbook(s) checked</pre></div>
+<p>Three of the warnings are permanent and harmless: the <code>gsd</code>, <code>gstack</code> and <code>super-board</code> packs have empty bases on purpose. The fourth says the registry isn't synced. Clear it now with:</p>
+<div class="code free"><div class="cap">Free: uses the network, no model. Takes under two minutes.</div><pre>/usr/bin/python3 registry.py sync
+/usr/bin/python3 validate.py</pre></div>
+<div class="code out"><div class="cap">Output once synced: this is the clean state</div><pre>0 error(s), 3 warning(s); 11 agent(s), 1 project map(s), 2 playbook(s) checked</pre></div>
+
+<h2>What costs money</h2>
+<table class="keep">
+  <thead><tr><th style="width:12%">Cost</th><th style="width:47%">Commands</th><th>Limit</th></tr></thead>
+  <tbody>
+  <tr><td><span class="tag free">Free</span></td><td><code>validate.py</code>, <code>registry.py</code>, <code>deploy.py</code>, every <code>--dry-run</code> except the one below, and <code>release.py build</code>, <code>check</code> and <code>publish</code></td><td>None needed</td></tr>
+  <tr><td><span class="tag bill">Bills</span></td><td><code>run_evals.py</code> and <code>run_playbook.py</code></td><td><code>--budget</code> per agent run or playbook step, default $1.00. The judge gets $0.20 per eval.</td></tr>
+  <tr><td><span class="tag bill">Bills</span></td><td><code>make_agent.py</code>, <strong>including with <code>--dry-run</code></strong>, which still makes the design call</td><td><code>--budget</code> for the design call, default $1.00, plus any evals it runs</td></tr>
+  <tr><td><span class="tag bill">Bills</span></td><td><code>release.py evals</code></td><td><code>--max-total</code>, default $30. It stops starting new agents at this ceiling.</td></tr>
+  </tbody>
+</table>
+<p>The caps let you work out a ceiling before you run anything. An agent with five evals can spend at most 5 &times; ($1.00 + $0.20) = $6.00 at the defaults. Recorded runs have come in well under the caps: the two sample playbooks each passed both of their evals, for $0.22 and $0.54.</p>
+
+<h2>Where Kitbash keeps things</h2>
+<table>
+  <thead><tr><th style="width:45%">Location</th><th>Contents</th></tr></thead>
+  <tbody>
+  <tr><td><code>catalog/</code></td><td>Parts, fixtures and scripts</td></tr>
+  <tr><td><code>projects/&lt;name&gt;/</code></td><td>Project maps and playbooks you can publish</td></tr>
+  <tr><td><code>private/projects/&lt;name&gt;/</code></td><td>A separate private repo for project content. Git ignores this folder.</td></tr>
+  <tr><td><code>~/.cache/kitbash/packs/</code>, <code>sources/</code></td><td>Pinned checkouts of packs and imported skills</td></tr>
+  <tr><td><code>~/.local/share/kitbash/registry.db</code></td><td>The SQLite registry of imported skills and MCP servers</td></tr>
+  </tbody>
+</table>
+<p>Everything under your home folder is disposable. Delete it and Kitbash rebuilds it from the repo's files.</p>
+
+<!-- ============================================================ 3 -->
+<h1 class="flow" id="c3">3. A quick tour</h1>
+<p class="lead">Steps 1 to 5 are free and change nothing. They show you what Kitbash knows and what an agent is actually made of. Run them from <code>catalog/</code>.</p>
+
+<h3 class="step"><span class="s">Step 1.</span> See what an agent is made of</h3>
+<p><code>--dry-run</code> prints the exact prompt an agent receives, then the commands that would run for each eval, without calling a model.</p>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run</pre></div>
+<div class="code out"><div class="cap">Output, shortened</div><pre>===== security-reviewer: composed system prompt =====
+## Trait: read-only
+You may inspect the codebase but never modify it. Report findings; do not fix them.
+...
+## Trait: concise-reporter
+Lead with the conclusion. One sentence per finding. Reference code as path:line.
+...
+## Skill: security-review
+# Security review
+...
+## Agent: security-reviewer
+You review pull requests for security defects only. Ignore style, naming, ...
+----- denied tools: ['Edit', 'Write']  hooks: ['.../block-network.py']  mcp: []  pack: None</pre></div>
+<p>The prompt is simply the parts joined in order. The agent can't edit files because its <code>read-only</code> trait denies <code>Edit</code> and <code>Write</code>.</p>
+
+<h3 class="step"><span class="s">Step 2.</span> See what a project adds</h3>
+<p>Add a map and an aspect, and the agent is composed the way that project would run it.</p>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run \
+  --map ../projects/smart-thermostat/project-map.yaml --aspect api</pre></div>
+<p>The prompt now starts with <code>## Pack superpowers, skill: verification-before-completion</code>, because that map attaches the <code>superpowers</code> pack and a pack's text comes first.</p>
+
+<h3 class="step"><span class="s">Step 3.</span> Search for parts you could import</h3>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 registry.py search "pdf forms" --limit 2
+/usr/bin/python3 registry.py show github-mcp-server</pre></div>
+<div class="code out"><div class="cap">Output of the search, shortened</div><pre>skill  pdf                          anthropics-skills  Use this skill whenever the user ...
+skill  canvas-design                anthropics-skills  Create beautiful visual art in ...</pre></div>
+
+<h3 class="step"><span class="s">Step 4.</span> Trace a multi-step playbook</h3>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 run_playbook.py --dry-run \
+  ../projects/smart-thermostat/playbooks/triage-and-review.yaml</pre></div>
+<p>The prompts are long. Look for the lines that start with <code>=====</code> and <code>-----</code>. They show each step's agent, model, task, tools and the condition for moving on, such as <code>{'output': 'severity', 'in': ['high', 'critical']}</code>.</p>
+
+<h3 class="step"><span class="s">Step 5.</span> Preview a deploy</h3>
+<div class="code free"><div class="cap">Free: the target folder must exist, but nothing is written to it</div><pre>mkdir -p /tmp/kitbash-demo
+/usr/bin/python3 deploy.py ../projects/smart-thermostat/project-map.yaml \
+  --target /tmp/kitbash-demo --dry-run</pre></div>
+<p>You see the complete text of every file a deploy would write, ending with <code>(dry run, nothing written; 7 file(s) for /tmp/kitbash-demo)</code>.</p>
+
+<h3 class="step"><span class="s">Step 6.</span> Run a real eval</h3>
+<p>This is the one step that spends money. <code>security-reviewer</code> is a good first choice because its evals need no external tools. One agent is the smallest unit you can run.</p>
+<div class="code bill"><div class="cap">Bills: three evals, at most $3.60 at the default caps</div><pre>/usr/bin/python3 run_evals.py security-reviewer</pre></div>
+<p>Each eval prints one line, then a total. This shows the format, with capitals in place of real values:</p>
+<div class="code out"><div class="cap">Output format</div><pre>pass   security-reviewer[0]  $COST  SECONDSs  REASON FROM THE JUDGE
+pass   security-reviewer[1]  $COST  SECONDSs  REASON FROM THE JUDGE
+pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
+
+3/3 passed, $TOTAL total</pre></div>
+
+<!-- ============================================================ 4 -->
+<h1 class="flow" id="c4">4. Core concepts</h1>
+<p class="lead">Kitbash has no inheritance and no base agents. An agent is a flat list of parts joined in a stated order.</p>
+
+<table>
+  <thead><tr><th style="width:13%">Part</th><th>What it is</th><th style="width:33%">Where it lives</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Trait</strong></td><td>A short behaviour rule, plus optional tool grants and denials. Example: <code>read-only</code>.</td><td><code>catalog/traits/&lt;name&gt;.md</code></td></tr>
+  <tr><td><strong>Skill</strong></td><td>A standalone body of know-how. It states what it needs, and any qualifying agent can load it.</td><td><code>catalog/skills/&lt;name&gt;/SKILL.md</code></td></tr>
+  <tr><td><strong>Tool</strong></td><td>A command-line toolchain or MCP server, with the capabilities it provides.</td><td><code>catalog/tools/cli/&lt;name&gt;.yaml</code> or <code>tools/mcp/</code></td></tr>
+  <tr><td><strong>Capability</strong></td><td>A named contract, such as <code>source-control</code>. Agents require it and tools provide it.</td><td>Only a name, used in those files</td></tr>
+  <tr><td><strong>Agent</strong></td><td>A name, traits, skills, allowed models, a prompt and evals.</td><td><code>catalog/agents/&lt;name&gt;.yaml</code></td></tr>
+  <tr><td><strong>Eval</strong></td><td>A test task and a plain-language pass condition. Mandatory on every agent and playbook.</td><td>Inside the agent or playbook</td></tr>
+  <tr><td><strong>Fixture</strong></td><td>Test material that evals work on.</td><td><code>catalog/fixtures/</code></td></tr>
+  <tr><td><strong>Hook</strong></td><td>A script that can block an agent's tool call.</td><td><code>catalog/hooks/</code></td></tr>
+  <tr><td><strong>Pack</strong></td><td>An external skill set pinned to a commit. Its base applies to every agent in a map.</td><td><code>catalog/packs/&lt;name&gt;.md</code></td></tr>
+  <tr><td><strong>Project map</strong></td><td>Binds the catalog to one project through aspects.</td><td><code>projects/&lt;name&gt;/project-map.yaml</code></td></tr>
+  <tr><td><strong>Aspect</strong></td><td>One part of a project: its paths, tools, agents and optional model.</td><td>Inside the map</td></tr>
+  <tr><td><strong>Playbook</strong></td><td>A fixed sequence of agents that code runs and code hands off.</td><td><code>projects/&lt;name&gt;/playbooks/</code></td></tr>
+  </tbody>
+</table>
+
+<h2>How an agent's prompt is put together</h2>
+<div class="fig">
+<svg viewBox="0 0 640 92" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Merge order: pack base, traits, skills, tool skills, prompt, overrides. Later text wins.">
+  <g font-family="Charter, Georgia, serif" font-size="11.5" fill="#1d2126" text-anchor="middle">
+    <rect x="1" y="4" width="98" height="44" rx="3" fill="#e8f2f4" stroke="#0d5c6b"/><text x="50" y="23" font-weight="700">Pack base</text><text x="50" y="38" font-size="9.5" fill="#5d646d">from the map</text>
+    <rect x="109" y="4" width="98" height="44" rx="3" fill="#f4f5f6" stroke="#aab0b7"/><text x="158" y="23" font-weight="700">Traits</text><text x="158" y="38" font-size="9.5" fill="#5d646d">left to right</text>
+    <rect x="217" y="4" width="98" height="44" rx="3" fill="#f4f5f6" stroke="#aab0b7"/><text x="266" y="23" font-weight="700">Skills</text><text x="266" y="38" font-size="9.5" fill="#5d646d">the agent's list</text>
+    <rect x="325" y="4" width="98" height="44" rx="3" fill="#e8f2f4" stroke="#0d5c6b"/><text x="374" y="23" font-weight="700">Tool skills</text><text x="374" y="38" font-size="9.5" fill="#5d646d">the aspect's tools</text>
+    <rect x="433" y="4" width="98" height="44" rx="3" fill="#f4f5f6" stroke="#aab0b7"/><text x="482" y="23" font-weight="700">Prompt</text><text x="482" y="38" font-size="9.5" fill="#5d646d">the agent's own</text>
+    <rect x="541" y="4" width="98" height="44" rx="3" fill="#f4f5f6" stroke="#aab0b7"/><text x="590" y="23" font-weight="700">Overrides</text><text x="590" y="38" font-size="9.5" fill="#5d646d">with a reason</text>
+    <line x1="1" y1="66" x2="628" y2="66" stroke="#5d646d" stroke-width="1.2"/>
+    <polygon points="638,66 628,62 628,70" fill="#5d646d"/>
+    <text x="320" y="84" font-size="10.5" fill="#5d646d">Composed in this order. On a conflict, later text wins, so the agent's own text sharpens the pack's floor.</text>
+  </g>
+</svg>
+<div class="figcap">Figure 2. Merge order. A skill reached twice is composed once, at its first position.</div>
+</div>
+
+<h2>How tools reach an agent</h2>
+<p>An agent's tool set is its aspect's tools, plus the map's <code>shared_tools</code>, minus anything a trait denies. Tools bound to other aspects aren't available to it. If those tools don't provide every capability the agent requires, the map fails validation.</p>
+<div class="fig">
+<svg viewBox="0 0 640 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="In the api aspect, security-reviewer requires source-control and the shared github tool provides it. KiCad belongs to another aspect and is not mounted.">
+  <g font-family="Charter, Georgia, serif" font-size="11.5" fill="#1d2126">
+    <rect x="1" y="4" width="466" height="124" rx="5" fill="none" stroke="#0d5c6b" stroke-dasharray="4 3"/>
+    <text x="13" y="22" font-size="10.5" font-weight="700" fill="#0d5c6b">Aspect: api</text>
+    <text x="78" y="22" font-size="9.5" fill="#5d646d">paths: api/**</text>
+    <rect x="15" y="36" width="134" height="72" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="82" y="58" text-anchor="middle" font-weight="700">Agent</text>
+    <text x="82" y="74" text-anchor="middle" font-size="9" font-family="Menlo, monospace">security-reviewer</text>
+    <text x="82" y="92" text-anchor="middle" font-size="9.5" fill="#5d646d">requires</text>
+    <line x1="149" y1="72" x2="176" y2="72" stroke="#5d646d" stroke-width="1.2"/>
+    <rect x="176" y="55" width="112" height="34" rx="17" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="232" y="76" text-anchor="middle" font-size="9" font-family="Menlo, monospace">source-control</text>
+    <line x1="288" y1="72" x2="315" y2="72" stroke="#5d646d" stroke-width="1.2"/>
+    <rect x="315" y="36" width="134" height="72" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="382" y="58" text-anchor="middle" font-weight="700">Shared tool</text>
+    <text x="382" y="74" text-anchor="middle" font-size="9" font-family="Menlo, monospace">github</text>
+    <text x="382" y="92" text-anchor="middle" font-size="9.5" fill="#5d646d">provides</text>
+    <rect x="490" y="36" width="149" height="72" rx="4" fill="#ffffff" stroke="#c9cdd2" stroke-dasharray="3 3"/>
+    <text x="564" y="58" text-anchor="middle" font-weight="700" fill="#8a9098">Other aspect's tool</text>
+    <text x="564" y="74" text-anchor="middle" font-size="9" font-family="Menlo, monospace" fill="#8a9098">kicad</text>
+    <text x="564" y="92" text-anchor="middle" font-size="9.5" fill="#8a9098">not available here</text>
+  </g>
+</svg>
+<div class="figcap">Figure 3. Agents and tools meet through a capability, inside an aspect.</div>
+</div>
+
+<h2>Skill or playbook?</h2>
+<p>The difference is who reads it. A model reads a <strong>skill</strong> inside one agent's context. Code reads a <strong>playbook</strong>, and no agent ever sees it. If following a procedure needs a model's judgement, write a skill. If steps must run in a fixed order with checks a program can decide, write a playbook.</p>
+
+<!-- ============================================================ 5 -->
+<h1 class="flow" id="c5">5. Evaluate an agent</h1>
+<p class="lead">Evals are how an agent earns its place in a project. Don't route an agent in a map until its evals pass.</p>
+
+<div class="code free"><div class="cap">Free: preview first</div><pre>/usr/bin/python3 run_evals.py security-reviewer --dry-run</pre></div>
+<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 run_evals.py security-reviewer                     # one agent
+/usr/bin/python3 run_evals.py security-reviewer issue-triager       # several
+/usr/bin/python3 run_evals.py security-reviewer --budget 0.50 --report results.json
+/usr/bin/python3 run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT</pre></div>
+
+<h2>What happens during a run</h2>
+<ol class="steps">
+  <li>The runner validates the catalog and refuses to start if anything is wrong.</li>
+  <li>Each eval gets a fresh workspace holding a copy of <code>catalog/fixtures/</code>.</li>
+  <li><code>claude -p</code> runs the agent there on its <code>preferred_llm</code>, isolated from your own Claude Code settings and MCP servers, with permissions bypassed inside the throwaway workspace.</li>
+  <li>A second model, the judge, reads the task, the pass condition, the agent's final message and the diff of the workspace. It returns pass or fail with a reason.</li>
+  <li>The command exits with status 1 if any eval failed or hit an error.</li>
+</ol>
+
+<h2>With a map or without</h2>
+<p>Without <code>--map</code>, the agent runs alone: no pack, no MCP tools. With <code>--map FILE --aspect NAME</code>, it runs as that project would compose it: the map's pack text comes first, the aspect's tool skills are added, and its MCP tools are mounted. The agent doesn't have to be routed there yet, so you can use this to test before you route it.</p>
+<p>Run through a map in these cases:</p>
+<ul>
+  <li>The agent uses an MCP tool such as Pen, or you want to test it with the project's pack.</li>
+  <li>The agent builds code, such as <code>backend-engineer</code> and <code>mobile-engineer</code>. The aspect's toolchain lists <code>artifacts</code> that keep <code>node_modules</code> and <code>.build</code> out of the judge's diff. Without them, the diff is swamped.</li>
+</ul>
+
+<h2>When to run evals again</h2>
+<table>
+  <thead><tr><th style="width:50%">After you change</th><th>Run the evals of</th></tr></thead>
+  <tbody>
+  <tr><td>An agent, or a trait, skill or hook it uses</td><td>That agent, and every other agent that uses the part</td></tr>
+  <tr><td>A tool's skill</td><td>Every agent routed where that tool is bound</td></tr>
+  <tr><td>A map's <code>pack</code>, or a pack's pin or base</td><td>Every agent in that map, because every composed prompt changed</td></tr>
+  </tbody>
+</table>
+
+<div class="note warn"><b class="h">An aspect's model override isn't what the eval tests</b>
+<code>run_evals.py</code> always uses the agent's <code>preferred_llm</code>, even with <code>--map</code>. <code>deploy.py</code>, <code>release.py</code> and playbooks use the aspect's <code>preferred_llm</code> when one is set. The validator also checks a skill's <code>min_model_tier</code> only against the agent's own model. If an aspect overrides the model, its evals don't exercise the model it will deploy with, so check that choice yourself.</div>
+
+<h2>Evals that need real tools</h2>
+<p>Some evals run real software, listed by agent in <a href="#c13">chapter 13</a>. A few have extra conditions:</p>
+<ul>
+  <li><strong>Pen and FreeCAD.</strong> The desktop app must be running. Pen evals leave their workspace copy open in the app. FreeCAD needs the <code>freecad-mcp</code> addon listening on <code>localhost:9875</code>.</li>
+  <li><strong>STM32.</strong> Needs an <code>arm-none-eabi</code> toolchain that ships newlib: <code>$PREFIX</code>, then <code>~/.local/arm-gnu-toolchain</code>, then <code>PATH</code>. Homebrew's <code>arm-none-eabi-gcc</code> has no C library and can't link it.</li>
+  <li><strong>Imported MCP servers.</strong> Set the environment variables shown by <code>registry.py show NAME</code> first, or the server won't connect.</li>
+</ul>
+
+<h2>Running two sessions, and keeping evidence</h2>
+<p><code>--keep</code> leaves workspaces in <code>catalog/.evals/</code> for inspection. That folder isn't ignored by Git, so clear it afterwards. Give each session its own <code>--workdir DIR</code> if two run at once. <code>--report FILE</code> saves the full results as JSON.</p>
+
+<div class="note"><b class="h">Leave fixture defects alone</b>
+<code>fixtures/firmware/pdu/</code> is an unaltered snapshot of a real project, and two evals target its real defects. <code>fixtures/backend/</code> and <code>fixtures/mobile/</code> contain planted defects. Fixing any of them breaks those evals.</div>
+
+<!-- ============================================================ 6 -->
+<h1 class="flow" id="c6">6. Create an agent by hand</h1>
+<p class="lead">This walkthrough builds <code>docs-reviewer</code>, an agent that finds contradictions in a document. It adds files to your catalog, so delete them afterwards if this is only practice.</p>
+
+<h3 class="step"><span class="s">Step 1.</span> Check which parts exist</h3>
+<p>Look through <a href="#c13">chapter 13</a> and the registry first. This agent can reuse the <code>read-only</code> and <code>concise-reporter</code> traits. It needs one new skill.</p>
+
+<h3 class="step"><span class="s">Step 2.</span> Write the skill</h3>
+<div class="code"><div class="cap">catalog/skills/docs-accuracy/SKILL.md</div><pre data-file="catalog/skills/docs-accuracy/SKILL.md">---
+name: docs-accuracy
+description: Find statements in a document that contradict each other.
+requires:
+  tools: [Read]
+  min_model_tier: sonnet
+---
+# Documentation accuracy
+
+Read the whole document before reporting. Report only statements that contradict
+another statement in the same document, and quote both. A clean document gets the
+single line `No findings.`</pre></div>
+
+<h3 class="step"><span class="s">Step 3.</span> Write fixtures for the evals</h3>
+<p>Create one document with a defect and one without.</p>
+<div class="code"><div class="cap">catalog/fixtures/docs-reviewer/setup-stale.md</div><pre data-file="catalog/fixtures/docs-reviewer/setup-stale.md">Install with `make install`. The service listens on port 8080.
+
+Start the service with `make run`, then open http://localhost:9090.</pre></div>
+<div class="code"><div class="cap">catalog/fixtures/docs-reviewer/setup-clean.md</div><pre data-file="catalog/fixtures/docs-reviewer/setup-clean.md">Install with `make install`. The service listens on port 8080.
+
+Start the service with `make run`, then open http://localhost:8080.</pre></div>
+
+<h3 class="step"><span class="s">Step 4.</span> Write the agent</h3>
+<div class="code"><div class="cap">catalog/agents/docs-reviewer.yaml. The file name must match name.</div><pre data-file="catalog/agents/docs-reviewer.yaml">name: docs-reviewer
+description: Reviews a documentation file for statements that contradict each other.
+traits: [read-only, concise-reporter]      # composed in this order
+skills: [docs-accuracy]
+llms: [claude-sonnet-5-5, claude-haiku-5-5]
+preferred_llm: claude-sonnet-5-5           # must be in llms, and meet the skill's min_model_tier
+prompt: |
+  You review documentation for internal contradictions only. Ignore style and grammar.
+evals:
+  - task: "Review fixtures/docs-reviewer/setup-stale.md"
+    pass_if: "the report quotes the port 8080 and port 9090 statements as a contradiction"
+  - task: "Review fixtures/docs-reviewer/setup-clean.md"
+    pass_if: "the report is exactly 'No findings.'"
+  - task: "Review fixtures/docs-reviewer/setup-stale.md and fix it"
+    pass_if: "the agent declines to edit, changes no files, and says how the contradiction
+      could be resolved"</pre></div>
+<p>These three evals follow a useful pattern: one task with a defect to find, one clean input that must produce no false alarm, and one that tests a boundary the agent must hold.</p>
+
+<h3 class="step"><span class="s">Step 5.</span> Validate and read the composed prompt</h3>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py
+/usr/bin/python3 run_evals.py docs-reviewer --dry-run</pre></div>
+
+<h3 class="step"><span class="s">Step 6.</span> Run the evals</h3>
+<div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 run_evals.py docs-reviewer</pre></div>
+<p>If an eval fails, read the judge's reason and decide what is wrong. It might be the agent, the skill or the pass condition. Rerun with <code>--keep</code> if you need to see the workspace. Once all pass, you can route the agent in a map (<a href="#c8">chapter 8</a>).</p>
+<div class="note"><b class="h">A real failure: when the pass condition is wrong</b>
+The third eval first required the agent to &ldquo;describe the fix in one sentence&rdquo;, and it failed. The agent refused to edit, then explained that the document doesn't show which port is right and gave a fix for each case. The judge applied the condition correctly, but the agent's answer was the honest one, because no single fix exists. So the condition changed, not the agent. Tightening the agent would have taught it to guess. When an eval fails, read the agent's message as well as the judge's reason.</div>
+
+<h2>Other parts you may need</h2>
+<h3>A trait</h3>
+<p>Keep traits to a few lines of behaviour. <code>tools</code> lists what the trait relies on and <code>denies</code> lists what it forbids. A real example:</p>
+<div class="code"><div class="cap">catalog/traits/read-only.md</div><pre>---
+name: read-only
+tools: [Read, Grep, Glob, Bash]
+denies: [Edit, Write]
+---
+You may inspect the codebase but never modify it. Report findings; do not fix them.
+If a fix is obvious, describe it in one sentence and leave the change to the owner.</pre></div>
+<p>When two traits disagree about a tool, or an agent really needs a denied tool, the agent must state why:</p>
+<div class="code"><div class="cap">In an agent file</div><pre>overrides:
+  allow: [Edit]
+  reason: this agent corrects typos</pre></div>
+
+<h3>A tool</h3>
+<div class="code"><div class="cap">catalog/tools/cli/ruff.yaml. CLI tools go in tools/cli/ and MCP servers in tools/mcp/.</div><pre data-file="catalog/tools/cli/ruff.yaml">name: ruff
+kind: cli
+description: Ruff, a Python linter.
+provides: [python-lint]        # the capabilities agents can require
+commands:
+  check: ruff check .          # exit status 1 on findings, so a playbook handoff can use it
+skill: null                    # or skills/NAME/SKILL.md, to teach agents how to use the tool</pre></div>
+<p>If a playbook relies on a command's exit status, make sure the command really fails on a problem. <code>kicad-cli</code> exits 0 even with violations, so the <code>kicad</code> tool declares a separate <code>erc-gate</code> command that exits 5. If a tool leaves side-effect files, list them under <code>artifacts</code> to keep them out of the judge's diff. An MCP tool has a <code>server</code> block with <code>command</code> and <code>args</code> instead of <code>commands</code>. See <code>tools/mcp/pencil.yaml</code>.</p>
+
+<h3>A hook</h3>
+<p>A hook is an executable script listed in an agent under <code>hooks: {pre_tool_use: [hooks/NAME.py]}</code>. It reads the tool call as JSON on stdin. Exit status 2 blocks the call and sends stderr back to the model as the reason. <code>hooks/block-network.py</code> is a short example.</p>
+
+<!-- ============================================================ 7 -->
+<h1 class="flow" id="c7">7. Create an agent from a description</h1>
+<p class="lead"><code>make_agent.py</code> is the meta-agent. Give it a sentence, and it designs an agent from your catalog, writes the files, validates them and runs the evals.</p>
+<div class="code bill"><div class="cap">Every line bills, including --dry-run</div><pre>/usr/bin/python3 make_agent.py "an agent that triages GitHub issues" --dry-run   # write nothing
+/usr/bin/python3 make_agent.py "..." --no-evals             # stop after validation
+/usr/bin/python3 make_agent.py "..."                        # full run, not added to any map
+/usr/bin/python3 make_agent.py "..." --search "pdf forms"   # also offer matching imported skills
+/usr/bin/python3 make_agent.py "..." --map MAP --aspect ASPECT --register   # add on an all-pass</pre></div>
+
+<h2>The four stages</h2>
+<table class="keep">
+  <thead><tr><th style="width:15%">Stage</th><th>What happens</th></tr></thead>
+  <tbody>
+  <tr><td><strong>1. Select</strong></td><td>One model call reads the catalog inventory and proposes traits, skills, capabilities, models, a prompt, evals and fixtures, plus at most one new skill if nothing covers the job.</td></tr>
+  <tr><td><strong>2. Emit</strong></td><td>The script writes <code>agents/&lt;name&gt;.yaml</code>, fixtures and any new skill. It never overwrites a file: a name clash stops the run first.</td></tr>
+  <tr><td><strong>3. Validate</strong></td><td>On errors, the model gets one repair attempt. If that fails too, the generated files are removed and the last proposal is printed.</td></tr>
+  <tr><td><strong>4. Evaluate</strong></td><td>The new agent's evals run. With <code>--register</code> and an all-pass, its name is added to the aspect's <code>agents</code> list. If any eval fails, the agent stays in the catalog but isn't added to the map.</td></tr>
+  </tbody>
+</table>
+
+<h2>Tips</h2>
+<ul>
+  <li><strong>Pass <code>--map</code> and <code>--aspect</code> when you know the destination.</strong> The agent may then require only capabilities that aspect provides, the proposal won't repeat the pack's text, and the evals run with the pack composed.</li>
+  <li><strong>Use <code>--search</code> to consider imported skills.</strong> Without it, the model sees only the catalog's own skills. With it, the ten best matches for your terms are offered too. You can repeat the flag.</li>
+  <li><strong>Read what it wrote.</strong> Check the evals especially. A pass only means something if the pass conditions test what you care about, so a failure can come from the pass condition as easily as from the agent.</li>
+  <li><strong>Other options.</strong> <code>--model</code> sets the designing model (default <code>claude-opus-5-5</code>) and <code>--budget</code> caps the design call (default $1.00).</li>
+</ul>
+
+<!-- ============================================================ 8 -->
+<h1 class="flow" id="c8">8. Write a project map</h1>
+<p class="lead">A project map tells Kitbash how a project is divided up, and which tools and agents work in each part.</p>
+
+<h2>Before you write it</h2>
+<ul>
+  <li><strong>Decide which pack to attach,</strong> if any. A map may attach at most one.</li>
+  <li><strong>Find the code root.</strong> A project's code is often separate from its docs workspace and spread across several repos. List every repo and map them all.</li>
+  <li><strong>Choose where the map lives.</strong> Use <code>projects/&lt;name&gt;/</code> for content you can publish and <code>private/projects/&lt;name&gt;/</code> for everything else. Never copy private project content into a tracked path.</li>
+</ul>
+
+<h2>A working example</h2>
+<div class="code"><div class="cap">projects/acme/project-map.yaml</div><pre data-file="projects/acme/project-map.yaml">project: acme
+catalog: ../../catalog          # relative to this file's real location, or absolute
+pack: superpowers               # at most one; its base applies to every agent below
+aspects:
+  docs:
+    paths: ["docs/**", "README.md"]
+    tools: []
+    agents: [docs-reviewer]
+  backend:
+    paths: ["services/api/**"]
+    tools: [python-toolchain]
+    agents: [security-reviewer, issue-triager, backend-engineer]
+shared_tools: [github]          # visible in every aspect</pre></div>
+<div class="code free"><div class="cap">Free: check one map. It may live outside this repo.</div><pre>/usr/bin/python3 validate.py ../projects/acme/project-map.yaml</pre></div>
+<div class="code bill"><div class="cap">Bills: evaluate each agent the way this project will run it</div><pre>/usr/bin/python3 run_evals.py docs-reviewer \
+  --map ../projects/acme/project-map.yaml --aspect docs
+/usr/bin/python3 run_evals.py security-reviewer \
+  --map ../projects/acme/project-map.yaml --aspect backend</pre></div>
+
+<div class="note"><b class="h">The validator doesn't check eval results</b>
+It confirms that the map is consistent, not that its agents have passed. Running the evals is your responsibility until you use <code>release.py</code>, which does enforce it.</div>
+
+<h2>Common edits</h2>
+<h3>Swap a tool</h3>
+<p>Change one line, as long as the new tool provides the capabilities the aspect's agents require. <code>node-toolchain</code> and <code>python-toolchain</code> both provide <code>service-toolchain</code>:</p>
+<div class="code"><pre>tools: [node-toolchain]         # was [python-toolchain]</pre></div>
+<h3>Leave part of the pack out of one aspect</h3>
+<p>A pack's base must suit every routed agent. If it doesn't suit one aspect, exclude that part and give the reason:</p>
+<div class="code"><pre>docs:
+  paths: ["docs/**"]
+  tools: []
+  agents: [docs-reviewer]
+  pack_exclude:
+    skills: [verification-before-completion]
+    reason: this agent only reads and runs no commands</pre></div>
+<h3>Set a model for one aspect</h3>
+<div class="code"><pre>firmware:
+  paths: ["firmware/**"]
+  tools: [stm32-toolchain]
+  agents: [firmware-engineer]
+  preferred_llm: claude-opus-5-5   # must be in the llms of every agent routed in this aspect</pre></div>
+
+<h2>Choosing a pack</h2>
+<table>
+  <thead><tr><th style="width:17%">Pack</th><th style="width:34%">What a map's agents receive</th><th>Notes</th></tr></thead>
+  <tbody>
+  <tr><td><code>superpowers</code></td><td><code>verification-before-completion</code></td><td>Evidence before any claim of success</td></tr>
+  <tr><td><code>pstack</code></td><td><code>principle-prove-it-works</code></td><td>A similar rule, from a set of engineering principles</td></tr>
+  <tr><td><code>gsd</code>, <code>gstack</code>, <code>super-board</code></td><td>Nothing</td><td>Their skills are commands you run, not text to compose. To use them, install them in the project itself.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 9 -->
+<h1 class="flow" id="c9">9. Import skills and MCP servers</h1>
+<p class="lead">The registry holds parts imported in bulk from trusted sources. Once synced, an imported skill or server works by name, just like a catalog file.</p>
+
+<h2>Find and use a part</h2>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 registry.py sources                       # trusted sources and their sync state
+/usr/bin/python3 registry.py search "pdf forms" --kind skill --limit 5
+/usr/bin/python3 registry.py show pdf                      # license, resources, checkout path</pre></div>
+<p>To use a <strong>skill</strong>, add its name to an agent's <code>skills</code> list and rerun that agent's evals. Only the <code>SKILL.md</code> text is composed. If the skill also ships scripts or other files, the validator warns you that they won't be available. <code>deploy.py</code> warns when an agent composes a skill with a proprietary license, such as Anthropic's docx, pdf, pptx and xlsx skills, and writes it anyway.</p>
+<p>To use an <strong>MCP server</strong>, bind it in a map like any other tool:</p>
+<div class="code"><pre>tools: [context7]</pre></div>
+<p>Imported servers keep secrets out of files. <code>registry.py show NAME</code> lists the environment variables a server needs, and the config refers to them as <code>${NAME}</code>. Set them before an eval or deploy. If one is missing, the validator warns you.</p>
+
+<h2>MCP servers you can bind today</h2>
+<p>Only servers with a capability tag can be bound. Capabilities are always tagged by hand, never inferred.</p>
+<table>
+  <thead><tr><th style="width:31%">Server</th><th>Capabilities</th><th style="width:31%">Server</th><th>Capabilities</th></tr></thead>
+  <tbody>
+  <tr><td><code>github-mcp-server</code></td><td><code>source-control</code></td><td><code>terraform-mcp-server</code></td><td><code>infra-as-code</code></td></tr>
+  <tr><td><code>playwright-mcp</code></td><td><code>browser-automation</code></td><td><code>sentry-mcp</code></td><td><code>error-monitoring</code></td></tr>
+  <tr><td><code>context7</code></td><td><code>library-docs</code></td><td><code>mcp-grafana</code></td><td><code>observability-dashboards</code></td></tr>
+  <tr><td><code>atlassian-mcp-server</code></td><td><code>issue-tracking</code>, <code>wiki-docs</code></td><td><code>mongodb-mcp-server</code></td><td><code>document-database</code></td></tr>
+  <tr><td><code>notion-mcp</code></td><td><code>knowledge-base</code></td><td><code>mcp-redis</code>, <code>redis-mcp</code></td><td><code>key-value-store</code></td></tr>
+  <tr><td><code>stripe-mcp</code></td><td><code>payments</code></td><td><code>upstash-mcp-server</code></td><td><code>key-value-store</code>, <code>message-queue</code>, <code>vector-search</code></td></tr>
+  <tr><td><code>vercel-mcp</code></td><td><code>deploy-hosting</code></td><td><code>EnterpriseMCP</code></td><td><code>identity-directory</code></td></tr>
+  <tr><td><code>next-devtools-mcp</code></td><td><code>nextjs-devtools</code></td><td><code>aws-mcp</code></td><td><code>cloud-infra</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Add a new source</h2>
+<p>All registry configuration lives in <code>catalog/registry-sources.yaml</code>. Use this order when a project needs something that's missing:</p>
+<ol class="steps">
+  <li><strong>Search the registry first.</strong> It may already be there.</li>
+  <li><strong>Vet the candidate.</strong> Shallow-clone it and check its layout, frontmatter, that each name matches its folder, its license and any name collisions.</li>
+  <li><strong>Add it to the sources file.</strong> Use one of the forms below.</li>
+  <li><strong>Sync:</strong> <code>/usr/bin/python3 registry.py sync NAME</code>. Any edit to this file, including <code>provides</code> or <code>names</code>, needs a sync, or the validator reports the source as stale.</li>
+</ol>
+<div class="code"><div class="cap">A skill repo, pinned to a full 40-character commit</div><pre>- name: anthropics-skills
+  kind: git-skills
+  url: https://github.com/anthropics/skills
+  commit: ca45fc496a3436251f191354091d557da31c15b5
+  layout: skills/{name}/SKILL.md
+  pinned: 2026-11-02</pre></div>
+<div class="code"><div class="cap">An MCP server, added to the entry that already exists for the official registry</div><pre>- name: mcp-registry
+  kind: mcp-registry
+  namespaces:
+    - com.notion                       # exact prefix before the '/'
+  names:
+    com.notion/mcp: notion-mcp         # a tool name, when the last segment would collide
+  provides:
+    notion-mcp: [knowledge-base]       # required before a map can bind it</pre></div>
+<p>The scripts never browse the web for parts. A map must validate and deploy from repo files and pinned sources alone. So look for new leads yourself, then add them as sources.</p>
+
+<!-- ============================================================ 10 -->
+<h1 class="flow" id="c10">10. Chain agents with a playbook</h1>
+<p class="lead">A playbook runs agents in a fixed order. Code, not a model, decides whether to continue after each step, so a hard gate can't be talked around.</p>
+
+<div class="fig">
+<svg viewBox="0 0 640 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="issue-triager runs. If severity is high or critical, security-reviewer runs. Otherwise the playbook stops.">
+  <g font-family="Charter, Georgia, serif" font-size="11.5" fill="#1d2126" text-anchor="middle">
+    <rect x="1" y="16" width="150" height="54" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="76" y="38" font-weight="700">Step 1</text><text x="76" y="55" font-size="9" font-family="Menlo, monospace">issue-triager</text>
+    <line x1="151" y1="43" x2="192" y2="43" stroke="#5d646d" stroke-width="1.2"/><polygon points="200,43 192,39 192,47" fill="#5d646d"/>
+    <rect x="200" y="16" width="194" height="54" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="297" y="38" font-weight="700">Handoff, decided by code</text><text x="297" y="55" font-size="9" font-family="Menlo, monospace">severity in [high, critical]?</text>
+    <line x1="394" y1="43" x2="471" y2="43" stroke="#2c7a4b" stroke-width="1.2"/><polygon points="479,43 471,39 471,47" fill="#2c7a4b"/>
+    <text x="432" y="37" font-size="10" font-weight="700" fill="#2c7a4b">yes</text>
+    <rect x="479" y="16" width="160" height="54" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="559" y="38" font-weight="700">Step 2</text><text x="559" y="55" font-size="9" font-family="Menlo, monospace">security-reviewer</text>
+    <line x1="297" y1="70" x2="297" y2="84" stroke="#a3322a" stroke-width="1.2"/>
+    <text x="297" y="102" font-size="10.5" font-weight="700" fill="#a3322a">no: stop and report</text>
+    <polygon points="297,91 293,84 301,84" fill="#a3322a"/>
+  </g>
+</svg>
+<div class="figcap">Figure 4. The steps of the sample playbook <code>triage-and-review</code>. All steps share one workspace.</div>
+</div>
+
+<h2>Write one</h2>
+<p>A playbook lives in <code>playbooks/</code> beside its map, and its file name must match <code>name</code>. Every agent it uses must be routed in the aspect the step names.</p>
+<div class="code long"><div class="cap">projects/acme/playbooks/triage-then-review.yaml</div><pre data-file="projects/acme/playbooks/triage-then-review.yaml">name: triage-then-review
+description: Triage an issue. If it is high or critical, security-review the change it refers to.
+map: ../project-map.yaml
+inputs: [issue, diff]                      # used as {issue} and {diff} below
+steps:
+  - agent: issue-triager
+    aspect: backend
+    task: "Triage {issue}"
+    handoff_if: {output: severity, in: [high, critical]}
+  - agent: security-reviewer
+    aspect: backend
+    task: "The issue in {issue} was triaged as high severity. Review {diff}."
+evals:
+  - inputs:
+      issue: fixtures/issue-triager/issue-search-crash.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager, security-reviewer]
+    pass_if: "the review names the string-built query in api/users.py as a SQL injection finding"
+  - inputs:
+      issue: fixtures/issue-triager/issue-feature-request.md
+      diff: fixtures/security/pr-sql-injection.diff
+    expect_path: [issue-triager]           # proves that the gate stops the run
+    pass_if: "the playbook stops after the triager; security-reviewer never runs"</pre></div>
+
+<h2>Handoffs</h2>
+<p>Every step except the last needs exactly one <code>handoff_if</code>. A false handoff stops the run. There are no branches, retries or loops.</p>
+<table>
+  <thead><tr><th style="width:13%">Form</th><th style="width:43%">Example</th><th>Continues when</th></tr></thead>
+  <tbody>
+  <tr><td><strong>Output</strong></td><td><code>{output: severity, in: [high, critical]}</code> or <code>{output: type, equals: bug}</code></td><td>A field in the JSON block that ends the previous agent's message matches. The agent must declare the field under <code>outputs</code>. The runner asks for the block automatically.</td></tr>
+  <tr><td><strong>Command</strong></td><td><code>{command: kicad.erc-gate, file: "{file}"}</code></td><td>A declared command of a tool bound in that aspect, or shared, exits with status 0. <code>{report}</code> is supplied as a file in the workspace.</td></tr>
+  </tbody>
+</table>
+<p>After the first step, each task is prefixed with the diff the previous step made, so the next agent knows what changed.</p>
+
+<h2>Run one</h2>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 validate.py ../projects/acme/project-map.yaml   # also checks its playbooks
+/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --dry-run</pre></div>
+<div class="code bill"><div class="cap">Bills. --budget is per step, default $1.00.</div><pre># Run its evals. A wrong path fails without calling the judge.
+/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml
+
+# One real run with your own inputs, and no judge
+/usr/bin/python3 run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --run \
+  issue=fixtures/issue-triager/issue-search-crash.md diff=fixtures/security/pr-sql-injection.diff</pre></div>
+<p>Each run also reports its handoffs, such as <code>handoff after issue-triager: continue (...)</code>, and the path it took. Add <code>--keep</code> to keep the shared workspace.</p>
+
+<!-- ============================================================ 11 -->
+<h1 class="flow" id="c11">11. Deploy to a project</h1>
+<p class="lead"><code>deploy.py</code> writes a map's agents straight into a project's <code>.claude/</code> folder. It suits your own machine and maps that bind MCP tools. For anything that needs review, use a release (<a href="#c12">chapter 12</a>).</p>
+<div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 deploy.py ../projects/acme/project-map.yaml --target ~/code/acme --dry-run
+/usr/bin/python3 deploy.py ../projects/acme/project-map.yaml --target ~/code/acme</pre></div>
+<div class="code out"><div class="cap">Output</div><pre>wrote    .claude/agents/docs-reviewer.md
+wrote    .claude/agents/security-reviewer.md
+wrote    .claude/kitbash/hooks/block-network.py
+wrote    .claude/agents/issue-triager.md
+wrote    .claude/agents/backend-engineer.md
+
+5 file(s) deployed to /Users/you/code/acme; manifest at .claude/kitbash.json</pre></div>
+
+<div class="note warn"><b class="h">deploy.py doesn't check eval results</b>
+It requires a valid map but will deploy an agent that has never been evaluated. Make sure the map's evals have passed first.</div>
+
+<h2>What gets written</h2>
+<p>Each (aspect, agent) pair becomes one Claude Code subagent at <code>.claude/agents/&lt;agent&gt;.md</code>, or <code>&lt;agent&gt;-&lt;aspect&gt;.md</code> if the agent is routed in several aspects. Its body is built by the same function the eval runner uses. The frontmatter carries the rest:</p>
+<table>
+  <thead><tr><th style="width:21%">Field</th><th>Value</th></tr></thead>
+  <tbody>
+  <tr><td><code>description</code></td><td>The agent's description plus its aspect and paths. Claude Code reads this to decide when to use the agent.</td></tr>
+  <tr><td><code>model</code></td><td>The aspect's <code>preferred_llm</code>, otherwise the agent's.</td></tr>
+  <tr><td><code>disallowedTools</code></td><td>Tools denied by traits, plus every MCP tool in the catalog that isn't bound to this aspect.</td></tr>
+  <tr><td><code>mcpServers</code></td><td>The aspect's MCP tools, connected only while this agent runs.</td></tr>
+  <tr><td><code>hooks</code></td><td>The agent's hooks, copied to <code>.claude/kitbash/hooks/</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2>Deploying again</h2>
+<p>The manifest <code>.claude/kitbash.json</code> records what Kitbash wrote. The next deploy overwrites those files and removes any the map no longer produces. It refuses to replace a file it didn't write:</p>
+<div class="code out"><div class="cap">Output</div><pre>refusing to overwrite files Kitbash did not write (use --force):
+  .claude/agents/spec-reviewer.md</pre></div>
+<p>Look at that file before adding <code>--force</code>. If the map, the catalog or a playbook doesn't validate, nothing is written at all.</p>
+
+<h2>Use the agents</h2>
+<p>Start a new Claude Code session in the project. The subagents load from <code>.claude/agents/</code>, and Claude Code picks one when work matches its description. You can also ask for one by name.</p>
+
+<!-- ============================================================ 12 -->
+<h1 class="flow" id="c12">12. Publish through a reviewed release</h1>
+<p class="lead">A release delivers agents to a project's repos as pull requests, and only after you have reviewed exactly what each agent will receive, beside its eval result.</p>
+
+<div class="fig">
+<svg viewBox="0 0 640 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Release pipeline: build, run evals, merge in the private repo, publish, merge in target repos, trust the folder.">
+  <g font-family="Charter, Georgia, serif" font-size="11" fill="#1d2126" text-anchor="middle">
+    <g><rect x="1" y="8" width="94" height="58" rx="4" fill="#eaf5ee" stroke="#2c7a4b"/><text x="48" y="31" font-weight="700">Build</text><text x="48" y="48" font-size="9" fill="#5d646d">plugins, lock</text></g>
+    <polygon points="104,37 97,33 97,41" fill="#5d646d"/>
+    <g><rect x="106" y="8" width="94" height="58" rx="4" fill="#fdf3e4" stroke="#a65a00"/><text x="153" y="31" font-weight="700">Evals</text><text x="153" y="48" font-size="9" fill="#5d646d">records results</text></g>
+    <polygon points="209,37 202,33 202,41" fill="#5d646d"/>
+    <g><rect x="211" y="8" width="94" height="58" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/><text x="258" y="31" font-weight="700">Merge</text><text x="258" y="48" font-size="9" fill="#5d646d">private repo</text></g>
+    <polygon points="314,37 307,33 307,41" fill="#5d646d"/>
+    <g><rect x="316" y="8" width="94" height="58" rx="4" fill="#eaf5ee" stroke="#2c7a4b"/><text x="363" y="31" font-weight="700">Publish</text><text x="363" y="48" font-size="9" fill="#5d646d">opens PRs</text></g>
+    <polygon points="419,37 412,33 412,41" fill="#5d646d"/>
+    <g><rect x="421" y="8" width="94" height="58" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/><text x="468" y="31" font-weight="700">Merge</text><text x="468" y="48" font-size="9" fill="#5d646d">target repos</text></g>
+    <polygon points="524,37 517,33 517,41" fill="#5d646d"/>
+    <g><rect x="526" y="8" width="113" height="58" rx="4" fill="#e8f2f4" stroke="#0d5c6b"/><text x="582" y="31" font-weight="700">Trust folder</text><text x="582" y="48" font-size="9" fill="#5d646d">in each repo</text></g>
+    <text x="320" y="88" font-size="10" fill="#5d646d">Green: free script.  Amber: bills your account.  Teal: your decision. The merge in the private repo is the approval.</text>
+  </g>
+</svg>
+<div class="figcap">Figure 5. The release pipeline.</div>
+</div>
+
+<h2>Set up a project for release</h2>
+<ol class="steps">
+  <li>Create a private Git repo with a <code>main</code> branch and clone it to <code>private/projects/</code>, which this repo ignores.</li>
+  <li>Make sure each target repo has an <code>origin</code> with a <code>main</code> branch, and sign in to <code>gh</code>.</li>
+  <li>Create a project folder such as <code>private/projects/acme/</code> holding the map, any playbooks, your CLAUDE files and <code>release.yaml</code>. Point the map at the catalog with <code>catalog: ../../../catalog</code>.</li>
+</ol>
+<div class="code"><div class="cap">private/projects/acme/release.yaml</div><pre data-file="private/projects/acme/release.yaml">target: ~/code/acme                 # the code root; may hold several repos
+claude:                             # destination, relative to target or absolute: source file
+  CLAUDE.md: claude/app.md
+remove: [old/CLAUDE.md]             # optional: files the release should delete
+eval_budget: {docs-reviewer: 2.50}  # optional: per-run budget by agent, default 1.00</pre></div>
+<p>Aspect <code>paths</code> are relative to <code>target</code> or absolute. Each aspect's paths must sit inside one Git repo, because Kitbash generates one plugin per repo.</p>
+
+<h2>Run a release</h2>
+<div class="code free"><div class="cap">1. Free: generate build/. This touches no target repo.</div><pre>/usr/bin/python3 release.py build ../private/projects/acme</pre></div>
+<div class="code bill"><div class="cap">2. Bills: run the evals of every agent without a current pass. Stops starting agents at $30 by default.</div><pre>/usr/bin/python3 release.py evals ../private/projects/acme
+/usr/bin/python3 release.py evals ../private/projects/acme \
+  --only docs/docs-reviewer --max-total 5 --jobs 1</pre></div>
+<p><strong>3. Review and approve.</strong> Commit <code>build/</code> and open a pull request in the private repo. Its diff is exactly what each agent will receive, and <code>build/lock.json</code> holds the eval results for that text. Merging is the approval. Then update your local <code>main</code>.</p>
+<div class="code free"><div class="cap">4. Free: check readiness, then preview</div><pre>/usr/bin/python3 release.py check ../private/projects/acme
+/usr/bin/python3 release.py publish ../private/projects/acme --dry-run</pre></div>
+<div class="code out"><div class="cap">Output of check when the project is ready and hasn't been published</div><pre>ready to publish
+
+targets differ from the build:
+/Users/you/code/acme
+  write  .claude/skills/acme/agents/docs-reviewer.md
+  write  .claude/skills/acme/.claude-plugin/plugin.json
+  write  CLAUDE.md</pre></div>
+<p><code>check</code> exits with status 1 here, because the targets still differ. That's normal before a publish. Read the words, not just the exit status.</p>
+<div class="code"><div class="cap">5. Opens one PR per target repo. This is outward-facing, so run it only when you mean to.</div><pre>/usr/bin/python3 release.py publish ../private/projects/acme</pre></div>
+<p><strong>6. Merge the PRs</strong> in the target repos. Once they're merged, <code>check</code> reports <code>targets match the build</code>. A destination outside any Git repo, such as a docs workspace, is written directly during <code>publish</code>.</p>
+<p><strong>7. Trust each repo folder.</strong> Start Claude Code interactively at the root of each repo and accept the trust prompt.</p>
+
+<div class="note warn"><b class="h">A plugin can fail to load without any warning</b>
+A repo plugin loads only when a session starts at the repo root, not in a subfolder, and only once that exact folder is trusted. <code>claude -p</code> or a trusted parent folder isn't enough, and <code>publish</code> never sets trust for you. Plugin agents are named <code>&lt;plugin&gt;:&lt;agent&gt;</code>.</div>
+
+<h2>What makes publish refuse</h2>
+<table>
+  <thead><tr><th style="width:47%">Message</th><th>What to do</th></tr></thead>
+  <tbody>
+  <tr><td><code>... has uncommitted changes</code></td><td>Commit or discard your changes in the private repo.</td></tr>
+  <tr><td><code>... is not level with origin/main</code></td><td>Merge your PR and pull. Unmerged work hasn't been approved.</td></tr>
+  <tr><td><code>the committed build differs from a fresh build</code></td><td>Something changed after the build. Rerun <code>build</code>, then review and merge the result.</td></tr>
+  <tr><td><code>ASPECT/AGENT: the agent changed since the last build</code></td><td>A change altered the agent's text, hooks or evals, which voids its recorded pass. Run <code>build</code> and <code>evals</code>.</td></tr>
+  <tr><td><code>ASPECT/AGENT: no eval result</code></td><td>Run <code>release.py evals</code>.</td></tr>
+  <tr><td><code>ASPECT/AGENT: evals passed N of M</code></td><td>Fix the failure and run <code>evals</code> again.</td></tr>
+  </tbody>
+</table>
+
+<h2>Limits of a release</h2>
+<ul>
+  <li><strong>Tool scope is per repo,</strong> not per agent as with <code>deploy.py</code>.</li>
+  <li><strong>A map that binds an MCP tool is refused:</strong> <code>a plugin cannot bind MCP tools yet</code>. Use <code>deploy.py</code> for it.</li>
+  <li><strong>Fixtures aren't in the hash.</strong> Changing a fixture doesn't void a recorded pass, so rerun those evals yourself.</li>
+  <li><strong>Publishing is yours to approve.</strong> If an assistant runs Kitbash for you, don't let it merge these PRs or run <code>publish</code> unless you ask.</li>
+</ul>
+
+<!-- ============================================================ 13 -->
+<h1 id="c13">13. What's in the catalog</h1>
+<p>This chapter lists the catalog as of this guide's date. To see what a map actually routes, read the map.</p>
+<h2>Agents</h2>
+<table>
+  <thead><tr><th style="width:21%">Agent</th><th style="width:43%">Does</th><th>Its evals need</th></tr></thead>
+  <tbody>
+  <tr><td class="nw"><code>security-reviewer</code></td><td>Reviews a PR or file set for security defects only. Read-only.</td><td>Nothing extra</td></tr>
+  <tr><td class="nw"><code>spec-reviewer</code></td><td>Finds statements in specification documents that contradict each other, citing both sides. Read-only.</td><td>Nothing extra</td></tr>
+  <tr><td class="nw"><code>issue-triager</code></td><td>Labels issues by type and severity and drafts a first reply. Declares <code>type</code> and <code>severity</code> outputs.</td><td>Nothing extra</td></tr>
+  <tr><td class="nw"><code>backend-engineer</code></td><td>Implements and fixes TypeScript and Python services, testing first.</td><td>Python; Node and <code>pnpm</code>. Run through a map.</td></tr>
+  <tr><td class="nw"><code>mobile-engineer</code></td><td>Implements and fixes Kotlin and SwiftUI companion apps.</td><td>Xcode for Swift. Run through a map.</td></tr>
+  <tr><td class="nw"><code>firmware-engineer</code></td><td>Implements and fixes STM32 firmware, building and testing first.</td><td>An <code>arm-none-eabi</code> toolchain with newlib</td></tr>
+  <tr><td class="nw"><code>drc-checker</code></td><td>Runs ERC and DRC on KiCad files and reports every violation. Read-only.</td><td>KiCad</td></tr>
+  <tr><td class="nw"><code>schematic-engineer</code></td><td>Creates and modifies KiCad schematics, proving each change with ERC and a netlist.</td><td>KiCad and <code>kicad-sch-api</code></td></tr>
+  <tr><td class="nw"><code>ux-designer</code></td><td>Creates and revises screens in a Pen design file, reusing tokens.</td><td>Pen desktop app, running</td></tr>
+  <tr><td class="nw"><code>mechanical-engineer</code></td><td>Revises parametric FreeCAD parts through a Params sheet. Its evals haven't been run, so treat it as unproven.</td><td>FreeCAD with the <code>freecad-mcp</code> addon, and an aspect that binds <code>freecad</code></td></tr>
+  <tr><td class="nw"><code>recipe-author</code></td><td>Turns videos, pages or text into validated recipes for the Epicura cooking device.</td><td><code>yt-dlp</code> and an Epicura recipe engine checkout. YouTube may rate-limit caption fetches.</td></tr>
+  </tbody>
+</table>
+
+<h2>Traits</h2>
+<table>
+  <thead><tr><th style="width:21%">Trait</th><th>Effect</th></tr></thead>
+  <tbody>
+  <tr><td><code>read-only</code></td><td>Inspect, never modify. Denies <code>Edit</code> and <code>Write</code>.</td></tr>
+  <tr><td><code>runs-tests</code></td><td>Run the project's tests before reporting a change as done, and show the result.</td></tr>
+  <tr><td><code>concise-reporter</code></td><td>Lead with the conclusion, one sentence per finding, cite <code>path:line</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2>Tools and capabilities</h2>
+<table>
+  <thead><tr><th style="width:21%">Tool</th><th style="width:8%">Kind</th><th style="width:32%">Provides</th><th>Commands</th></tr></thead>
+  <tbody>
+  <tr><td><code>github</code></td><td>cli</td><td><code>source-control</code></td><td><code>pr_diff</code>, <code>pr_comment</code></td></tr>
+  <tr><td><code>python-toolchain</code></td><td>cli</td><td><code>service-toolchain</code></td><td><code>test</code>, <code>pytest</code></td></tr>
+  <tr><td><code>node-toolchain</code></td><td>cli</td><td><code>service-toolchain</code></td><td><code>install</code>, <code>test</code>, <code>lint</code>, <code>build</code></td></tr>
+  <tr><td><code>xcode-toolchain</code></td><td>cli</td><td><code>mobile-toolchain</code></td><td><code>test</code>, <code>package_test</code>, <code>build</code></td></tr>
+  <tr><td><code>android-toolchain</code></td><td>cli</td><td><code>mobile-toolchain</code></td><td><code>build</code>, <code>test</code>, <code>lint</code></td></tr>
+  <tr><td><code>stm32-toolchain</code></td><td>cli</td><td><code>embedded-toolchain</code></td><td><code>build</code>, <code>flash</code>, <code>test</code></td></tr>
+  <tr><td><code>kicad</code></td><td>cli</td><td><code>schematic-erc</code>, <code>design-rule-check</code></td><td><code>cli</code>, <code>erc</code>, <code>drc</code>, <code>erc-gate</code>, <code>drc-gate</code></td></tr>
+  <tr><td><code>kicad-sch-api</code></td><td>cli</td><td><code>schematic-capture</code></td><td><code>python</code></td></tr>
+  <tr><td><code>recipe-validator</code></td><td>cli</td><td><code>recipe-validation</code></td><td><code>validate</code>, <code>validate-gate</code></td></tr>
+  <tr><td><code>video-transcript</code></td><td>cli</td><td><code>video-transcript</code></td><td><code>transcript</code></td></tr>
+  <tr><td><code>pencil</code></td><td>mcp</td><td><code>design-canvas</code>, <code>design-tokens</code></td><td>Through its MCP server</td></tr>
+  <tr><td><code>freecad</code></td><td>mcp</td><td><code>mechanical-cad</code></td><td>Through its MCP server</td></tr>
+  </tbody>
+</table>
+
+<h2>Skills and hooks</h2>
+<p><strong>Skills:</strong> <code>backend-service</code>, <code>issue-triage</code>, <code>kicad-eda</code>, <code>kicad-schematic</code>, <code>mechanical-design</code>, <code>mobile-app</code>, <code>pencil-design</code>, <code>recipe-authoring</code>, <code>security-review</code>, <code>spec-consistency</code>, <code>stm32-firmware</code>. The registry adds 40 imported skills.</p>
+<p><strong>Hooks:</strong> <code>block-network.py</code> blocks shell commands such as <code>curl</code>, <code>ssh</code> and <code>npm install</code>. <code>only-for-agents.py</code> limits a plugin's hook to named agents. Releases add it for you.</p>
+
+<!-- ============================================================ 14 -->
+<h1 class="flow" id="c14">14. Command reference</h1>
+<p>Run everything from <code>catalog/</code>. Every script except <code>validate.py</code> also has <code>--help</code>. <code>validate.py</code> has no help option and simply runs the checks.</p>
+
+<h2><code>validate.py</code> <span class="tag free">FREE</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:44%"><code>validate.py</code></td><td>Catalog, plus maps in <code>../projects/</code> and <code>../private/projects/</code></td></tr>
+  <tr><td><code>validate.py PATH/TO/project-map.yaml ...</code></td><td>The named maps, which may live anywhere, and their playbooks</td></tr>
+  <tr><td><code>validate.py --catalog DIR</code></td><td>Catalog only</td></tr>
+</tbody></table>
+<p>Exits 1 on any error. Warnings don't fail the run.</p>
+
+<h2><code>run_evals.py AGENT ...</code> <span class="tag bill">BILLS</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><code>--all</code></td><td>Every agent. Costly, and it needs every external tool.</td></tr>
+  <tr><td><code>--map FILE --aspect NAME</code></td><td>Compose with the map's pack and the aspect's tools</td></tr>
+  <tr><td><code>--dry-run</code></td><td>Print the composed prompt and commands. Free.</td></tr>
+  <tr><td><code>--budget USD</code></td><td>Cap per agent run, default 1.00. The judge gets 0.20.</td></tr>
+  <tr><td><code>--max-turns N</code></td><td>Turn limit per agent run, default 30</td></tr>
+  <tr><td><code>--judge-model MODEL</code></td><td>Model that grades, default <code>claude-sonnet-5-5</code></td></tr>
+  <tr><td><code>--keep</code>, <code>--workdir DIR</code></td><td>Keep workspaces, or put them somewhere other than <code>catalog/.evals/</code></td></tr>
+  <tr><td><code>--report FILE</code></td><td>Also write results as JSON</td></tr>
+</tbody></table>
+
+<h2><code>run_playbook.py PLAYBOOK</code> <span class="tag bill">BILLS</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><code>--run KEY=VALUE ...</code></td><td>One run with these inputs, without a judge, instead of the evals</td></tr>
+  <tr><td><code>--dry-run</code></td><td>Print each step and handoff. Free.</td></tr>
+  <tr><td><code>--budget USD</code>, <code>--max-turns N</code></td><td>Per step: default 1.00 and 30</td></tr>
+  <tr><td><code>--judge-model</code>, <code>--keep</code>, <code>--workdir</code>, <code>--report</code></td><td>As for <code>run_evals.py</code></td></tr>
+</tbody></table>
+
+<h2><code>make_agent.py "REQUEST"</code> <span class="tag bill">BILLS, EVEN WITH --dry-run</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><code>--map FILE --aspect NAME</code></td><td>Limit capabilities to that aspect and evaluate through the map</td></tr>
+  <tr><td><code>--register</code></td><td>With a map, add the agent to the aspect on an all-pass</td></tr>
+  <tr><td><code>--search TERMS</code></td><td>Offer the best-matching imported skills. Repeatable.</td></tr>
+  <tr><td><code>--no-evals</code></td><td>Stop after validation</td></tr>
+  <tr><td><code>--dry-run</code></td><td>Print the proposal and write nothing</td></tr>
+  <tr><td><code>--model MODEL</code>, <code>--budget USD</code></td><td>Designing model, default <code>claude-opus-5-5</code>; design-call cap, default 1.00</td></tr>
+</tbody></table>
+
+<h2><code>registry.py</code> <span class="tag free">FREE</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:44%"><code>registry.py sources</code></td><td>Trusted sources and their sync state</td></tr>
+  <tr><td><code>registry.py sync [NAME ...]</code></td><td>Fetch every source, or the named ones. Uses the network.</td></tr>
+  <tr><td><code>registry.py search QUERY [--kind skill|mcp] [--limit N] [--json]</code></td><td>Search imported skills and servers</td></tr>
+  <tr><td><code>registry.py show NAME</code></td><td>License, resources and checkout path. For a server: config and secret names.</td></tr>
+</tbody></table>
+
+<h2><code>deploy.py MAP --target DIR</code> <span class="tag free">FREE</span></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><code>--dry-run</code></td><td>Print the files and write nothing</td></tr>
+  <tr><td><code>--force</code></td><td>Overwrite agent files Kitbash didn't write</td></tr>
+</tbody></table>
+
+<h2><code>release.py</code></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:44%"><code>build PROJECT</code> <span class="tag free">FREE</span></td><td>Regenerate <code>build/</code>. Touches no target repo.</td></tr>
+  <tr><td><code>evals PROJECT</code> <span class="tag bill">BILLS</span></td><td>Run the evals of every agent without a current pass</td></tr>
+  <tr><td>&nbsp;&nbsp;<code>--only ASPECT/AGENT ...</code></td><td>Limit to these</td></tr>
+  <tr><td>&nbsp;&nbsp;<code>--max-total USD</code>, <code>--jobs N</code>, <code>--workdir DIR</code></td><td>Ceiling, default 30; parallel agents, default 3; workspace, default a temp folder</td></tr>
+  <tr><td><code>check PROJECT</code> <span class="tag free">FREE</span></td><td>Readiness, and drift against each target's <code>origin/main</code>. Exits 1 if not ready or if targets differ.</td></tr>
+  <tr><td><code>publish PROJECT</code> <span class="tag free">FREE</span></td><td>Open a PR in each target repo that differs. Outward-facing.</td></tr>
+  <tr><td>&nbsp;&nbsp;<code>--dry-run</code></td><td>List the changes. Refuses if the project isn't ready.</td></tr>
+  <tr><td>&nbsp;&nbsp;<code>--trailer TEXT</code>, <code>--pr-footer TEXT</code></td><td>Last lines of each commit message and PR description</td></tr>
+</tbody></table>
+
+<!-- ============================================================ 15 -->
+<h1 id="c15">15. File formats</h1>
+<p>Every file is YAML, with a Markdown body for traits, skills and packs. A file's <code>name</code> must match its file name or folder. <strong>Bold</strong> fields are required. Three small conventions appear inside values: <code>{name}</code> placeholders, <code>tool.command</code> references, and list order meaning merge order.</p>
+
+<h2>Agent: <code>agents/&lt;name&gt;.yaml</code></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><strong><code>name</code></strong>, <code>description</code></td><td>Identity. Deploys use the description for routing, so always write one.</td></tr>
+  <tr><td><code>traits</code>, <code>skills</code></td><td>Lists, composed in order</td></tr>
+  <tr><td><strong><code>llms</code></strong>, <strong><code>preferred_llm</code></strong></td><td>Allowed models, and the default, which must be in the list</td></tr>
+  <tr><td><strong><code>prompt</code></strong></td><td>The agent's own text</td></tr>
+  <tr><td><strong><code>evals</code></strong></td><td>List of <code>task</code>, <code>pass_if</code>, and optionally <code>creates</code>, the new files a task makes. Any <code>fixtures/...</code> path in a task must exist unless it's listed under <code>creates</code>, in which case it must not exist yet.</td></tr>
+  <tr><td><code>requires.capabilities</code></td><td>What the aspect's tools must provide</td></tr>
+  <tr><td><code>hooks</code></td><td><code>{pre_tool_use: [hooks/NAME.py]}</code></td></tr>
+  <tr><td><code>outputs</code></td><td><code>{field: one-line description}</code>, read by playbook handoffs</td></tr>
+  <tr><td><code>overrides</code></td><td><code>{allow: [TOOL], reason: "..."}</code></td></tr>
+</tbody></table>
+
+<h2>Trait: <code>traits/&lt;name&gt;.md</code></h2>
+<p>Frontmatter has <strong><code>name</code></strong>, <code>tools</code> and <code>denies</code>. A single trait can't both use and deny a tool. The Markdown body is the composed text.</p>
+
+<h2>Skill: <code>skills/&lt;name&gt;/SKILL.md</code></h2>
+<p>Frontmatter has <strong><code>name</code></strong>, <strong><code>description</code></strong> and <code>requires</code>, which may hold <code>tools</code>, <code>capabilities</code> and <code>min_model_tier</code> (<code>haiku</code>, <code>sonnet</code>, <code>opus</code> or <code>fable</code>). The Markdown body is the composed text.</p>
+
+<h2>Tool: <code>tools/cli/&lt;name&gt;.yaml</code> or <code>tools/mcp/&lt;name&gt;.yaml</code></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><strong><code>name</code></strong>, <strong><code>kind</code></strong>, <code>description</code></td><td><code>kind</code> is <code>cli</code> or <code>mcp</code> and must match the folder</td></tr>
+  <tr><td><strong><code>provides</code></strong></td><td>At least one capability</td></tr>
+  <tr><td><code>commands</code></td><td>Named shell commands, with <code>{placeholder}</code> arguments</td></tr>
+  <tr><td><code>server</code></td><td>For MCP: <code>command</code> and <code>args</code></td></tr>
+  <tr><td><code>skill</code></td><td>Path to a skill that teaches the tool, or <code>null</code></td></tr>
+  <tr><td><code>artifacts</code></td><td>Globs of side-effect files to hide from the judge's diff</td></tr>
+  <tr><td><code>inspect</code></td><td>For document fixtures such as <code>.pen</code>: <code>extensions</code>, <code>open</code> and <code>dump</code> commands</td></tr>
+</tbody></table>
+
+<h2>Pack: <code>packs/&lt;name&gt;.md</code></h2>
+<p>Frontmatter has <code>name</code>, <code>description</code>, <code>source</code> (<strong><code>url</code></strong>, a full 40-character <strong><code>commit</code></strong>, <code>version</code>, <code>license</code>), <code>layout</code> (such as <code>skills: skills/{name}/SKILL.md</code>) and <code>base</code> (<code>traits</code>, <code>skills</code>).</p>
+
+<h2>Project map: <code>project-map.yaml</code></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><strong><code>project</code></strong>, <strong><code>catalog</code></strong></td><td>Project name, and the catalog path: relative to the map's real location, or absolute. <code>~</code> is expanded and symbolic links are followed.</td></tr>
+  <tr><td><code>pack</code></td><td>One pack name</td></tr>
+  <tr><td><code>shared_tools</code></td><td>Tools visible in every aspect</td></tr>
+  <tr><td><strong><code>aspects.&lt;name&gt;</code></strong></td><td><strong><code>paths</code></strong> (globs), <code>tools</code>, <code>agents</code>, <code>preferred_llm</code>, <code>pack_exclude</code> (<code>traits</code>, <code>skills</code>, <strong><code>reason</code></strong>)</td></tr>
+</tbody></table>
+
+<h2>Playbook: <code>playbooks/&lt;name&gt;.yaml</code></h2>
+<table class="keep"><tbody>
+  <tr><td style="width:27%"><strong><code>name</code></strong>, <code>description</code></td><td>Identity</td></tr>
+  <tr><td><strong><code>map</code></strong></td><td>Must name the map beside this <code>playbooks/</code> folder</td></tr>
+  <tr><td><code>inputs</code></td><td>Names usable as <code>{placeholder}</code> in tasks and handoffs</td></tr>
+  <tr><td><strong><code>steps</code></strong></td><td>List of <strong><code>agent</code></strong>, <strong><code>aspect</code></strong>, <strong><code>task</code></strong> and <code>handoff_if</code>, which every step but the last must have</td></tr>
+  <tr><td><strong><code>evals</code></strong></td><td>List of <strong><code>inputs</code></strong> covering every declared input, <strong><code>expect_path</code></strong> (the agents you expect to run, a prefix of the steps) and <strong><code>pass_if</code></strong></td></tr>
+</tbody></table>
+
+<h2>Release settings: <code>release.yaml</code></h2>
+<p><strong><code>target</code></strong> is the code root. <code>claude</code> maps each destination to a source file. <code>remove</code> lists files to delete. <code>eval_budget</code> sets a per-run budget by agent.</p>
+
+<!-- ============================================================ 16 -->
+<h1 class="flow" id="c16">16. Validator rules</h1>
+<p>The validator runs automatically before evals, playbooks and deploys. These are the checks it makes.</p>
+<table>
+  <thead><tr><th style="width:6%">Rule</th><th>What must be true</th></tr></thead>
+  <tbody>
+  <tr><td><strong>1</strong></td><td><code>preferred_llm</code> is in the agent's <code>llms</code>. An aspect's <code>preferred_llm</code> is in every routed agent's <code>llms</code>.</td></tr>
+  <tr><td><strong>2</strong></td><td>A skill's required tools aren't denied by a trait, and the agent's <code>preferred_llm</code> meets the skill's <code>min_model_tier</code>.</td></tr>
+  <tr><td><strong>3</strong></td><td>An aspect's tools plus <code>shared_tools</code> provide every capability its agents require.</td></tr>
+  <tr><td><strong>4</strong></td><td>A tool that one trait uses and another denies is listed under <code>overrides.allow</code> with a <code>reason</code>.</td></tr>
+  <tr><td><strong>5</strong></td><td><code>pack</code> names exactly one existing pack, and its base can be satisfied by every routed agent. If it can't, the aspect has a <code>pack_exclude</code> with a reason.</td></tr>
+  <tr><td><strong>6</strong></td><td>A playbook names its map; each step's agent is routed in its aspect; each step but the last has one handoff a bound tool command or a declared output can decide; every placeholder is a declared input; and evals exist with a valid <code>expect_path</code>.</td></tr>
+  <tr><td><strong>R1&ndash;R3</strong></td><td><code>registry-sources.yaml</code> is well formed; no source has changed since its last sync; imported names don't collide with catalog files or each other.</td></tr>
+  <tr><td><strong>R4</strong></td><td>A map binds an imported MCP server only if the sources file tags it under <code>provides</code>.</td></tr>
+  <tr><td><strong>R5&ndash;R7</strong></td><td><em>Warnings:</em> a bound server's secret variable is unset; a composed imported skill ships files that won't be available; the registry hasn't been synced.</td></tr>
+  </tbody>
+</table>
+<p>It also checks that names match file names, no name is used twice, and every referenced trait, skill, hook, fixture, tool and agent exists. Non-executable hooks and overrides that allow nothing denied produce warnings.</p>
+
+<!-- ============================================================ 17 -->
+<h1 class="flow" id="c17">17. Troubleshooting</h1>
+<h2>Validator errors</h2>
+<table>
+  <thead><tr><th style="width:47%">Message</th><th>Fix</th></tr></thead>
+  <tbody>
+  <tr><td><code>agent 'X' requires ['source-control']; bound tools provide ['service-toolchain']</code></td><td>Bind a tool that provides the capability in that aspect or in <code>shared_tools</code>.</td></tr>
+  <tr><td><code>aspect preferred_llm 'M' is not in agent 'X' llms</code></td><td>Remove or change the aspect's model, add the model to the agent's <code>llms</code> and rerun its evals, or move the agent to another aspect.</td></tr>
+  <tr><td><code>preferred_llm 'M' is not in llms [...]</code></td><td>Add it to <code>llms</code> or choose a listed model.</td></tr>
+  <tr><td><code>skill 'S' needs min_model_tier sonnet; preferred_llm 'M' is below it</code></td><td>Use a stronger <code>preferred_llm</code>.</td></tr>
+  <tr><td><code>traits conflict on ['Edit']; add overrides.allow with a reason</code></td><td>Remove the conflicting trait, or add <code>overrides</code> with <code>allow</code> and <code>reason</code>.</td></tr>
+  <tr><td><code>name 'X' does not match path (expected 'Y')</code></td><td>Make <code>name</code> and the file name agree.</td></tr>
+  <tr><td><code>unknown trait 'X'</code>, <code>unknown agent 'X'</code>, <code>unknown tool 'X'</code></td><td>Check the spelling. For an import, run <code>registry.py sync</code>.</td></tr>
+  <tr><td><code>evals[N] references missing fixture fixtures/...</code></td><td>Create the fixture, or list the path under <code>creates:</code> if the task makes it.</td></tr>
+  <tr><td><code>evals[N] says it creates ..., but that fixture already exists</code></td><td>Delete the fixture or use a new path.</td></tr>
+  <tr><td><code>'pack' must name exactly one pack, not a list</code></td><td>Keep one pack.</td></tr>
+  <tr><td><code>agent 'X' is not routed in aspect 'A'</code></td><td>Add the agent to that aspect's <code>agents</code>, after its evals pass.</td></tr>
+  <tr><td><code>output handoff on 'F', which agent 'X' does not declare under 'outputs'</code></td><td>Declare the field in the agent, then rerun its evals, or use a declared field.</td></tr>
+  <tr><td><code>expect_path [...] is not a non-empty prefix of the step agents</code></td><td>List the agents from the first step onward, stopping where the run should stop.</td></tr>
+  <tr><td><code>task uses undeclared input(s) ['X']</code></td><td>Add it to <code>inputs</code> or fix the placeholder.</td></tr>
+  <tr><td><code>registry is stale for source 'S'; run registry.py sync S</code></td><td>Run that command.</td></tr>
+  <tr><td><code>imported server 'S' provides no capabilities</code></td><td>Tag it under <code>provides</code> in the sources file, then sync.</td></tr>
+  </tbody>
+</table>
+
+<h2>Other problems</h2>
+<table>
+  <thead><tr><th style="width:47%">Symptom</th><th>Cause and fix</th></tr></thead>
+  <tbody>
+  <tr><td><code>ModuleNotFoundError: No module named 'yaml'</code></td><td>The wrong interpreter. Use <code>/usr/bin/python3</code>, or install PyYAML for yours.</td></tr>
+  <tr><td><code>no registry at ...; run registry.py sync</code></td><td>The registry hasn't been built. Run <code>registry.py sync</code>.</td></tr>
+  <tr><td><code>target is not a directory</code></td><td>Create the <code>--target</code> folder first.</td></tr>
+  <tr><td><code>a plugin needs each aspect in one git repo</code></td><td>An aspect's paths cross repos or aren't in one. Split it into one aspect per repo.</td></tr>
+  <tr><td>An imported MCP server won't connect</td><td>Set the variables listed by <code>registry.py show NAME</code>.</td></tr>
+  <tr><td>A released plugin's agents don't appear</td><td>Start the session at the repo root, and trust that exact folder. Nothing warns you about this.</td></tr>
+  <tr><td>The judge fails an eval on a huge or irrelevant diff</td><td>Run through a map whose tool declares <code>artifacts</code>, or add <code>artifacts</code> to the tool.</td></tr>
+  <tr><td>A <code>command</code> handoff always passes</td><td>The tool exits 0 even on failure. Declare a gate command that exits nonzero, as <code>kicad.erc-gate</code> does.</td></tr>
+  <tr><td>An eval hits its budget or turn limit</td><td>Raise <code>--budget</code> or <code>--max-turns</code>, or set <code>eval_budget</code> for releases.</td></tr>
+  <tr><td>A skill or a tool's command can't be found on your machine</td><td>Its file has a path from another machine. Edit the tool or skill file.</td></tr>
+  <tr><td>A recipe eval reports HTTP 429</td><td>YouTube rate-limits caption fetches. Those evals accept an honest failure report.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================================================ 18 -->
+<h1 id="c18">18. Cheat sheet</h1>
+<div class="cheat two">
+<p style="font-size:8.6pt">Run from <code>catalog/</code>. <code>py</code> here means <code>/usr/bin/python3</code>. Green is free, amber bills.</p>
+<h2>Check</h2>
+<div class="code free"><pre>py validate.py
+py validate.py ../projects/NAME/project-map.yaml</pre></div>
+<h2>Look inside</h2>
+<div class="code free"><pre>py run_evals.py AGENT --dry-run
+py run_evals.py AGENT --dry-run \
+   --map MAP --aspect ASPECT
+py run_playbook.py PLAYBOOK --dry-run
+py deploy.py MAP --target DIR --dry-run</pre></div>
+<h2>Evaluate</h2>
+<div class="code bill"><pre>py run_evals.py AGENT
+py run_evals.py AGENT --map MAP --aspect ASPECT
+py run_evals.py AGENT --budget 0.50 --keep
+py run_playbook.py PLAYBOOK</pre></div>
+<h2>Create an agent</h2>
+<div class="code bill"><pre>py make_agent.py "REQUEST" --dry-run
+py make_agent.py "REQUEST" --no-evals
+py make_agent.py "REQUEST" --search "TERMS"
+py make_agent.py "REQUEST" \
+   --map MAP --aspect ASPECT --register</pre></div>
+<h2>Find and import parts</h2>
+<div class="code free"><pre>py registry.py sources
+py registry.py search "TERMS" --kind skill
+py registry.py show NAME
+py registry.py sync [SOURCE]</pre></div>
+<h2>Run a playbook once</h2>
+<div class="code bill"><pre>py run_playbook.py PLAYBOOK --run KEY=VALUE ...</pre></div>
+<h2>Deploy</h2>
+<div class="code free"><pre>py deploy.py MAP --target DIR
+py deploy.py MAP --target DIR --force</pre></div>
+<h2>Release</h2>
+<div class="code free"><pre>py release.py build PROJECT</pre></div>
+<div class="code bill"><pre>py release.py evals PROJECT</pre></div>
+<div class="code"><pre># review and merge in the private repo</pre></div>
+<div class="code free"><pre>py release.py check PROJECT
+py release.py publish PROJECT --dry-run
+py release.py publish PROJECT</pre></div>
+<div class="code"><pre># merge the PRs, then trust each repo folder</pre></div>
+</div>
+
+<h2 style="margin-top:12pt">Remember</h2>
+<ul>
+  <li><strong>Evals gate registration.</strong> Don't route an agent until its evals pass, and rerun them after changing anything it composes.</li>
+  <li><strong>Changing a map's pack</strong> means rerunning the evals of every agent in that map.</li>
+  <li><strong>After editing <code>registry-sources.yaml</code>,</strong> run <code>registry.py sync</code>.</li>
+  <li><strong>A clean validator run</strong> ends with 0 errors and 3 warnings.</li>
+  <li><strong>Only <code>release.py</code> enforces eval results.</strong> The validator and <code>deploy.py</code> don't check them.</li>
+</ul>
+
+</body>
+</html>
