@@ -34,8 +34,9 @@ ones.
 
 - One finding per subject, most severe first whether it spans documents or not: the
   severity, the subject, then each side as `path:line` and what it says.
-- Severity is high or medium. High means a safety limit, or something that would get
-  built wrong if an engineer followed the wrong document. Everything else is medium.
+- Severity is high or medium. High means a safety limit, a security property such as who
+  can access or read something, or something that would get built wrong if an engineer
+  followed the wrong document. Everything else is medium.
 - When several documents repeat the same conflict, make it one finding listing every
   site, not one finding per pair.
 - Do not decide which side is right. You may note each side's `modified` date when
