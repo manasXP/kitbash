@@ -12,6 +12,15 @@ Run inside that project (from its root or any folder below it), `validate.py` wi
 `run_evals.py --aspect NAME` uses it without `--map`, and `deploy.py` with no map deploys it into the project.
 Workspaces then go in `.kitbash/work/`, which holds a `.gitignore` of `*` so they are never committed.
 
+The project's own agents, traits, skills, tools, hooks and fixtures go in `.kitbash/catalog/`, laid out like this
+catalog, and every script run inside the project merges them in by name. A name this catalog already has is an error,
+as is a fixture file at a path this catalog's `fixtures/` already uses, since both fixture folders are copied into
+each eval workspace. A path a file gives relative to its catalog (a tool's `skill`, an agent's `hooks`, an eval's
+fixture) is looked up in the file's own catalog first, then the other, so a project agent can use
+`hooks/block-network.py` from here. `${KITBASH_CATALOG}` in a project file is `.kitbash/catalog/`. Packs and registry
+sources come from this catalog only. Inside a project `make_agent.py` writes there too, and it refuses to write into
+a catalog installed as a Claude Code plugin.
+
 ## Semantics
 
 Merge order for an agent: the map's pack base (its traits, then its skills), then the agent's traits left to right,

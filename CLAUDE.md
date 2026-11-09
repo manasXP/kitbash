@@ -41,7 +41,7 @@ Some evals need the real tool: KiCad, the Pen desktop app, the FreeCAD app with 
 
 ## Architecture
 
-**`validate.py` is also the shared library.** `load_catalog` merges the catalog files, pack checkouts and registry rows by name, so imported skills and servers look like ordinary members to every script. `run_evals.py` imports it and adds `compose` and `aspect_context`. `run_playbook.py` and `deploy.py` import both, so what passes evals is exactly what gets deployed. `registry.py` and `make_agent.py` import `validate.py` only.
+**`validate.py` is also the shared library.** `load_catalog` merges the catalog files, a project's `.kitbash/catalog/` when run inside that project, pack checkouts and registry rows by name, so imported and project skills and servers look like ordinary members to every script. `run_evals.py` imports it and adds `compose` and `aspect_context`. `run_playbook.py` and `deploy.py` import both, so what passes evals is exactly what gets deployed. `registry.py` and `make_agent.py` import `validate.py` only.
 
 **An agent is composed, not inherited.** `compose` concatenates text in this order: the map's pack base (traits, then skills), the agent's traits left to right, its skills, the skills of mounted tools, `prompt`, `overrides`. Later text wins. A skill reached twice is composed once, at its first position.
 

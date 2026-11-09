@@ -62,8 +62,9 @@ def compose(agent, cat, tool_names, pack=None):
     so that the agent's own text wins on conflict."""
     parts, denied, allowed = [], set(), set()
 
-    def own(path):  # the catalog's own files may hold host-specific values; pack and imported text is as written
-        return V.expand(body(path), cat["dir"], home=False) if path.startswith(cat["dir"] + os.sep) else body(path)
+    def own(path):  # catalog files may hold host-specific values; pack and imported text is as written
+        root = V.root_of(path, cat)
+        return V.expand(body(path), root, home=False) if root else body(path)
     if pack:
         name, pk, ex_traits, ex_skills = pack
         pk_traits, pk_skills = V.pack_base(pk)
@@ -88,9 +89,9 @@ def compose(agent, cat, tool_names, pack=None):
         composed.add(os.path.realpath(path))
         parts.append(f"## Skill: {s}\n{own(path)}")
     for name in tool_names:
-        data, _ = cat["tools"][name]
+        data, tool_path = cat["tools"][name]
         if data.get("skill"):
-            path = os.path.join(cat["dir"], data["skill"])
+            path = V.resolve(cat, data["skill"], tool_path)
             if os.path.realpath(path) not in composed:
                 composed.add(os.path.realpath(path))
                 parts.append(f"## Tool skill: {name}\n{own(path)}")
@@ -101,7 +102,7 @@ def compose(agent, cat, tool_names, pack=None):
         parts.append(f"## Override\nYou may use {sorted(allowed)}. Reason: {overrides.get('reason')}")
     hooks = []
     for scripts in (agent.get("hooks") or {}).values():
-        hooks += [os.path.join(cat["dir"], h) for h in V.as_list(scripts)]
+        hooks += [V.resolve(cat, h, cat["agents"][agent["name"]][1]) for h in V.as_list(scripts)]
     return "\n\n".join(parts), sorted(denied - allowed), hooks
 
 
@@ -147,13 +148,22 @@ def claude_json(args, cwd, timeout=900):
 
 
 def inspectors(tool_names, cat):
-    """(extensions, open_cmd, dump_cmd) for every mounted tool that declares `inspect`."""
+    """(extensions, open_cmd, dump_cmd, directory to dump from) for every mounted tool that declares `inspect`.
+    A dump command names its script relative to the catalog directory the tool file is in."""
     out = []
     for name in tool_names:
-        ins = (cat["tools"][name][0].get("inspect") or {})
+        data, path = cat["tools"][name]
+        ins = data.get("inspect") or {}
         if ins.get("extensions"):
-            out.append((tuple(ins["extensions"]), ins.get("open"), ins.get("dump")))
+            out.append((tuple(ins["extensions"]), ins.get("open"), ins.get("dump"), V.root_of(path, cat) or cat["dir"]))
     return out
+
+
+def copy_fixtures(cat, work):
+    """Copy the fixtures of the catalog, then of the project's own catalog, into work/fixtures/."""
+    for root in cat["roots"]:
+        if os.path.isdir(os.path.join(root, "fixtures")):
+            shutil.copytree(os.path.join(root, "fixtures"), os.path.join(work, "fixtures"), dirs_exist_ok=True)
 
 
 def inspect_files(work, specs, cat, do_open=False):
@@ -162,14 +172,14 @@ def inspect_files(work, specs, cat, do_open=False):
     for root, _, files in os.walk(os.path.join(work, "fixtures")):
         for f in files:
             path = os.path.join(root, f)
-            for exts, open_cmd, dump_cmd in specs:
+            for exts, open_cmd, dump_cmd, dump_dir in specs:
                 if not f.endswith(exts):
                     continue
                 if do_open and open_cmd:
                     subprocess.run([a.replace("{file}", path) for a in open_cmd], check=False)
                     time.sleep(5)
                 if dump_cmd:
-                    proc = subprocess.run([a.replace("{file}", path) for a in dump_cmd], cwd=cat["dir"],
+                    proc = subprocess.run([a.replace("{file}", path) for a in dump_cmd], cwd=dump_dir,
                                           capture_output=True, text=True, timeout=180)
                     dumps[os.path.relpath(path, work)] = (proc.stdout + proc.stderr)[-12000:]
     return dumps
@@ -226,7 +236,7 @@ def claude_args(task, model, system_prompt, denied, hooks, mcp, opts, work):
 def run_one(agent, ev, system_prompt, denied, hooks, mcp, opts, cat):
     work = tempfile.mkdtemp(prefix=f"{agent['name']}-", dir=opts.workdir)
     pristine = os.path.join(work, ".pristine")
-    shutil.copytree(os.path.join(cat["dir"], "fixtures"), os.path.join(work, "fixtures"))
+    copy_fixtures(cat, work)
     shutil.copytree(os.path.join(work, "fixtures"), os.path.join(pristine, "fixtures"))
 
     args = claude_args(ev["task"], agent["preferred_llm"], system_prompt, denied, hooks, mcp, opts, work)
@@ -295,7 +305,7 @@ def main():
         ap.error("--map needs --aspect")
 
     rep = V.Report()
-    cat = V.load_catalog(CATALOG, rep)
+    cat = V.load_catalog(CATALOG, rep, V.user_catalog(opts.map))
     V.check_catalog(cat, rep)
     if rep.errors:
         print("\n".join(f"error    {e}" for e in rep.errors))

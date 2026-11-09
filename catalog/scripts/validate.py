@@ -312,9 +312,70 @@ def server_config(tool):
     return cfg
 
 
-def load_catalog(cat, rep):
+def load_members(cat, rep):
+    """{kind: {name: (data, path)}} for the traits, skills, tools and agents files under one catalog directory."""
     stem = lambda p: os.path.splitext(os.path.basename(p))[0]  # noqa: E731
     skill_dir = lambda p: os.path.basename(os.path.dirname(p))  # noqa: E731
+    return {
+        "traits": load_named(glob.glob(f"{cat}/traits/*.md"), load_frontmatter, rep, stem),
+        "skills": load_named(glob.glob(f"{cat}/skills/*/SKILL.md"), load_frontmatter, rep, skill_dir),
+        "tools": {n: (expand(d, cat), p) for n, (d, p) in
+                  load_named(glob.glob(f"{cat}/tools/*/*.yaml"), load_yaml, rep, stem).items()},
+        "agents": load_named(glob.glob(f"{cat}/agents/*.yaml"), load_yaml, rep, stem),
+    }
+
+
+def load_user_catalog(out, user, rep):
+    """Merge a project's own catalog (.kitbash/catalog/) into a loaded catalog. A name the catalog already has is an
+    error and the catalog's item is kept, as is a fixture file both have, since both fixture folders are copied into
+    one eval workspace. Packs and registry sources come from the catalog only."""
+    for kind, members in load_members(user, rep).items():
+        for n, (d, p) in members.items():
+            if n in out[kind]:
+                rep.error(p, f"{kind[:-1]} '{n}' is already in the catalog ({out[kind][n][1]}); rename it")
+            else:
+                out[kind][n] = (d, p)
+    for r, _, files in os.walk(os.path.join(user, "fixtures")):
+        for f in files:
+            rel = os.path.relpath(os.path.join(r, f), user)
+            if os.path.exists(os.path.join(out["dir"], rel)):
+                rep.error(os.path.join(r, f), f"{rel} is also a fixture of the catalog; move it to another folder")
+    for ignored in ("packs", SOURCES_FILE):
+        if os.path.exists(os.path.join(user, ignored)):
+            rep.warn(os.path.join(user, ignored), "ignored: packs and registry sources come from the catalog only")
+    out["roots"].append(user)
+
+
+def user_catalog(map_path=None):
+    """Where a project's own catalog lives: .kitbash/catalog/ in the project of a map kept in a .kitbash folder,
+    or, with no map, in the project found from the current directory. None outside a project."""
+    root = project_root(map_path) if map_path else find_project()
+    return os.path.join(root, PROJECT_DIR, "catalog") if root else None
+
+
+def root_of(path, cat):
+    """The catalog directory (built-in or user) a file belongs to, or None."""
+    real = os.path.realpath(path)
+    roots = [r for r in cat["roots"] if real.startswith(os.path.realpath(r) + os.sep)]
+    return max(roots, key=len) if roots else None
+
+
+def resolve(cat, rel, owner):
+    """A path a catalog file gives relative to the catalog (a tool's skill, an agent's hook, an eval's fixture),
+    looked up in the owner's own catalog directory first, then the other. Where it exists nowhere, the path it
+    would have in the owner's directory."""
+    own = root_of(owner, cat)
+    order = ([own] if own else []) + [r for r in cat["roots"] if r != own]
+    for r in order:
+        if os.path.exists(os.path.join(r, rel)):
+            return os.path.join(r, rel)
+    return os.path.join(order[0], rel)
+
+
+def load_catalog(cat, rep, user=None):
+    """The catalog at cat, merged by name with a project's own catalog at user (when that directory exists) and
+    with registry imports. roots lists the directories files come from, the catalog's first."""
+    stem = lambda p: os.path.splitext(os.path.basename(p))[0]  # noqa: E731
     packs = load_named(glob.glob(f"{cat}/packs/*.md"), load_frontmatter, rep, stem)
     for name, (pk, path) in packs.items():
         pk["_traits"], pk["_skills"] = {}, {}
@@ -323,15 +384,9 @@ def load_catalog(cat, rep):
             if root:
                 pk["_traits"] = pack_members(pk, path, root, "traits", rep)
                 pk["_skills"] = pack_members(pk, path, root, "skills", rep)
-    out = {
-        "dir": cat,
-        "traits": load_named(glob.glob(f"{cat}/traits/*.md"), load_frontmatter, rep, stem),
-        "skills": load_named(glob.glob(f"{cat}/skills/*/SKILL.md"), load_frontmatter, rep, skill_dir),
-        "tools": {n: (expand(d, cat), p) for n, (d, p) in
-                  load_named(glob.glob(f"{cat}/tools/*/*.yaml"), load_yaml, rep, stem).items()},
-        "agents": load_named(glob.glob(f"{cat}/agents/*.yaml"), load_yaml, rep, stem),
-        "packs": packs,
-    }
+    out = {"dir": cat, "roots": [cat], **load_members(cat, rep), "packs": packs}
+    if user and os.path.isdir(user):
+        load_user_catalog(out, user, rep)
     out["sources"] = load_sources(cat, rep)
     imported_skills, imported_tools = load_registry(cat, out["sources"], rep)
     for kind, imported in (("skills", imported_skills), ("tools", imported_tools)):
@@ -420,7 +475,7 @@ def check_tools(cat, rep):
         if not as_list(t.get("provides")):
             rep.error(p, "'provides' must list at least one capability")
         skill = t.get("skill")
-        if skill and not os.path.exists(os.path.join(cat["dir"], skill)):
+        if skill and not os.path.exists(resolve(cat, skill, p)):
             rep.error(p, f"skill file not found: {skill}")
 
 
@@ -450,7 +505,7 @@ def check_agent(name, a, p, cat, rep):
     hooks = a.get("hooks", {}) or {}
     for event, scripts in hooks.items():
         for h in as_list(scripts):
-            hp = os.path.join(cat["dir"], h)
+            hp = resolve(cat, h, p)
             if not os.path.exists(hp):
                 rep.error(p, f"hook not found: {h}")
             elif not os.access(hp, os.X_OK):
@@ -505,9 +560,9 @@ def check_fixture_refs(text, creates, cat, p, what, rep):
     for fx in re.findall(r"fixtures/[^\s,;'\"]+", text):
         fx = fx.rstrip(".:)")
         if fx in creates:
-            if os.path.exists(os.path.join(cat["dir"], fx)):
+            if any(os.path.exists(os.path.join(r, fx)) for r in cat["roots"]):
                 rep.error(p, f"{what} says it creates {fx}, but that fixture already exists")
-        elif not os.path.exists(os.path.join(cat["dir"], fx)):
+        elif not os.path.exists(resolve(cat, fx, p)):
             rep.error(p, f"{what} references missing fixture {fx}")
 
 
@@ -536,16 +591,22 @@ def catalog_dir(map_path, cat_rel):
     return os.path.normpath(os.path.join(map_dir(map_path), os.path.expanduser(cat_rel)))
 
 
-def find_project_map(start=None):
-    """The project map at .kitbash/project-map.yaml in the current directory or its nearest parent, or None."""
+def find_project(start=None):
+    """The project around the current directory: it or its nearest parent holding a .kitbash folder, or None."""
     d = os.path.abspath(start or os.getcwd())
     while True:
-        path = os.path.join(d, PROJECT_DIR, "project-map.yaml")
-        if os.path.isfile(path):
-            return path
+        if os.path.isdir(os.path.join(d, PROJECT_DIR)):
+            return d
         if os.path.dirname(d) == d:
             return None
         d = os.path.dirname(d)
+
+
+def find_project_map(start=None):
+    """The project map at .kitbash/project-map.yaml in the project around the current directory, or None."""
+    root = find_project(start)
+    path = os.path.join(root, PROJECT_DIR, "project-map.yaml") if root else None
+    return path if path and os.path.isfile(path) else None
 
 
 def project_root(map_path):
@@ -557,8 +618,7 @@ def project_root(map_path):
 def work_dir(map_path=None):
     """Default home of eval and playbook workspaces: .kitbash/work/ in the project of the given map or the one found
     from the current directory, holding a .gitignore so its copies are never committed; else catalog/.evals/."""
-    found = map_path or find_project_map()
-    root = project_root(found) if found else None
+    root = project_root(map_path) if map_path else find_project()
     if not root:
         return os.path.join(CATALOG, ".evals")
     d = os.path.join(root, PROJECT_DIR, "work")
@@ -578,10 +638,11 @@ def check_project_map(path, rep, catalogs):
     if not os.path.isdir(cat_dir):
         rep.error(path, f"catalog directory not found: {cat_dir}")
         return
-    if cat_dir not in catalogs:
-        catalogs[cat_dir] = load_catalog(cat_dir, rep)
-        check_catalog(catalogs[cat_dir], rep)
-    cat = catalogs[cat_dir]
+    key = (cat_dir, user_catalog(path))
+    if key not in catalogs:
+        catalogs[key] = load_catalog(cat_dir, rep, key[1])
+        check_catalog(catalogs[key], rep)
+    cat = catalogs[key]
     tools, agents, skills = cat["tools"], cat["agents"], cat["skills"]
 
     shared = set(as_list(pm.get("shared_tools")))
@@ -852,14 +913,14 @@ def main(argv):
 
     if "--catalog" in argv:
         cat_dir = os.path.abspath(argv[argv.index("--catalog") + 1])
-        catalogs[cat_dir] = load_catalog(cat_dir, rep)
-        check_catalog(catalogs[cat_dir], rep)
+        catalogs[(cat_dir, None)] = load_catalog(cat_dir, rep)
+        check_catalog(catalogs[(cat_dir, None)], rep)
         maps = [a for a in argv if a.endswith(".yaml") and a != argv[argv.index("--catalog") + 1]]
     else:
         maps = [a for a in argv if a.endswith(".yaml")] or as_list(find_project_map())
         if not maps:
-            catalogs[here] = load_catalog(here, rep)
-            check_catalog(catalogs[here], rep)
+            catalogs[(here, None)] = load_catalog(here, rep)
+            check_catalog(catalogs[(here, None)], rep)
             maps = sorted(glob.glob(os.path.join(here, "..", "projects", "*", "project-map.yaml")) +
                           glob.glob(os.path.join(here, "..", "private", "projects", "*", "project-map.yaml")))
 

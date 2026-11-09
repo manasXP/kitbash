@@ -191,7 +191,7 @@ def main():
         sys.exit("catalog, map or playbook does not validate; fix it before deploying")
     pm = yaml.safe_load(open(map_path))
     cat_dir = V.catalog_dir(map_path, pm.get("catalog"))
-    cat = V.load_catalog(cat_dir, V.Report())
+    cat = V.load_catalog(cat_dir, V.Report(), V.user_catalog(map_path))
 
     files = plan(map_path, pm, cat)
     if opts.dry_run:

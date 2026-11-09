@@ -116,7 +116,7 @@ def aspect_model(pm, aspect, agent):
 def run_playbook(pb, pm, map_path, values, cat, opts):
     work = tempfile.mkdtemp(prefix=f"{pb['name']}-", dir=opts.workdir)
     pristine = os.path.join(work, ".pristine")
-    shutil.copytree(os.path.join(cat["dir"], "fixtures"), os.path.join(work, "fixtures"))
+    R.copy_fixtures(cat, work)
     shutil.copytree(os.path.join(work, "fixtures"), os.path.join(pristine, "fixtures"))
     t0 = time.time()
     out = {"path": [], "steps": [], "handoffs": [], "cost": 0.0, "workspace": work, "status": "ran"}
@@ -222,7 +222,7 @@ def main():
         sys.exit("catalog, map or playbook does not validate; fix it before running")
     pm = yaml.safe_load(open(map_path))
     cat_dir = V.catalog_dir(map_path, pm.get("catalog"))
-    cat = V.load_catalog(cat_dir, V.Report())
+    cat = V.load_catalog(cat_dir, V.Report(), V.user_catalog(map_path))
     opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(map_path)
     os.makedirs(opts.workdir, exist_ok=True)
 

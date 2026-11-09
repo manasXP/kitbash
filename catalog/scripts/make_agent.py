@@ -9,7 +9,8 @@ Usage:
 
 Stages (see docs/Composable-Agent-Taxonomy.pdf, part 7):
     1. Select   one headless Claude call reads the catalog inventory and picks traits, skills, capabilities.
-    2. Emit     the script writes agents/<name>.yaml, any fixtures the evals need, and at most one new skill.
+    2. Emit     the script writes agents/<name>.yaml, any fixtures the evals need, and at most one new skill,
+                into the project's .kitbash/catalog/ when run inside a project, else into this catalog.
     3. Validate validate.py rules run; on failure the errors go back to the model for one repair pass,
                 and if it still fails the written files are removed and the proposal is printed instead.
     4. Evaluate run_evals.py runs the agent's evals. With --register and an all-pass, the agent is added
@@ -17,6 +18,7 @@ Stages (see docs/Composable-Agent-Taxonomy.pdf, part 7):
 
 Options:
     --map FILE --aspect NAME   Constrain capabilities to the aspect's tools and (with --register) register there.
+                               --aspect alone uses .kitbash/project-map.yaml here or in the nearest parent.
     --model MODEL              Model that designs the agent (default claude-opus-5-5).
     --budget USD               Spend cap for the design call (default 1.00).
     --no-evals                 Stop after validation.
@@ -96,11 +98,11 @@ def inventory(cat, allowed_tools, pack=None, offered=()):
         "skills": {n: skill_entry(d) for n, (d, p) in cat["skills"].items() if "_source" not in d or n in offered},
         "tools": {n: {"provides": d.get("provides", []), "kind": d.get("kind")} for n, d in tools.items()},
         "capabilities_available": capabilities,
-        "hooks": sorted(os.path.relpath(p, cat["dir"]) for p in
-                        [os.path.join(cat["dir"], "hooks", f) for f in os.listdir(os.path.join(cat["dir"], "hooks"))]
-                        if os.path.isfile(p)),
-        "existing_fixtures": sorted(os.path.relpath(os.path.join(r, f), cat["dir"])
-                                    for r, _, fs in os.walk(os.path.join(cat["dir"], "fixtures")) for f in fs),
+        "hooks": sorted({os.path.join("hooks", f) for root in cat["roots"] if os.path.isdir(os.path.join(root, "hooks"))
+                         for f in os.listdir(os.path.join(root, "hooks"))
+                         if os.path.isfile(os.path.join(root, "hooks", f))}),
+        "existing_fixtures": sorted({os.path.relpath(os.path.join(r, f), root) for root in cat["roots"]
+                                     for r, _, fs in os.walk(os.path.join(root, "fixtures")) for f in fs}),
         "existing_agent_names": sorted(cat["agents"]),
         "models": KNOWN_MODELS,
         "pack_applied_by_map": None if not pack else {
@@ -213,10 +215,15 @@ def planned_files(p):
     return files
 
 
-def write_files(files):
+def installed_plugin():
+    """True when this catalog is a Claude Code plugin install, under ~/.claude/plugins/."""
+    return f"{os.sep}.claude{os.sep}plugins{os.sep}" in os.path.realpath(CATALOG)
+
+
+def write_files(files, root):
     written = []
     for rel, content in files.items():
-        path = os.path.join(CATALOG, rel)
+        path = os.path.join(root, rel)
         if os.path.exists(path) and not rel.startswith("fixtures/"):
             sys.exit(f"refusing to overwrite existing {rel}")
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -236,10 +243,10 @@ def remove_files(paths):
 
 # ---------------------------------------------------------------- validate / register
 
-def validate_all(map_path, aspect, agent_name):
+def validate_all(map_path, aspect, agent_name, user):
     """Catalog rules plus, if a map is given, the map with the new agent routed into the aspect."""
     rep = V.Report()
-    cat = V.load_catalog(CATALOG, rep)
+    cat = V.load_catalog(CATALOG, rep, user)
     V.check_catalog(cat, rep)
     if map_path:
         pm = yaml.safe_load(open(map_path))
@@ -252,7 +259,7 @@ def validate_all(map_path, aspect, agent_name):
         yaml.safe_dump(pm, tmp, sort_keys=False)
         tmp.close()
         try:
-            V.check_project_map(tmp.name, rep, {CATALOG: cat})
+            V.check_project_map(tmp.name, rep, {(V.catalog_dir(tmp.name, pm["catalog"]), V.user_catalog(tmp.name)): cat})
         finally:
             os.remove(tmp.name)
         rep.errors = [e.replace(tmp.name, map_path) for e in rep.errors]
@@ -290,13 +297,22 @@ def main():
     ap.add_argument("--search", action="append", default=[], metavar="TERMS")
     opts = ap.parse_args()
     sys.stdout.reconfigure(line_buffering=True)   # keep stage lines ordered with run_evals output
-    if bool(opts.map) != bool(opts.aspect):
-        ap.error("--map and --aspect go together")
+    if opts.aspect and not opts.map:
+        opts.map = V.find_project_map()
+        if not opts.map:
+            ap.error(f"--aspect needs --map, or a {V.PROJECT_DIR}/project-map.yaml here or in a parent directory")
+    if opts.map and not opts.aspect:
+        ap.error("--map needs --aspect")
     if opts.register and not opts.map:
         ap.error("--register needs --map and --aspect")
+    opts.map = opts.map and os.path.abspath(opts.map)
+    user = V.user_catalog(opts.map)   # new files go to the project's own catalog; outside a project, to this one
+    if not user and installed_plugin() and not opts.dry_run:
+        sys.exit(f"this catalog is an installed plugin, which is replaced on update; run inside a project "
+                 f"(a folder holding {V.PROJECT_DIR}/) so the new agent is written to {V.PROJECT_DIR}/catalog/")
 
     rep = V.Report()
-    cat = V.load_catalog(CATALOG, rep)
+    cat = V.load_catalog(CATALOG, rep, user)
     V.check_catalog(cat, rep)
     if rep.errors:
         sys.exit("catalog does not validate; fix it first:\n" + "\n".join(rep.errors))
@@ -341,9 +357,9 @@ def main():
     written = []
     for attempt in (1, 2):
         remove_files(written)
-        written = write_files(planned_files(proposal))
+        written = write_files(planned_files(proposal), user or CATALOG)
         print(f"stage 2  wrote {len(written)} file(s)")
-        rep = validate_all(opts.map, opts.aspect, proposal["name"])
+        rep = validate_all(opts.map, opts.aspect, proposal["name"], user)
         if not rep.errors:
             print("stage 3  validation passed")
             break
@@ -360,7 +376,7 @@ def main():
         cost += out.get("total_cost_usd", 0)
 
     for w in written:
-        print(f"         {os.path.relpath(w, CATALOG)}")
+        print(f"         {os.path.relpath(w, user or CATALOG)}")
     if opts.no_evals:
         print(f"\ndone without evals. design cost ${cost:.3f}")
         return 0
@@ -370,7 +386,7 @@ def main():
     if opts.map:
         cmd += ["--map", opts.map, "--aspect", opts.aspect]
     print("stage 4  running evals")
-    rc = subprocess.call(cmd, cwd=CATALOG)
+    rc = subprocess.call(cmd)   # from the current directory, so run_evals.py finds the same project
     if rc != 0:
         print(f"\nevals did not all pass. '{proposal['name']}' stays in the catalog but is NOT registered. "
               f"Inspect with: run_evals.py {proposal['name']} --keep")
