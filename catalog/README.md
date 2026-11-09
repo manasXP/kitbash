@@ -196,6 +196,11 @@ Exit status 1 if any eval failed or errored. `--report FILE` writes the full res
 `--keep` leaves workspaces in place, `--budget` caps spend per agent run (default 1.00 USD), and `--workdir DIR`
 puts the per-eval workspaces somewhere other than `.evals/` so two sessions do not share one.
 
+With `--aspect`, an agent runs on the model it is deployed with there: the aspect's `preferred_llm`, else its own.
+For a map in a project's `.kitbash/` folder, each agent's results are also recorded in `.kitbash/evals.lock.json`
+under `aspect/agent`, against a hash of what the agent does in that aspect, taken before its evals start. That file
+is meant to be committed, and `deploy.py` reads it (see Deploy).
+
 A tool may declare `artifacts: [globs]` for side-effect files it writes (kicad-cli leaves a `.kicad_prl` beside a
 board after DRC). The runner excludes them from the diff the judge sees, since they are not edits by the agent.
 
@@ -256,6 +261,17 @@ name and its `paths`, which is what Claude Code reads when deciding which subage
 produces, and refuses to overwrite a file it did not write unless `--force` is given. The map must validate
 (rule 6 included) or nothing is written. Tool and skill files name host-specific paths (KiCAD, Pen, a venv) as
 placeholders, and the agent files inline the values they resolve to, so a deploy is for the machine that made it.
+
+For a map in a project's `.kitbash/` folder, deploy also enforces the eval gate: it refuses, writing nothing, while
+any routed agent has no record in `.kitbash/evals.lock.json`, failed one of its evals, or has changed since they ran,
+and names the `run_evals.py` command for each. `--dry-run` lists the same refusals and exits 1. The hash covers the
+model, disallowed tools, MCP config, composed prompt, hook scripts and evals, not the agent's name or description,
+so routing an agent into a second aspect or editing an aspect's `paths` keeps its pass. Catalog directories and the
+interpreter are replaced by their placeholders before hashing, so a plugin update or a moved project keeps every
+pass whose composed text is unchanged, while an update that changes a skill refuses only the agents composing it.
+Values resolved from `${NAME:-default}` are hashed as resolved, so a pass recorded on one machine counts on another
+only where those tools sit at the same paths. Maps outside a `.kitbash/` folder have no gate here; `release.py`
+gates its own.
 
 ## Release
 

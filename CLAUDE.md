@@ -60,7 +60,7 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 
 ## Working in this repo
 
-- **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map.
+- **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map. For maps in a project's `.kitbash/`, `deploy.py` enforces this from `.kitbash/evals.lock.json`, which `run_evals.py --aspect` writes.
 - **Don't fix the fixtures' defects.** `fixtures/firmware/pdu/` is an unaltered snapshot of a real project whose real defects two evals target. `fixtures/backend/` and `fixtures/mobile/` carry planted defects that evals target.
 - **Epicura's map is at `private/projects/epicura/project-map.yaml`**, targeting `~/code/Epicura`. `projects/epicura/README.md` points to it.
 - **Run backend and mobile evals through a map** (`--aspect cloud` or `--aspect ios` on the live Epicura map). The aspect's toolchain `artifacts` keep `node_modules` and `.build` out of the judge's diff.

@@ -109,10 +109,6 @@ def with_previous_diff(task, prev, diff):
             f"unified diff (empty if none):\n\n{diff or '(no changes)'}\n\nYour task: {task}")
 
 
-def aspect_model(pm, aspect, agent):
-    return (pm["aspects"][aspect] or {}).get("preferred_llm") or agent["preferred_llm"]
-
-
 def run_playbook(pb, pm, map_path, values, cat, opts):
     work = tempfile.mkdtemp(prefix=f"{pb['name']}-", dir=opts.workdir)
     pristine = os.path.join(work, ".pristine")
@@ -131,7 +127,7 @@ def run_playbook(pb, pm, map_path, values, cat, opts):
         if agent.get("outputs"):
             system_prompt += "\n\n" + outputs_instruction(agent)
         task = with_previous_diff(fill(st["task"], values), prev_agent, prev_diff)
-        model = aspect_model(pm, st["aspect"], agent)
+        model = R.aspect_model(pm, st["aspect"], agent)
         args = R.claude_args(task, model, system_prompt, denied, hooks, R.mcp_config(tool_names, cat), opts, work)
         specs = R.inspectors(tool_names, cat)
         if opts.dry_run:

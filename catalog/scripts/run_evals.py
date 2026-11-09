@@ -11,6 +11,9 @@ Options:
     --map FILE --aspect NAME   Mount the MCP tools bound to that aspect (plus shared_tools), add their skills,
                                and compose the map's pack (minus the aspect's pack_exclude) before the agent.
                                --aspect alone uses .kitbash/project-map.yaml here or in the nearest parent.
+                               The agent runs on the model it deploys with there: the aspect's preferred_llm,
+                               else its own. For a map in a .kitbash folder, each agent's results are recorded
+                               in .kitbash/evals.lock.json, which deploy.py requires a current pass in.
     --judge-model MODEL        Model that decides pass/fail (default claude-sonnet-5-5).
     --budget USD               Max spend per agent run (default 1.00). The judge gets 0.20.
     --max-turns N              Turn limit per agent run (default 30).
@@ -127,6 +130,11 @@ def aspect_context(map_path, aspect, cat):
     return sorted(names), pack
 
 
+def aspect_model(pm, aspect, agent):
+    """The model an agent runs on inside an aspect: the aspect's preferred_llm, else the agent's."""
+    return (pm["aspects"][aspect] or {}).get("preferred_llm") or agent["preferred_llm"]
+
+
 def mcp_config(tool_names, cat):
     servers = {}
     for name in tool_names:
@@ -239,7 +247,8 @@ def run_one(agent, ev, system_prompt, denied, hooks, mcp, opts, cat):
     copy_fixtures(cat, work)
     shutil.copytree(os.path.join(work, "fixtures"), os.path.join(pristine, "fixtures"))
 
-    args = claude_args(ev["task"], agent["preferred_llm"], system_prompt, denied, hooks, mcp, opts, work)
+    model = aspect_model(opts.pm, opts.aspect, agent) if getattr(opts, "pm", None) else agent["preferred_llm"]
+    args = claude_args(ev["task"], model, system_prompt, denied, hooks, mcp, opts, work)
 
     specs = inspectors(opts.tool_names, cat)
     if opts.dry_run:
@@ -320,6 +329,9 @@ def main():
 
     tool_names, pack = aspect_context(opts.map, opts.aspect, cat) if opts.map else ([], None)
     opts.tool_names = tool_names
+    opts.pm = V.yaml.safe_load(open(opts.map)) if opts.map else None   # runs on the model the aspect deploys with
+    import deploy as D   # here, not at the top: deploy.py imports this module
+    record = opts.map and D.lock_path(opts.map) and not opts.dry_run   # a .kitbash map: results open the deploy gate
     mcp = mcp_config(tool_names, cat)
     opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(opts.map)
     os.makedirs(opts.workdir, exist_ok=True)
@@ -328,6 +340,7 @@ def main():
     for name in names:
         agent, _ = cat["agents"][name]
         system_prompt, denied, hooks = compose(agent, cat, tool_names, pack)
+        digest = D.eval_hash(opts.aspect, name, opts.pm, cat, opts.map) if record else None   # what is evaluated
         if opts.dry_run:
             print(f"\n===== {name}: composed system prompt =====\n{system_prompt}\n"
                   f"----- denied tools: {denied}  hooks: {hooks}  mcp: {list((mcp or {}).get('mcpServers', {}))}"
@@ -341,6 +354,11 @@ def main():
             if not opts.keep and not opts.dry_run and r.get("workspace"):
                 shutil.rmtree(r["workspace"], ignore_errors=True)
                 r.pop("workspace", None)
+        if record:
+            rec = D.record_evals(opts.map, opts.aspect, name, digest, aspect_model(opts.pm, opts.aspect, agent),
+                                 [r for r in results if r["agent"] == name])
+            print(f"recorded {opts.aspect}/{name}: {rec['passed']}/{rec['total']} in "
+                  f"{V.PROJECT_DIR}/{D.LOCK}" + ("" if rec["passed"] == rec["total"] else "; deploy stays refused"))
 
     if opts.dry_run:
         return 0

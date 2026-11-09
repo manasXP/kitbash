@@ -62,6 +62,11 @@ PROJECT_DIR = ".kitbash"   # a project's Kitbash folder: project-map.yaml, playb
 HOST_VALUE = re.compile(r"\$\{(KITBASH_CATALOG|KITBASH_PYTHON)\}|\$\{([A-Za-z_][A-Za-z0-9_]*):-([^}]*)\}")
 
 
+def python():
+    """The interpreter tool commands run under: KITBASH_PYTHON when set, else the one running Kitbash."""
+    return os.environ.get("KITBASH_PYTHON") or sys.executable
+
+
 def expand(value, cat, home=True):
     """Resolve the host-specific values in a catalog file's text, or in every string of a loaded YAML value.
     ${KITBASH_CATALOG} is the catalog directory and ${KITBASH_PYTHON} the interpreter running Kitbash unless
@@ -79,7 +84,7 @@ def expand(value, cat, home=True):
         if m.group(1) == "KITBASH_CATALOG":
             return cat
         if m.group(1) == "KITBASH_PYTHON":
-            return os.environ.get("KITBASH_PYTHON") or sys.executable
+            return python()
         default = m.group(3)
         return os.environ.get(m.group(2)) or (os.path.expanduser(default) if home else default)
     return HOST_VALUE.sub(sub, value)
