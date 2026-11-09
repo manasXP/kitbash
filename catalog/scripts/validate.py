@@ -2,8 +2,9 @@
 """Validate an agent catalog and the project maps that bind it.
 
 Usage:
-    validate.py                       # catalog above this script + ../projects/*/ and ../private/projects/*/project-map.yaml
-    validate.py path/to/project-map.yaml [...]
+    validate.py                       # .kitbash/project-map.yaml here or in the nearest parent, if there is one;
+                                      # else the catalog above this script + ../projects/*/ and ../private/projects/*/
+    validate.py path/to/project-map.yaml [...]   # a map with no `catalog:` uses the catalog above this script
     validate.py --catalog DIR         # catalog only, no maps
 
 Rules (see GOAL.md):
@@ -56,6 +57,8 @@ REGISTRY_DB = os.path.expanduser("~/.local/share/kitbash/registry.db")
 SOURCES_FILE = "registry-sources.yaml"
 SOURCE_KINDS = {"git-skills", "mcp-registry"}
 TOOL_KINDS = {"mcp", "cli"}
+CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the built-in catalog
+PROJECT_DIR = ".kitbash"   # a project's Kitbash folder: project-map.yaml, playbooks/, work/
 HOST_VALUE = re.compile(r"\$\{(KITBASH_CATALOG|KITBASH_PYTHON)\}|\$\{([A-Za-z_][A-Za-z0-9_]*):-([^}]*)\}")
 
 
@@ -526,8 +529,43 @@ def map_dir(path):
 
 
 def catalog_dir(map_path, cat_rel):
-    """The catalog a map names: relative to the map's real location, or absolute (with ~ expanded)."""
+    """The catalog a map names: relative to the map's real location, or absolute (with ~ expanded).
+    A map that names none uses the built-in catalog, the one around these scripts."""
+    if not cat_rel:
+        return CATALOG
     return os.path.normpath(os.path.join(map_dir(map_path), os.path.expanduser(cat_rel)))
+
+
+def find_project_map(start=None):
+    """The project map at .kitbash/project-map.yaml in the current directory or its nearest parent, or None."""
+    d = os.path.abspath(start or os.getcwd())
+    while True:
+        path = os.path.join(d, PROJECT_DIR, "project-map.yaml")
+        if os.path.isfile(path):
+            return path
+        if os.path.dirname(d) == d:
+            return None
+        d = os.path.dirname(d)
+
+
+def project_root(map_path):
+    """The project a map in a .kitbash folder belongs to, or None for a map kept anywhere else."""
+    d = map_dir(map_path)
+    return os.path.dirname(d) if os.path.basename(d) == PROJECT_DIR else None
+
+
+def work_dir(map_path=None):
+    """Default home of eval and playbook workspaces: .kitbash/work/ in the project of the given map or the one found
+    from the current directory, holding a .gitignore so its copies are never committed; else catalog/.evals/."""
+    found = map_path or find_project_map()
+    root = project_root(found) if found else None
+    if not root:
+        return os.path.join(CATALOG, ".evals")
+    d = os.path.join(root, PROJECT_DIR, "work")
+    os.makedirs(d, exist_ok=True)
+    if not os.path.exists(os.path.join(d, ".gitignore")):
+        open(os.path.join(d, ".gitignore"), "w").write("*\n")
+    return d
 
 
 def check_project_map(path, rep, catalogs):
@@ -536,11 +574,7 @@ def check_project_map(path, rep, catalogs):
         return
     if not pm.get("project"):
         rep.error(path, "missing 'project'")
-    cat_rel = pm.get("catalog")
-    if not cat_rel:
-        rep.error(path, "missing 'catalog' (path to the catalog directory)")
-        return
-    cat_dir = catalog_dir(path, cat_rel)
+    cat_dir = catalog_dir(path, pm.get("catalog"))
     if not os.path.isdir(cat_dir):
         rep.error(path, f"catalog directory not found: {cat_dir}")
         return
@@ -822,7 +856,7 @@ def main(argv):
         check_catalog(catalogs[cat_dir], rep)
         maps = [a for a in argv if a.endswith(".yaml") and a != argv[argv.index("--catalog") + 1]]
     else:
-        maps = [a for a in argv if a.endswith(".yaml")]
+        maps = [a for a in argv if a.endswith(".yaml")] or as_list(find_project_map())
         if not maps:
             catalogs[here] = load_catalog(here, rep)
             check_catalog(catalogs[here], rep)

@@ -3,8 +3,14 @@
 Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, and `scripts/` holding `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `release.py`, `registry.py`. Run the scripts from this directory.
 Projects live outside the catalog and bind it through `project-map.yaml`. Its `catalog:` is resolved against the
 map's real location (symbolic links are followed, so a map linked into a project keeps working) or may be absolute,
-with `~` expanded; `playbooks/` is likewise looked up beside the real file. A project may also hold `playbooks/`,
-sequences of agent invocations run by code (defined in GOAL.md, checked by rule 6, run by `run_playbook.py`).
+with `~` expanded; `playbooks/` is likewise looked up beside the real file. A map with no `catalog:` uses this
+catalog, the one around the scripts. A project may also hold `playbooks/`, sequences of agent invocations run by
+code (defined in GOAL.md, checked by rule 6, run by `run_playbook.py`).
+
+A project can keep its map in its own repo as `.kitbash/project-map.yaml`, with playbooks in `.kitbash/playbooks/`.
+Run inside that project (from its root or any folder below it), `validate.py` with no map checks that map,
+`run_evals.py --aspect NAME` uses it without `--map`, and `deploy.py` with no map deploys it into the project.
+Workspaces then go in `.kitbash/work/`, which holds a `.gitignore` of `*` so they are never committed.
 
 ## Semantics
 
@@ -59,8 +65,8 @@ Any other `${...}`, such as a secret reference in a server config, is left for C
 ## Validator
 
 ```
-./scripts/validate.py                                  # this catalog + ../projects/*/project-map.yaml
-./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field
+./scripts/validate.py                                  # .kitbash/project-map.yaml here or above, else this catalog + ../projects/*/project-map.yaml
+./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field, else this one
 ./scripts/validate.py --catalog DIR                    # catalog only
 ```
 
@@ -160,10 +166,12 @@ replaces the browsing step with a local search once the datasets are bought.
 ./scripts/run_evals.py security-reviewer firmware-engineer
 ./scripts/run_evals.py --all
 ./scripts/run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
+./scripts/run_evals.py ux-designer --aspect ux-design   # inside a project: its .kitbash/project-map.yaml
 ./scripts/run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
 ```
 
-Each eval runs `claude -p` in a fresh workspace under `.evals/` holding a copy of `fixtures/`.
+Each eval runs `claude -p` in a fresh workspace under `.evals/` (`.kitbash/work/` inside a project) holding a copy
+of `fixtures/`.
 The agent is composed as the taxonomy says: the map's pack base (with `--map/--aspect`, minus that
 aspect's `pack_exclude`), then trait bodies left to right, skill bodies, the skills of any mounted
 tools, then the agent prompt. Denied tools become `--disallowedTools`, hooks become a `--settings`
@@ -222,6 +230,7 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 
 ```
 ./scripts/deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+./scripts/deploy.py                                # inside a project: its .kitbash/project-map.yaml, into that project
 ./scripts/deploy.py MAP --target DIR --dry-run     # print the files, write nothing
 ./scripts/deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
 ```

@@ -11,7 +11,8 @@ Options:
     --budget USD          Max spend per step (default 1.00). The judge gets 0.20.
     --max-turns N         Turn limit per step (default 30).
     --keep                Keep the workspace under .evals/ for inspection.
-    --workdir DIR         Where workspaces are created (default catalog/.evals).
+    --workdir DIR         Where workspaces are created (default .kitbash/work/ when the map is in a .kitbash
+                          folder, else catalog/.evals).
     --report FILE         Also write a JSON report.
 
 A playbook is read here, never by a model. Each step composes its agent exactly as run_evals.py does,
@@ -38,8 +39,6 @@ import time
 import run_evals as R
 import validate as V  # before yaml: validate falls back to the vendored PyYAML
 import yaml
-
-CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def fill(text, values):
@@ -222,9 +221,9 @@ def main():
         print("\n".join(f"error    {e}" for e in rep.errors))
         sys.exit("catalog, map or playbook does not validate; fix it before running")
     pm = yaml.safe_load(open(map_path))
-    cat_dir = V.catalog_dir(map_path, pm["catalog"])
+    cat_dir = V.catalog_dir(map_path, pm.get("catalog"))
     cat = V.load_catalog(cat_dir, V.Report())
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(map_path)
     os.makedirs(opts.workdir, exist_ok=True)
 
     if opts.run is not None:

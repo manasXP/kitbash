@@ -3,6 +3,7 @@
 
 Usage:
     deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+    deploy.py                                   # .kitbash/project-map.yaml here or in a parent, into its project
     deploy.py MAP --target DIR --dry-run        # print the files, write nothing
     deploy.py MAP --target DIR --force          # overwrite files in .claude/agents/ that Kitbash did not write
 
@@ -166,13 +167,20 @@ def plan_plugins(map_path, pm, cat, target):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("map")
-    ap.add_argument("--target", required=True, help="root of the real project to deploy into")
+    ap.add_argument("map", nargs="?", help=f"default {V.PROJECT_DIR}/project-map.yaml here or in a parent directory")
+    ap.add_argument("--target", help=f"root of the real project to deploy into; default the project of a map in a "
+                                     f"{V.PROJECT_DIR} folder")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true")
     opts = ap.parse_args()
 
+    opts.map = opts.map or V.find_project_map()
+    if not opts.map:
+        ap.error(f"give a map, or run inside a project with a {V.PROJECT_DIR}/project-map.yaml")
     map_path = os.path.abspath(opts.map)
+    opts.target = opts.target or V.project_root(map_path)
+    if not opts.target:
+        ap.error(f"--target is required for a map outside a {V.PROJECT_DIR} folder")
     target = os.path.abspath(os.path.expanduser(opts.target))
     if not os.path.isdir(target):
         sys.exit(f"target is not a directory: {target}")
@@ -182,7 +190,7 @@ def main():
         print("\n".join(f"error    {e}" for e in rep.errors))
         sys.exit("catalog, map or playbook does not validate; fix it before deploying")
     pm = yaml.safe_load(open(map_path))
-    cat_dir = V.catalog_dir(map_path, pm["catalog"])
+    cat_dir = V.catalog_dir(map_path, pm.get("catalog"))
     cat = V.load_catalog(cat_dir, V.Report())
 
     files = plan(map_path, pm, cat)

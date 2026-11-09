@@ -10,11 +10,13 @@ Usage:
 Options:
     --map FILE --aspect NAME   Mount the MCP tools bound to that aspect (plus shared_tools), add their skills,
                                and compose the map's pack (minus the aspect's pack_exclude) before the agent.
+                               --aspect alone uses .kitbash/project-map.yaml here or in the nearest parent.
     --judge-model MODEL        Model that decides pass/fail (default claude-sonnet-5-5).
     --budget USD               Max spend per agent run (default 1.00). The judge gets 0.20.
     --max-turns N              Turn limit per agent run (default 30).
     --keep                     Keep the per-eval workspaces under .evals/ for inspection.
-    --workdir DIR              Where per-eval workspaces are created (default catalog/.evals).
+    --workdir DIR              Where per-eval workspaces are created (default .kitbash/work/ in the map's project,
+                               or the project found from here, else catalog/.evals).
     --report FILE              Also write a JSON report.
 
 Each eval runs in a fresh workspace containing a copy of catalog/fixtures/. The agent is
@@ -285,8 +287,12 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--report")
     opts = ap.parse_args()
-    if bool(opts.map) != bool(opts.aspect):
-        ap.error("--map and --aspect go together")
+    if opts.aspect and not opts.map:
+        opts.map = V.find_project_map()
+        if not opts.map:
+            ap.error(f"--aspect needs --map, or a {V.PROJECT_DIR}/project-map.yaml here or in a parent directory")
+    if opts.map and not opts.aspect:
+        ap.error("--map needs --aspect")
 
     rep = V.Report()
     cat = V.load_catalog(CATALOG, rep)
@@ -305,7 +311,7 @@ def main():
     tool_names, pack = aspect_context(opts.map, opts.aspect, cat) if opts.map else ([], None)
     opts.tool_names = tool_names
     mcp = mcp_config(tool_names, cat)
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(opts.map)
     os.makedirs(opts.workdir, exist_ok=True)
 
     results = []

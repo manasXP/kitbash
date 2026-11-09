@@ -63,7 +63,7 @@ class Project:
         if rep.errors:
             sys.exit("\n".join(f"error    {e}" for e in rep.errors) + "\nmap does not validate")
         self.pm = yaml.safe_load(open(self.map))
-        self.cat = V.load_catalog(V.catalog_dir(self.map, self.pm["catalog"]), V.Report())
+        self.cat = V.load_catalog(V.catalog_dir(self.map, self.pm.get("catalog")), V.Report())
 
     def dest(self, path):
         return os.path.join(self.target, os.path.expanduser(path))
