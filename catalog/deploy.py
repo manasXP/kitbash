@@ -5,7 +5,6 @@ Usage:
     deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
     deploy.py MAP --target DIR --dry-run        # print the files, write nothing
     deploy.py MAP --target DIR --force          # overwrite files in .claude/agents/ that Kitbash did not write
-    deploy.py MAP --target DIR --plugin         # one plugin per repo under DIR, instead of DIR/.claude/agents/
 
 Each (aspect, agent) pair becomes one Claude Code subagent file, .claude/agents/<agent>.md
 (<agent>-<aspect>.md when an agent is routed in more than one aspect), composed exactly as run_evals.py
@@ -22,12 +21,10 @@ A manifest at .claude/kitbash.json records what was written. A later deploy over
 the ones no longer produced, and refuses to touch a file it did not write unless --force is given.
 The map, its catalog and its playbooks must validate first; nothing is written otherwise.
 
---plugin groups aspects by the git checkout holding their paths and writes each group to
-<repo>/.claude/skills/<repo>/, with its own manifest at DIR/.claude/kitbash-plugins.json, which Claude Code loads when a session starts in that repo and that exact folder
-is trusted (`claude -p` and a trusted parent do not count; without trust the plugin does not load). The agent bodies
-are the same text. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks move to the plugin's
-hooks/hooks.json behind only-for-agents.py, which runs them only inside that agent, and a map that binds an MCP tool
-is refused.
+plan_plugins is the plugin form of the same composition, used by release.py. It groups aspects by the git checkout
+holding their paths, one plugin per repo. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks move to
+the plugin's hooks/hooks.json behind only-for-agents.py, which runs them only inside that agent, and a map that binds
+an MCP tool is refused.
 """
 import argparse
 import json
@@ -44,7 +41,6 @@ import run_evals as R
 import validate as V
 
 MANIFEST = ".claude/kitbash.json"
-PLUGIN_MANIFEST = ".claude/kitbash-plugins.json"  # separate, so a plugin deploy leaves a classic one in place
 HOOK_DIR = ".claude/kitbash/hooks"
 
 
@@ -64,7 +60,7 @@ def agent_file(asp, ag, pm, cat, map_path, unique, plugin_paths=None):
     cfg = pm["aspects"][asp] or {}
     mcp_here = [t for t in tool_names if cat["tools"][t][0].get("kind") == "mcp"]
     if plugin and mcp_here:
-        sys.exit(f"--plugin cannot bind MCP tools yet: aspect '{asp}' binds {mcp_here}")
+        sys.exit(f"a plugin cannot bind MCP tools yet: aspect '{asp}' binds {mcp_here}")
     mcp_elsewhere = sorted(t for t, (d, _) in cat["tools"].items() if d.get("kind") == "mcp" and t not in tool_names)
     paths = plugin_paths if plugin else V.as_list(cfg.get("paths"))
 
@@ -111,26 +107,34 @@ def plan(map_path, pm, cat):
     return files
 
 
+def git_root(path):
+    """The git checkout holding path, or None."""
+    d = path
+    while d != os.path.dirname(d):
+        if os.path.exists(os.path.join(d, ".git")):
+            return d
+        d = os.path.dirname(d)
+    return None
+
+
 def repo_of(asp, pm, target):
     """The git checkout holding an aspect's paths, which are relative to target or absolute."""
     paths = V.as_list((pm["aspects"][asp] or {}).get("paths"))
-    repos = set()
-    for p in paths:
-        d = os.path.join(target, p.split("*")[0].rstrip("/"))
-        while not os.path.exists(os.path.join(d, ".git")) and d != os.path.dirname(d):
-            d = os.path.dirname(d)
-        repos.add(d)
-    if len(repos) != 1 or not os.path.exists(os.path.join(*repos, ".git")):
-        sys.exit(f"--plugin needs each aspect in one git repo: aspect '{asp}' has paths {paths} under {target}")
+    repos = {git_root(os.path.join(target, p.split("*")[0].rstrip("/"))) for p in paths}
+    if len(repos) != 1 or None in repos:
+        sys.exit(f"a plugin needs each aspect in one git repo: aspect '{asp}' has paths {paths} under {target}")
     return repos.pop()
 
 
 def plan_plugins(map_path, pm, cat, target):
-    """{path relative to target, or absolute outside it: text or source path to copy}, one plugin per repo."""
+    """(files, agents), one plugin per repo.
+
+    files is {path relative to target, or absolute outside it: text or source path to copy}.
+    agents is {(aspect, agent): {plugin, file, text, hooks}}."""
     by_repo = {}
     for asp, ag in routed(pm):
         by_repo.setdefault(repo_of(asp, pm, target), []).append((asp, ag))
-    files = {}
+    files, agents = {}, {}
     for repo, pairs in by_repo.items():
         name = os.path.basename(repo).lower()
         root = os.path.join(repo, ".claude", "skills", name)
@@ -142,6 +146,7 @@ def plan_plugins(map_path, pm, cat, target):
             in_repo = [os.path.join(target, p)[len(repo) + 1:] for p in V.as_list((pm["aspects"][asp] or {}).get("paths"))]
             rel, text, hooks = agent_file(asp, ag, pm, cat, map_path, names.count(ag) == 1, plugin_paths=in_repo)
             files[f"{root}/{rel}"] = text
+            agents[(asp, ag)] = {"plugin": name, "file": rel, "text": text, "hooks": hooks}
             warn_license(f"{root}/{rel}", ag, cat)
             for h in hooks:
                 guarded.setdefault(h, []).append(f"{name}:{os.path.splitext(os.path.basename(rel))[0]}")
@@ -151,13 +156,13 @@ def plan_plugins(map_path, pm, cat, target):
             guard = os.path.join(cat["dir"], "hooks", "only-for-agents.py")
             files[f"{root}/hooks/{os.path.basename(guard)}"] = ("copy", guard)
             commands = []
-            for h, agents in guarded.items():
+            for h, scoped in guarded.items():
                 files[f"{root}/hooks/{os.path.basename(h)}"] = ("copy", h)
                 commands.append({"type": "command", "command": '"${CLAUDE_PLUGIN_ROOT}/hooks/only-for-agents.py" '
-                                 f'"${{CLAUDE_PLUGIN_ROOT}}/hooks/{os.path.basename(h)}" ' + " ".join(agents)})
+                                 f'"${{CLAUDE_PLUGIN_ROOT}}/hooks/{os.path.basename(h)}" ' + " ".join(scoped)})
             files[f"{root}/hooks/hooks.json"] = json.dumps(
                 {"hooks": {"PreToolUse": [{"matcher": "", "hooks": commands}]}}, indent=2) + "\n"
-    return files
+    return files, agents
 
 
 def main():
@@ -166,7 +171,6 @@ def main():
     ap.add_argument("--target", required=True, help="root of the real project to deploy into")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--plugin", action="store_true", help="write one plugin per repo under the target")
     opts = ap.parse_args()
 
     map_path = os.path.abspath(opts.map)
@@ -182,15 +186,14 @@ def main():
     cat_dir = V.catalog_dir(map_path, pm["catalog"])
     cat = V.load_catalog(cat_dir, V.Report())
 
-    files = plan_plugins(map_path, pm, cat, target) if opts.plugin else plan(map_path, pm, cat)
+    files = plan(map_path, pm, cat)
     if opts.dry_run:
         for rel, content in files.items():
             print(f"\n----- {rel}" + (f"  (copy of {content[1]})" if isinstance(content, tuple) else f"\n{content}"))
         print(f"\n(dry run, nothing written; {len(files)} file(s) for {target})")
         return 0
 
-    manifest = PLUGIN_MANIFEST if opts.plugin else MANIFEST
-    mpath = os.path.join(target, manifest)
+    mpath = os.path.join(target, MANIFEST)
     previous = set(json.load(open(mpath)).get("files", [])) if os.path.exists(mpath) else set()
     foreign = [rel for rel in files if os.path.exists(os.path.join(target, rel)) and rel not in previous]
     if foreign and not opts.force:
@@ -214,7 +217,7 @@ def main():
     json.dump({"project": pm["project"], "map": map_path, "catalog": cat_dir,
                "deployed": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "files": sorted(files)},
               open(mpath, "w"), indent=2)
-    print(f"\n{len(files)} file(s) deployed to {target}; manifest at {manifest}")
+    print(f"\n{len(files)} file(s) deployed to {target}; manifest at {MANIFEST}")
     return 0
 
 

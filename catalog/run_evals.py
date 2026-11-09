@@ -191,7 +191,7 @@ def tool_artifacts(tool_names, cat):
 
 def workspace_diff(pristine, work, artifacts=(), limit=12000):
     excludes = ["--exclude=.claude", "--exclude=build"] + [f"--exclude={a}" for a in artifacts]
-    proc = subprocess.run(["diff", "-ruN", *excludes, pristine, work], capture_output=True, text=True)
+    proc = subprocess.run(["diff", "-ruN", *excludes, pristine, work], capture_output=True, text=True, errors="replace")
     out = proc.stdout.replace(pristine, "a").replace(work, "b")
     return out[:limit] + ("\n...[truncated]" if len(out) > limit else "")
 
