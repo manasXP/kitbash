@@ -108,7 +108,8 @@ same day: 213 hosted remotes, mostly personal or test servers. Skills come from 
 anthropics/claude-plugins-official, one source per plugin since a source takes one layout (11 plugins, 21 skills;
 frontend-design and skill-creator left out as duplicates of anthropics/skills). `registry.py sync` fetches that into
 `~/.local/share/kitbash/registry.db` (outside the vault, so iCloud never syncs a database mid-write) and git
-checkouts into `~/.cache/kitbash/sources/<name>/`; both are disposable and rebuilt from the vault file.
+checkouts into `~/.cache/kitbash/sources/<repo>-<commit>/`, one per repo and pin however many sources share it; both
+are disposable and rebuilt from the vault file.
 
 `validate.load_catalog` merges the rows into the catalog by name, so an agent lists an imported skill like any
 other and a map binds an imported server like any other tool; every script goes through that loader. A skill's body

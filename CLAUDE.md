@@ -53,7 +53,7 @@ Some evals need the real tool: KiCad, the Pen desktop app, the FreeCAD app with 
 
 **Some state lives outside the repo.** All of it is disposable and rebuilt from repo files:
 - `~/.cache/kitbash/packs/<name>/`: pinned pack checkouts, fetched on first use. `packs/<name>.md` holds only the link and commit.
-- `~/.cache/kitbash/sources/<name>/`: pinned checkouts of git import sources. Imported skill bodies are composed from here.
+- `~/.cache/kitbash/sources/<repo>-<commit>/`: pinned checkouts of git import sources, one per repo and pin however many sources share it. Imported skill bodies are composed from here.
 - `~/.local/share/kitbash/registry.db`: the SQLite registry, built from `registry-sources.yaml`. It stays outside the vault so iCloud never syncs it mid-write.
 
 The scripts never browse the web for leads: a map must validate and deploy from repo files and pinned sources alone.

@@ -137,6 +137,11 @@ def git_checkout(d, url, commit, where, rep):
     return d
 
 
+def source_dir(url, commit):
+    """Checkout directory of a git source, keyed by repo and pin so sources that differ only in layout share a tree."""
+    return os.path.join(SOURCE_CACHE, f"{url.rstrip('/').rsplit('/', 1)[-1]}-{commit[:12]}")
+
+
 def pack_checkout(name, pk, path, rep):
     """Working tree of the pack's repo at source.commit, fetched into PACK_CACHE/<name>/ on first use."""
     src = pk.get("source") or {}
@@ -246,7 +251,7 @@ def load_registry(cat, sources, rep):
             root = None
             for r in db.execute("SELECT name, path, frontmatter, license, has_resources FROM skills WHERE source=?", (name,)):
                 if root is None:
-                    root = git_checkout(os.path.join(SOURCE_CACHE, name), src["url"], src["commit"], where, rep)
+                    root = git_checkout(source_dir(src["url"], src["commit"]), src["url"], src["commit"], where, rep)
                     if root is None:
                         break
                 data = json.loads(r["frontmatter"])
