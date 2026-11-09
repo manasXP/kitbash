@@ -64,8 +64,8 @@ were tested from a local clone in a throwaway CLAUDE_CONFIG_DIR, with evals fake
   - allowed-tools apply only in the turn that invoked the skill. After the user answered the pack question, the
     next turn needed approval for validate.py, even within one process (checked with two stream-json turns). The
     skill now asks the pack, other-repos and aspects questions in one AskUserQuestion call, whose answers arrive
-    within the skill's turn. Still to check: one interactive /kitbash:kitbash run in the scratch project, to
-    confirm the validator then runs with no prompt.
+    within the skill's turn. Checked in one interactive Sonnet session in the scratch project: the questions came
+    as a dialog, and validate.py then ran with no prompt.
   - Not run in a session: the deploy dry run (I ran it by hand), and anything interactive (AskUserQuestion is not
     available under -p).
   - The cmux claude wrapper on PATH adds a PermissionRequest hook that can hold a -p run for up to 125 s. Use
