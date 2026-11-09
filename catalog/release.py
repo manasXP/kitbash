@@ -320,6 +320,7 @@ def publish(p, opts):
             print(r.stdout.strip() or f"PR not created for {repo}: {r.stderr.strip()}")
             failed |= r.returncode != 0
             git(repo, "worktree", "remove", "--force", wt)
+            git(repo, "branch", "-q", "-D", branch)
     return 1 if failed else 0
 
 
