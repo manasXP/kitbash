@@ -7,7 +7,7 @@ requires:
 ---
 # KiCAD checks with kicad-cli
 
-The binary is `/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli`. Design files are
+The binary is `${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli}`. Design files are
 plain-text s-expressions: `.kicad_sch` for schematics, `.kicad_pcb` for boards. Read them
 with Read or Grep when you need context the report does not give, such as a footprint's
 reference or a net's other members.

@@ -3,8 +3,23 @@
 Layout: `traits/`, `skills/<name>/SKILL.md`, `tools/cli/` and `tools/mcp/` (one YAML per tool, in the folder matching its `kind`, with helper scripts beside), `agents/`, `packs/<name>.md`, `registry-sources.yaml`, `hooks/`, `fixtures/`, and `scripts/` holding `validate.py`, `run_evals.py`, `make_agent.py`, `run_playbook.py`, `deploy.py`, `release.py`, `registry.py`. Run the scripts from this directory.
 Projects live outside the catalog and bind it through `project-map.yaml`. Its `catalog:` is resolved against the
 map's real location (symbolic links are followed, so a map linked into a project keeps working) or may be absolute,
-with `~` expanded; `playbooks/` is likewise looked up beside the real file. A project may also hold `playbooks/`,
-sequences of agent invocations run by code (defined in GOAL.md, checked by rule 6, run by `run_playbook.py`).
+with `~` expanded; `playbooks/` is likewise looked up beside the real file. A map with no `catalog:` uses this
+catalog, the one around the scripts. A project may also hold `playbooks/`, sequences of agent invocations run by
+code (defined in GOAL.md, checked by rule 6, run by `run_playbook.py`).
+
+A project can keep its map in its own repo as `.kitbash/project-map.yaml`, with playbooks in `.kitbash/playbooks/`.
+Run inside that project (from its root or any folder below it), `validate.py` with no map checks that map,
+`run_evals.py --aspect NAME` uses it without `--map`, and `deploy.py` with no map deploys it into the project.
+Workspaces then go in `.kitbash/work/`, which holds a `.gitignore` of `*` so they are never committed.
+
+The project's own agents, traits, skills, tools, hooks and fixtures go in `.kitbash/catalog/`, laid out like this
+catalog, and every script run inside the project merges them in by name. A name this catalog already has is an error,
+as is a fixture file at a path this catalog's `fixtures/` already uses, since both fixture folders are copied into
+each eval workspace. A path a file gives relative to its catalog (a tool's `skill`, an agent's `hooks`, an eval's
+fixture) is looked up in the file's own catalog first, then the other, so a project agent can use
+`hooks/block-network.py` from here. `${KITBASH_CATALOG}` in a project file is `.kitbash/catalog/`. Packs and registry
+sources come from this catalog only. Inside a project `make_agent.py` writes there too, and it refuses to write into
+a catalog installed as a Claude Code plugin.
 
 ## Semantics
 
@@ -40,13 +55,27 @@ beyond YAML. The notation that exists is three conventions inside scalars: `{nam
 commands, `tool.command` references in handoffs, and `expect_path` as an ordered list that must be a prefix of
 the steps. List order is merge order. Reopen only if an eval needs a branching playbook.
 
-All the scripts need PyYAML. On macOS the system interpreter has it: `/usr/bin/python3 <script>`.
+The scripts run on any Python 3.9 or later. They use an installed PyYAML, else the pure-Python copy in
+`scripts/vendor/` (PyYAML 6.0.3, MIT licensed).
+
+Catalog files name host-specific values instead of writing them out, and the loader resolves them in tool files and
+in the catalog's own trait and skill text (pack and imported text is composed as written):
+
+- `${KITBASH_CATALOG}` is the catalog directory, wherever it is checked out or installed.
+- `${KITBASH_PYTHON}` is the interpreter running Kitbash, or the `KITBASH_PYTHON` environment variable when set.
+- `${NAME:-default}` is the environment variable `NAME`, else the default, which is the usual macOS location, such as
+  `${KICAD_CLI:-/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli}`. A leading `~` in a default is expanded in
+  tool files, whose values reach a process with no shell, and kept in skill text, which a shell reads.
+
+Any other `${...}`, such as a secret reference in a server config, is left for Claude Code. The variables in use are
+`KICAD_CLI`, `KICAD_SYMBOL_DIR`, `KICAD_SCH_PYTHON`, `PEN_MCP_SERVER`, `ANDROID_HOME`, `JAVA_HOME` and
+`DEVELOPER_DIR`.
 
 ## Validator
 
 ```
-./scripts/validate.py                                  # this catalog + ../projects/*/project-map.yaml
-./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field
+./scripts/validate.py                                  # .kitbash/project-map.yaml here or above, else this catalog + ../projects/*/project-map.yaml
+./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field, else this one
 ./scripts/validate.py --catalog DIR                    # catalog only
 ```
 
@@ -146,10 +175,12 @@ replaces the browsing step with a local search once the datasets are bought.
 ./scripts/run_evals.py security-reviewer firmware-engineer
 ./scripts/run_evals.py --all
 ./scripts/run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
+./scripts/run_evals.py ux-designer --aspect ux-design   # inside a project: its .kitbash/project-map.yaml
 ./scripts/run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
 ```
 
-Each eval runs `claude -p` in a fresh workspace under `.evals/` holding a copy of `fixtures/`.
+Each eval runs `claude -p` in a fresh workspace under `.evals/` (`.kitbash/work/` inside a project) holding a copy
+of `fixtures/`.
 The agent is composed as the taxonomy says: the map's pack base (with `--map/--aspect`, minus that
 aspect's `pack_exclude`), then trait bodies left to right, skill bodies, the skills of any mounted
 tools, then the agent prompt. Denied tools become `--disallowedTools`, hooks become a `--settings`
@@ -164,6 +195,11 @@ the agent's final message, and the workspace diff, and returns a structured pass
 Exit status 1 if any eval failed or errored. `--report FILE` writes the full results as JSON,
 `--keep` leaves workspaces in place, `--budget` caps spend per agent run (default 1.00 USD), and `--workdir DIR`
 puts the per-eval workspaces somewhere other than `.evals/` so two sessions do not share one.
+
+With `--aspect`, an agent runs on the model it is deployed with there: the aspect's `preferred_llm`, else its own.
+For a map in a project's `.kitbash/` folder, each agent's results are also recorded in `.kitbash/evals.lock.json`
+under `aspect/agent`, against a hash of what the agent does in that aspect, taken before its evals start. That file
+is meant to be committed, and `deploy.py` reads it (see Deploy).
 
 A tool may declare `artifacts: [globs]` for side-effect files it writes (kicad-cli leaves a `.kicad_prl` beside a
 board after DRC). The runner excludes them from the diff the judge sees, since they are not edits by the agent.
@@ -208,6 +244,7 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 
 ```
 ./scripts/deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+./scripts/deploy.py                                # inside a project: its .kitbash/project-map.yaml, into that project
 ./scripts/deploy.py MAP --target DIR --dry-run     # print the files, write nothing
 ./scripts/deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
 ```
@@ -222,8 +259,19 @@ mounted; `mcpServers` inlines the aspect's MCP tools, connected only while that 
 name and its `paths`, which is what Claude Code reads when deciding which subagent to use. A manifest at
 `.claude/kitbash.json` lists the written files; the next deploy overwrites those, removes any the map no longer
 produces, and refuses to overwrite a file it did not write unless `--force` is given. The map must validate
-(rule 6 included) or nothing is written. Tool files carry host-specific paths (KiCAD, Pen, a venv), so a deploy
-is for this machine; the agent files inline them as they stand.
+(rule 6 included) or nothing is written. Tool and skill files name host-specific paths (KiCAD, Pen, a venv) as
+placeholders, and the agent files inline the values they resolve to, so a deploy is for the machine that made it.
+
+For a map in a project's `.kitbash/` folder, deploy also enforces the eval gate: it refuses, writing nothing, while
+any routed agent has no record in `.kitbash/evals.lock.json`, failed one of its evals, or has changed since they ran,
+and names the `run_evals.py` command for each. `--dry-run` lists the same refusals and exits 1. The hash covers the
+model, disallowed tools, MCP config, composed prompt, hook scripts and evals, not the agent's name or description,
+so routing an agent into a second aspect or editing an aspect's `paths` keeps its pass. Catalog directories and the
+interpreter are replaced by their placeholders before hashing, so a plugin update or a moved project keeps every
+pass whose composed text is unchanged, while an update that changes a skill refuses only the agents composing it.
+Values resolved from `${NAME:-default}` are hashed as resolved, so a pass recorded on one machine counts on another
+only where those tools sit at the same paths. Maps outside a `.kitbash/` folder have no gate here; `release.py`
+gates its own.
 
 ## Release
 
@@ -312,7 +360,7 @@ then auto-generated, strips WebVTT tags and the rolling duplicate lines, and pri
 no captions, 3 means yt-dlp failed. YouTube rate-limits caption fetches (HTTP 429 after two in a row on 2 Nov 2026),
 so the recipe-author evals that hit a URL accept an honest failure report. `tools/cli/recipe_validate.py` imports
 `epicura_recipe` from the real checkout (`EPICURA_RECIPE_ENGINE`) and exits 5 on an invalid file, so it doubles as a
-playbook gate; it needs `/usr/bin/python3`, the interpreter with pydantic. `fixtures/recipes/` holds the real Kanda
+playbook gate; it runs under `${KITBASH_PYTHON}`, which must have pydantic (on this machine, `/usr/bin/python3`). `fixtures/recipes/` holds the real Kanda
 Poha caption track, a hand-written infeasible medu vada transcript, copies of the project's five recipes for the
 dispenser convention (ASD boxes 1 cumin, 2 mustard, 3 turmeric, 4 chili, 5 salt, 6 urad dal; two CID trays; SLD oil
 and water), and an empty `out/` the evals write into. Written 2 Nov 2026.

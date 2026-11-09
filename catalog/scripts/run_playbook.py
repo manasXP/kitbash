@@ -11,7 +11,8 @@ Options:
     --budget USD          Max spend per step (default 1.00). The judge gets 0.20.
     --max-turns N         Turn limit per step (default 30).
     --keep                Keep the workspace under .evals/ for inspection.
-    --workdir DIR         Where workspaces are created (default catalog/.evals).
+    --workdir DIR         Where workspaces are created (default .kitbash/work/ when the map is in a .kitbash
+                          folder, else catalog/.evals).
     --report FILE         Also write a JSON report.
 
 A playbook is read here, never by a model. Each step composes its agent exactly as run_evals.py does,
@@ -35,12 +36,9 @@ import sys
 import tempfile
 import time
 
-import yaml
-
 import run_evals as R
-import validate as V
-
-CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
+import yaml
 
 
 def fill(text, values):
@@ -111,14 +109,10 @@ def with_previous_diff(task, prev, diff):
             f"unified diff (empty if none):\n\n{diff or '(no changes)'}\n\nYour task: {task}")
 
 
-def aspect_model(pm, aspect, agent):
-    return (pm["aspects"][aspect] or {}).get("preferred_llm") or agent["preferred_llm"]
-
-
 def run_playbook(pb, pm, map_path, values, cat, opts):
     work = tempfile.mkdtemp(prefix=f"{pb['name']}-", dir=opts.workdir)
     pristine = os.path.join(work, ".pristine")
-    shutil.copytree(os.path.join(cat["dir"], "fixtures"), os.path.join(work, "fixtures"))
+    R.copy_fixtures(cat, work)
     shutil.copytree(os.path.join(work, "fixtures"), os.path.join(pristine, "fixtures"))
     t0 = time.time()
     out = {"path": [], "steps": [], "handoffs": [], "cost": 0.0, "workspace": work, "status": "ran"}
@@ -133,7 +127,7 @@ def run_playbook(pb, pm, map_path, values, cat, opts):
         if agent.get("outputs"):
             system_prompt += "\n\n" + outputs_instruction(agent)
         task = with_previous_diff(fill(st["task"], values), prev_agent, prev_diff)
-        model = aspect_model(pm, st["aspect"], agent)
+        model = R.aspect_model(pm, st["aspect"], agent)
         args = R.claude_args(task, model, system_prompt, denied, hooks, R.mcp_config(tool_names, cat), opts, work)
         specs = R.inspectors(tool_names, cat)
         if opts.dry_run:
@@ -223,9 +217,9 @@ def main():
         print("\n".join(f"error    {e}" for e in rep.errors))
         sys.exit("catalog, map or playbook does not validate; fix it before running")
     pm = yaml.safe_load(open(map_path))
-    cat_dir = V.catalog_dir(map_path, pm["catalog"])
-    cat = V.load_catalog(cat_dir, V.Report())
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
+    cat_dir = V.catalog_dir(map_path, pm.get("catalog"))
+    cat = V.load_catalog(cat_dir, V.Report(), V.user_catalog(map_path))
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(map_path)
     os.makedirs(opts.workdir, exist_ok=True)
 
     if opts.run is not None:

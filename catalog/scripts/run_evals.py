@@ -10,11 +10,16 @@ Usage:
 Options:
     --map FILE --aspect NAME   Mount the MCP tools bound to that aspect (plus shared_tools), add their skills,
                                and compose the map's pack (minus the aspect's pack_exclude) before the agent.
+                               --aspect alone uses .kitbash/project-map.yaml here or in the nearest parent.
+                               The agent runs on the model it deploys with there: the aspect's preferred_llm,
+                               else its own. For a map in a .kitbash folder, each agent's results are recorded
+                               in .kitbash/evals.lock.json, which deploy.py requires a current pass in.
     --judge-model MODEL        Model that decides pass/fail (default claude-sonnet-5-5).
     --budget USD               Max spend per agent run (default 1.00). The judge gets 0.20.
     --max-turns N              Turn limit per agent run (default 30).
     --keep                     Keep the per-eval workspaces under .evals/ for inspection.
-    --workdir DIR              Where per-eval workspaces are created (default catalog/.evals).
+    --workdir DIR              Where per-eval workspaces are created (default .kitbash/work/ in the map's project,
+                               or the project found from here, else catalog/.evals).
     --report FILE              Also write a JSON report.
 
 Each eval runs in a fresh workspace containing a copy of catalog/fixtures/. The agent is
@@ -59,6 +64,10 @@ def compose(agent, cat, tool_names, pack=None):
     pack is (name, data, excluded trait names, excluded skill names) or None. Its base comes first,
     so that the agent's own text wins on conflict."""
     parts, denied, allowed = [], set(), set()
+
+    def own(path):  # catalog files may hold host-specific values; pack and imported text is as written
+        root = V.root_of(path, cat)
+        return V.expand(body(path), root, home=False) if root else body(path)
     if pack:
         name, pk, ex_traits, ex_skills = pack
         pk_traits, pk_skills = V.pack_base(pk)
@@ -76,19 +85,19 @@ def compose(agent, cat, tool_names, pack=None):
     for t in V.as_list(agent.get("traits")):
         data, path = cat["traits"][t]
         denied |= set(V.as_list(data.get("denies")))
-        parts.append(f"## Trait: {t}\n{body(path)}")
+        parts.append(f"## Trait: {t}\n{own(path)}")
     composed = set()  # a skill reached twice is composed once, at its first position
     for s in V.as_list(agent.get("skills")):
         _, path = cat["skills"][s]
         composed.add(os.path.realpath(path))
-        parts.append(f"## Skill: {s}\n{body(path)}")
+        parts.append(f"## Skill: {s}\n{own(path)}")
     for name in tool_names:
-        data, _ = cat["tools"][name]
+        data, tool_path = cat["tools"][name]
         if data.get("skill"):
-            path = os.path.join(cat["dir"], data["skill"])
+            path = V.resolve(cat, data["skill"], tool_path)
             if os.path.realpath(path) not in composed:
                 composed.add(os.path.realpath(path))
-                parts.append(f"## Tool skill: {name}\n{body(path)}")
+                parts.append(f"## Tool skill: {name}\n{own(path)}")
     parts.append(f"## Agent: {agent['name']}\n{agent['prompt'].strip()}")
     overrides = agent.get("overrides") or {}
     if overrides.get("allow"):
@@ -96,7 +105,7 @@ def compose(agent, cat, tool_names, pack=None):
         parts.append(f"## Override\nYou may use {sorted(allowed)}. Reason: {overrides.get('reason')}")
     hooks = []
     for scripts in (agent.get("hooks") or {}).values():
-        hooks += [os.path.join(cat["dir"], h) for h in V.as_list(scripts)]
+        hooks += [V.resolve(cat, h, cat["agents"][agent["name"]][1]) for h in V.as_list(scripts)]
     return "\n\n".join(parts), sorted(denied - allowed), hooks
 
 
@@ -121,6 +130,11 @@ def aspect_context(map_path, aspect, cat):
     return sorted(names), pack
 
 
+def aspect_model(pm, aspect, agent):
+    """The model an agent runs on inside an aspect: the aspect's preferred_llm, else the agent's."""
+    return (pm["aspects"][aspect] or {}).get("preferred_llm") or agent["preferred_llm"]
+
+
 def mcp_config(tool_names, cat):
     servers = {}
     for name in tool_names:
@@ -142,13 +156,22 @@ def claude_json(args, cwd, timeout=900):
 
 
 def inspectors(tool_names, cat):
-    """(extensions, open_cmd, dump_cmd) for every mounted tool that declares `inspect`."""
+    """(extensions, open_cmd, dump_cmd, directory to dump from) for every mounted tool that declares `inspect`.
+    A dump command names its script relative to the catalog directory the tool file is in."""
     out = []
     for name in tool_names:
-        ins = (cat["tools"][name][0].get("inspect") or {})
+        data, path = cat["tools"][name]
+        ins = data.get("inspect") or {}
         if ins.get("extensions"):
-            out.append((tuple(ins["extensions"]), ins.get("open"), ins.get("dump")))
+            out.append((tuple(ins["extensions"]), ins.get("open"), ins.get("dump"), V.root_of(path, cat) or cat["dir"]))
     return out
+
+
+def copy_fixtures(cat, work):
+    """Copy the fixtures of the catalog, then of the project's own catalog, into work/fixtures/."""
+    for root in cat["roots"]:
+        if os.path.isdir(os.path.join(root, "fixtures")):
+            shutil.copytree(os.path.join(root, "fixtures"), os.path.join(work, "fixtures"), dirs_exist_ok=True)
 
 
 def inspect_files(work, specs, cat, do_open=False):
@@ -157,14 +180,14 @@ def inspect_files(work, specs, cat, do_open=False):
     for root, _, files in os.walk(os.path.join(work, "fixtures")):
         for f in files:
             path = os.path.join(root, f)
-            for exts, open_cmd, dump_cmd in specs:
+            for exts, open_cmd, dump_cmd, dump_dir in specs:
                 if not f.endswith(exts):
                     continue
                 if do_open and open_cmd:
                     subprocess.run([a.replace("{file}", path) for a in open_cmd], check=False)
                     time.sleep(5)
                 if dump_cmd:
-                    proc = subprocess.run([a.replace("{file}", path) for a in dump_cmd], cwd=cat["dir"],
+                    proc = subprocess.run([a.replace("{file}", path) for a in dump_cmd], cwd=dump_dir,
                                           capture_output=True, text=True, timeout=180)
                     dumps[os.path.relpath(path, work)] = (proc.stdout + proc.stderr)[-12000:]
     return dumps
@@ -221,10 +244,11 @@ def claude_args(task, model, system_prompt, denied, hooks, mcp, opts, work):
 def run_one(agent, ev, system_prompt, denied, hooks, mcp, opts, cat):
     work = tempfile.mkdtemp(prefix=f"{agent['name']}-", dir=opts.workdir)
     pristine = os.path.join(work, ".pristine")
-    shutil.copytree(os.path.join(cat["dir"], "fixtures"), os.path.join(work, "fixtures"))
+    copy_fixtures(cat, work)
     shutil.copytree(os.path.join(work, "fixtures"), os.path.join(pristine, "fixtures"))
 
-    args = claude_args(ev["task"], agent["preferred_llm"], system_prompt, denied, hooks, mcp, opts, work)
+    model = aspect_model(opts.pm, opts.aspect, agent) if getattr(opts, "pm", None) else agent["preferred_llm"]
+    args = claude_args(ev["task"], model, system_prompt, denied, hooks, mcp, opts, work)
 
     specs = inspectors(opts.tool_names, cat)
     if opts.dry_run:
@@ -282,11 +306,15 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--report")
     opts = ap.parse_args()
-    if bool(opts.map) != bool(opts.aspect):
-        ap.error("--map and --aspect go together")
+    if opts.aspect and not opts.map:
+        opts.map = V.find_project_map()
+        if not opts.map:
+            ap.error(f"--aspect needs --map, or a {V.PROJECT_DIR}/project-map.yaml here or in a parent directory")
+    if opts.map and not opts.aspect:
+        ap.error("--map needs --aspect")
 
     rep = V.Report()
-    cat = V.load_catalog(CATALOG, rep)
+    cat = V.load_catalog(CATALOG, rep, V.user_catalog(opts.map))
     V.check_catalog(cat, rep)
     if rep.errors:
         print("\n".join(f"error    {e}" for e in rep.errors))
@@ -301,14 +329,18 @@ def main():
 
     tool_names, pack = aspect_context(opts.map, opts.aspect, cat) if opts.map else ([], None)
     opts.tool_names = tool_names
+    opts.pm = V.yaml.safe_load(open(opts.map)) if opts.map else None   # runs on the model the aspect deploys with
+    import deploy as D   # here, not at the top: deploy.py imports this module
+    record = opts.map and D.lock_path(opts.map) and not opts.dry_run   # a .kitbash map: results open the deploy gate
     mcp = mcp_config(tool_names, cat)
-    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else os.path.join(CATALOG, ".evals")
+    opts.workdir = os.path.abspath(opts.workdir) if opts.workdir else V.work_dir(opts.map)
     os.makedirs(opts.workdir, exist_ok=True)
 
     results = []
     for name in names:
         agent, _ = cat["agents"][name]
         system_prompt, denied, hooks = compose(agent, cat, tool_names, pack)
+        digest = D.eval_hash(opts.aspect, name, opts.pm, cat, opts.map) if record else None   # what is evaluated
         if opts.dry_run:
             print(f"\n===== {name}: composed system prompt =====\n{system_prompt}\n"
                   f"----- denied tools: {denied}  hooks: {hooks}  mcp: {list((mcp or {}).get('mcpServers', {}))}"
@@ -322,6 +354,11 @@ def main():
             if not opts.keep and not opts.dry_run and r.get("workspace"):
                 shutil.rmtree(r["workspace"], ignore_errors=True)
                 r.pop("workspace", None)
+        if record:
+            rec = D.record_evals(opts.map, opts.aspect, name, digest, aspect_model(opts.pm, opts.aspect, agent),
+                                 [r for r in results if r["agent"] == name])
+            print(f"recorded {opts.aspect}/{name}: {rec['passed']}/{rec['total']} in "
+                  f"{V.PROJECT_DIR}/{D.LOCK}" + ("" if rec["passed"] == rec["total"] else "; deploy stays refused"))
 
     if opts.dry_run:
         return 0

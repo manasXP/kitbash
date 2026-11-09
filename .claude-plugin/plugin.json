@@ -1,0 +1,12 @@
+{
+  "name": "kitbash",
+  "version": "0.1.0",
+  "description": "Assemble Claude Code subagents for a project from a catalog of reusable parts, prove each one with evals, and deploy only the agents that passed.",
+  "author": {
+    "name": "Manas Pradhan"
+  },
+  "homepage": "https://github.com/manasXP/kitbash",
+  "repository": "https://github.com/manasXP/kitbash",
+  "license": "MIT",
+  "keywords": ["subagents", "agents", "evals", "catalog"]
+}

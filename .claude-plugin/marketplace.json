@@ -1,0 +1,14 @@
+{
+  "name": "kitbash",
+  "description": "Kitbash: tested, composable Claude Code subagents for your project.",
+  "owner": {
+    "name": "Manas Pradhan"
+  },
+  "plugins": [
+    {
+      "name": "kitbash",
+      "source": "./",
+      "description": "Assemble Claude Code subagents for a project from a catalog of reusable parts, prove each one with evals, and deploy only the agents that passed."
+    }
+  ]
+}

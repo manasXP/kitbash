@@ -36,10 +36,9 @@ import tempfile
 import threading
 import time
 
-import yaml
-
 import deploy as D
-import validate as V
+import validate as V  # before yaml: validate falls back to the vendored PyYAML
+import yaml
 
 CATALOG = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -64,7 +63,7 @@ class Project:
         if rep.errors:
             sys.exit("\n".join(f"error    {e}" for e in rep.errors) + "\nmap does not validate")
         self.pm = yaml.safe_load(open(self.map))
-        self.cat = V.load_catalog(V.catalog_dir(self.map, self.pm["catalog"]), V.Report())
+        self.cat = V.load_catalog(V.catalog_dir(self.map, self.pm.get("catalog")), V.Report(), V.user_catalog(self.map))
 
     def dest(self, path):
         return os.path.join(self.target, os.path.expanduser(path))

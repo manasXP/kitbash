@@ -102,26 +102,27 @@
     <li><a href="#c2"><span class="n">2</span>Set up</a></li>
     <li><a href="#c3"><span class="n">3</span>A quick tour</a></li>
     <li><a href="#c4"><span class="n">4</span>Core concepts</a></li>
+    <li><a href="#c5"><span class="n">5</span>A worked example: a smart thermostat</a></li>
   </ul>
   <div class="toc-part">Part II: Tasks</div>
   <ul class="toc">
-    <li><a href="#c5"><span class="n">5</span>Evaluate an agent</a></li>
-    <li><a href="#c6"><span class="n">6</span>Create an agent by hand</a></li>
-    <li><a href="#c7"><span class="n">7</span>Create an agent from a description</a></li>
-    <li><a href="#c8"><span class="n">8</span>Write a project map</a></li>
-    <li><a href="#c9"><span class="n">9</span>Import skills and MCP servers</a></li>
-    <li><a href="#c10"><span class="n">10</span>Chain agents with a playbook</a></li>
-    <li><a href="#c11"><span class="n">11</span>Deploy to a project</a></li>
-    <li><a href="#c12"><span class="n">12</span>Publish through a reviewed release</a></li>
+    <li><a href="#c6"><span class="n">6</span>Evaluate an agent</a></li>
+    <li><a href="#c7"><span class="n">7</span>Create an agent by hand</a></li>
+    <li><a href="#c8"><span class="n">8</span>Create an agent from a description</a></li>
+    <li><a href="#c9"><span class="n">9</span>Write a project map</a></li>
+    <li><a href="#c10"><span class="n">10</span>Import skills and MCP servers</a></li>
+    <li><a href="#c11"><span class="n">11</span>Chain agents with a playbook</a></li>
+    <li><a href="#c12"><span class="n">12</span>Deploy to a project</a></li>
+    <li><a href="#c13"><span class="n">13</span>Publish through a reviewed release</a></li>
   </ul>
   <div class="toc-part">Part III: Reference</div>
   <ul class="toc">
-    <li><a href="#c13"><span class="n">13</span>What's in the catalog</a></li>
-    <li><a href="#c14"><span class="n">14</span>Command reference</a></li>
-    <li><a href="#c15"><span class="n">15</span>File formats</a></li>
-    <li><a href="#c16"><span class="n">16</span>Validator rules</a></li>
-    <li><a href="#c17"><span class="n">17</span>Troubleshooting</a></li>
-    <li><a href="#c18"><span class="n">18</span>Cheat sheet</a></li>
+    <li><a href="#c14"><span class="n">14</span>What's in the catalog</a></li>
+    <li><a href="#c15"><span class="n">15</span>Command reference</a></li>
+    <li><a href="#c16"><span class="n">16</span>File formats</a></li>
+    <li><a href="#c17"><span class="n">17</span>Validator rules</a></li>
+    <li><a href="#c18"><span class="n">18</span>Troubleshooting</a></li>
+    <li><a href="#c19"><span class="n">19</span>Cheat sheet</a></li>
   </ul>
 </section>
 
@@ -185,7 +186,7 @@
 </div>
 
 <h2>How to use this guide</h2>
-<p>New to Kitbash? Read chapters 2 to 4 and run the commands as you go. Part II is a set of independent tasks, so go straight to the one you need. Part III is for looking things up. Commands are marked by cost:</p>
+<p>New to Kitbash? Read chapters 2 to 4 and run the commands as you go, then chapter 5 to see a whole project put together. Part II is a set of independent tasks, so go straight to the one you need. Part III is for looking things up. Commands are marked by cost:</p>
 <div class="code free"><div class="cap">Free: no model call</div><pre>/usr/bin/python3 scripts/validate.py</pre></div>
 <div class="code bill"><div class="cap">Bills your account through the claude CLI</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer</pre></div>
 
@@ -193,38 +194,68 @@
 <table>
   <thead><tr><th style="width:49%">Available now</th><th>Not built yet</th></tr></thead>
   <tbody>
-  <tr><td>Catalog, validator, eval runner</td><td>Automatic project maps. You write maps by hand.</td></tr>
-  <tr><td>Meta-agent that designs a new agent from a sentence</td><td>A <code>/kitbash</code> skill. You run each script yourself.</td></tr>
-  <tr><td>Playbook runner, registry of imported parts</td><td>A <code>csv-index</code> registry source for listing datasets.</td></tr>
-  <tr><td>Direct deploy and reviewed release</td><td>MCP tools in plugins. <code>release.py</code> refuses a map that binds one, so use <code>deploy.py</code> for those maps.</td></tr>
+  <tr><td>Catalog, validator, eval runner</td><td>Automatic project maps. You write a map, or the <code>/kitbash</code> skill drafts one with Claude for you to confirm.</td></tr>
+  <tr><td>Meta-agent that designs a new agent from a sentence</td><td>A <code>csv-index</code> registry source for listing datasets.</td></tr>
+  <tr><td>Playbook runner, registry of imported parts</td><td>MCP tools in plugins. <code>release.py</code> refuses a map that binds one, so use <code>deploy.py</code> for those maps.</td></tr>
+  <tr><td>Direct deploy, reviewed release, and a Claude Code plugin with a <code>/kitbash</code> skill</td><td></td></tr>
   </tbody>
 </table>
 
-<div class="note warn"><b class="h">Kitbash is not fully portable yet</b>
-Some tool and skill files contain absolute paths from the author's Mac, such as <code>/Applications/KiCad/...</code>. Edit them before using those tools on another machine. Deployed agent files inline these paths, so a deploy is valid only on the machine that ran it.</div>
+<div class="note"><b class="h">A deploy belongs to one machine</b>
+Tool files name the programs they run through environment variables with macOS defaults, such as <code>KICAD_CLI</code>, so set those on another system (<a href="#c18">chapter 18</a>). Deployed agent files inline the resolved paths, so a deploy is valid only on the machine that ran it.</div>
 
 <!-- ============================================================ 2 -->
 <h1 class="flow" id="c2">2. Set up</h1>
+<p class="lead">There are two ways in. Install Kitbash as a Claude Code plugin to give one project its agents, with Claude doing the steps and asking you at each decision. Clone the repo to run the scripts yourself or to change the catalog. The rest of this guide works from a clone.</p>
+
 <h2>What you need</h2>
 <table>
   <thead><tr><th style="width:31%">Requirement</th><th>Needed for</th></tr></thead>
   <tbody>
-  <tr><td>Python 3.9 or later with PyYAML</td><td>Every script</td></tr>
+  <tr><td><a href="https://code.claude.com/docs/">Claude Code</a> (<code>claude</code>), signed in</td><td>The plugin, evals, playbooks and <code>make_agent.py</code></td></tr>
+  <tr><td>Python 3.9 or later</td><td>Every script. Kitbash bundles PyYAML, so there is nothing to install.</td></tr>
   <tr><td>Git, with network access</td><td>The first fetch of a pack or import source, and <code>registry.py sync</code></td></tr>
-  <tr><td><a href="https://code.claude.com/docs/">Claude Code</a> CLI (<code>claude</code>)</td><td>Evals, playbooks and <code>make_agent.py</code></td></tr>
   <tr><td>GitHub CLI (<code>gh</code>), signed in</td><td><code>release.py publish</code>, and agents that use the <code>github</code> tool</td></tr>
-  <tr><td>Domain tools such as KiCad or an STM32 toolchain</td><td>Only the agents that use them. See <a href="#c13">chapter 13</a>.</td></tr>
+  <tr><td>Domain tools such as KiCad or an STM32 toolchain</td><td>Only the agents that use them. See <a href="#c14">chapter 14</a>.</td></tr>
   </tbody>
 </table>
 
-<h2>Install</h2>
-<div class="code free"><div class="cap">Free: run once</div><pre>git clone https://github.com/manasXP/kitbash.git
-cd kitbash/catalog
-/usr/bin/python3 -c "import yaml; print(yaml.__version__)"  # prints a version if installed
-/usr/bin/python3 -m pip install --user pyyaml               # only if the line above failed</pre></div>
+<h2>Install the plugin</h2>
+<div class="code free"><div class="cap">Free: in a terminal, with Claude Code 2.1.275 or later</div><pre>claude plugin install kitbash --marketplace manasXP/kitbash</pre></div>
+<p>Inside a session, type the same command as <code>/plugin install kitbash --marketplace manasXP/kitbash</code>. On an older Claude Code, add the marketplace first:</p>
+<div class="code free"><div class="cap">Free: older Claude Code</div><pre>claude plugin marketplace add manasXP/kitbash
+claude plugin install kitbash@kitbash</pre></div>
+<p>The plugin carries the whole catalog and its scripts. Claude Code replaces that copy on every update, so keep nothing of your own in it.</p>
+
+<h2>Set up a project with the plugin</h2>
+<p>Start Claude Code at the project's root folder and run the skill:</p>
+<div class="code"><div class="cap">In Claude Code</div><pre>/kitbash:kitbash set up agents for this repo</pre></div>
+<ol class="steps">
+  <li><strong>It looks.</strong> Claude inventories the project and reads the catalog's agents, tools and packs.</li>
+  <li><strong>It asks.</strong> It proposes aspects, then asks in one dialog which pack to attach, whether the project spans other repositories, and whether the aspects are right. It writes nothing before you answer.</li>
+  <li><strong>It writes and validates.</strong> It writes <code>.kitbash/project-map.yaml</code> and runs the validator until it reports <code>0 error(s)</code>.</li>
+  <li><strong>It evaluates, on your go-ahead.</strong> For each routed agent it shows the dry run, checks that the tools the evals need are installed, and asks before each billed run, naming its ceiling.</li>
+  <li><strong>It deploys what passed.</strong> It runs the deploy dry run, and deploys only once every routed agent has a current pass.</li>
+</ol>
+<p>The skill pre-approves its free commands, so the validator and the dry runs run without a permission prompt. Writing files and every billed command still ask. Everything that belongs to the project goes in its <code>.kitbash/</code> folder:</p>
+<div class="code out"><div class="cap">A project's .kitbash/ folder</div><pre>.kitbash/
+  project-map.yaml     aspects, the tools bound to each, the agents routed to each
+  playbooks/           optional multi-agent sequences
+  catalog/             optional project agents, traits, skills, tools, hooks, fixtures
+  evals.lock.json      eval results, written by run_evals.py and read by deploy.py
+  work/                eval workspaces, ignored by git</pre></div>
+<p>Commit <code>.kitbash/</code> and the files the deploy writes in <code>.claude/</code>. A map in <code>.kitbash/</code> needs no <code>catalog:</code> line, since it uses the catalog of the scripts that read it. Project agents in <code>.kitbash/catalog/</code> must not reuse a catalog name.</p>
+
+<h2>Run the scripts from a clone</h2>
+<div class="code free"><div class="cap">Free: run once</div><pre>git clone https://github.com/manasXP/kitbash.git ~/kitbash
+cd ~/kitbash/catalog</pre></div>
+<p>Commands in the rest of this guide run from <code>catalog/</code>. The same scripts also work inside a project with a <code>.kitbash/</code> folder, from its root or any folder below it. There they find the map, merge <code>.kitbash/catalog/</code> into the catalog, and need no <code>--map</code>:</p>
+<div class="code free"><div class="cap">Free: run inside the project</div><pre>/usr/bin/python3 ~/kitbash/catalog/scripts/validate.py
+/usr/bin/python3 ~/kitbash/catalog/scripts/run_evals.py security-reviewer --aspect api --dry-run
+/usr/bin/python3 ~/kitbash/catalog/scripts/deploy.py --dry-run</pre></div>
 
 <div class="note"><b class="h">Which Python to use</b>
-Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/python3</code>, the macOS system interpreter. Plain <code>python3</code> or <code>./scripts/validate.py</code> can resolve to a different interpreter without PyYAML and fail with <code>No module named 'yaml'</code>. On other systems, use any Python 3.9 or later that has PyYAML and substitute its path.</div>
+This guide writes <code>/usr/bin/python3</code>, the macOS system interpreter. Any Python 3.9 or later works, so substitute its path on other systems. Tool commands run under the same interpreter as Kitbash. The <code>recipe-validator</code> tool also needs pydantic, so use an interpreter that has it, or point <code>KITBASH_PYTHON</code> at one.</div>
 
 <h2>Check that it works</h2>
 <div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py</pre></div>
@@ -252,6 +283,7 @@ Every command in this guide runs from <code>catalog/</code> with <code>/usr/bin/
   <thead><tr><th style="width:45%">Location</th><th>Contents</th></tr></thead>
   <tbody>
   <tr><td><code>catalog/</code></td><td>Parts and fixtures, with the scripts in <code>catalog/scripts/</code></td></tr>
+  <tr><td><code>.kitbash/</code> in your project</td><td>The project's map, playbooks and own parts, its eval results in <code>evals.lock.json</code>, and eval workspaces in <code>work/</code></td></tr>
   <tr><td><code>projects/&lt;name&gt;/</code></td><td>Project maps and playbooks you can publish</td></tr>
   <tr><td><code>private/projects/&lt;name&gt;/</code></td><td>A separate private repo for project content. Git ignores this folder.</td></tr>
   <tr><td><code>~/.cache/kitbash/packs/</code>, <code>sources/</code></td><td>Pinned checkouts of packs and imported skills</td></tr>
@@ -388,7 +420,194 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 <p>The difference is who reads it. A model reads a <strong>skill</strong> inside one agent's context. Code reads a <strong>playbook</strong>, and no agent ever sees it. If following a procedure needs a model's judgement, write a skill. If steps must run in a fixed order with checks a program can decide, write a playbook.</p>
 
 <!-- ============================================================ 5 -->
-<h1 class="flow" id="c5">5. Evaluate an agent</h1>
+<h1 class="flow" id="c5">5. A worked example: a smart thermostat</h1>
+<p class="lead">This chapter follows one project from map to working agents. The repo ships its map in <code>projects/smart-thermostat/</code>, with two playbooks. Each step links to the chapter that covers it in detail.</p>
+
+<h2>The project</h2>
+<p>A smart thermostat is a good test of Kitbash because one product needs four kinds of work, each with its own tools. Its repo is laid out like this:</p>
+<table class="keep">
+  <thead><tr><th style="width:27%">Folder</th><th style="width:38%">Work</th><th>Tools the work needs</th></tr></thead>
+  <tbody>
+  <tr><td><code>design/</code>, <code>app/src/ui/</code></td><td>Screens for the companion app</td><td>The Pen design app, through its MCP server</td></tr>
+  <tr><td><code>firmware/</code></td><td>STM32 firmware for the device</td><td>An <code>arm-none-eabi</code> toolchain</td></tr>
+  <tr><td><code>api/</code></td><td>The cloud service the app talks to, plus its issues and pull requests</td><td>GitHub</td></tr>
+  <tr><td><code>hardware/</code></td><td>The circuit board, as KiCad schematics and layouts</td><td>KiCad and the <code>kicad-sch-api</code> library</td></tr>
+  </tbody>
+</table>
+<p>A single general-purpose assistant would see all of these tools all the time. Kitbash gives each folder its own agents, which see only that folder's tools.</p>
+
+<h2>The map</h2>
+<div class="code"><div class="cap">projects/smart-thermostat/project-map.yaml</div><pre data-file="projects/smart-thermostat/project-map.yaml">project: smart-thermostat
+catalog: ../../catalog
+pack: superpowers        # exactly one pack per map; its base applies to every agent below
+aspects:
+  ux-design:
+    paths: ["design/**", "app/src/ui/**"]
+    tools: [pencil]
+    agents: [ux-designer]
+  firmware:
+    paths: ["firmware/**"]
+    tools: [stm32-toolchain]
+    agents: [firmware-engineer]
+    preferred_llm: claude-opus-5-5
+  api:
+    paths: ["api/**"]
+    tools: []
+    agents: [security-reviewer, issue-triager]
+  eda-design:
+    paths: ["hardware/**/*.kicad_sch", "hardware/**/*.kicad_pcb", "hardware/**/*.kicad_pro"]
+    tools: [kicad, kicad-sch-api]
+    agents: [drc-checker, schematic-engineer]
+shared_tools: [github]</pre></div>
+
+<div class="fig">
+<svg viewBox="0 0 640 214" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The smart-thermostat map: the superpowers pack over four aspects, ux-design, firmware, api and eda-design, each with its own tools and agents, and github shared by all.">
+  <g font-family="Charter, Georgia, serif" font-size="11.5" fill="#1d2126" text-anchor="middle">
+    <rect x="1" y="2" width="638" height="26" rx="3" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="320" y="19.5"><tspan font-weight="700">pack: superpowers</tspan><tspan fill="#5d646d" font-size="10">   verification-before-completion is composed first, for every agent below</tspan></text>
+
+    <rect x="1" y="38" width="152" height="136" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="77" y="57" font-weight="700">ux-design</text>
+    <text x="77" y="71" font-size="8.5" font-family="Menlo, monospace" fill="#5d646d">design/**, app/src/ui/**</text>
+    <text x="77" y="92" font-size="9" fill="#5d646d">tools</text>
+    <text x="77" y="105" font-size="9" font-family="Menlo, monospace" fill="#0d5c6b">pencil (MCP)</text>
+    <text x="77" y="126" font-size="9" fill="#5d646d">agents</text>
+    <text x="77" y="139" font-size="9" font-family="Menlo, monospace">ux-designer</text>
+
+    <rect x="163" y="38" width="152" height="136" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="239" y="57" font-weight="700">firmware</text>
+    <text x="239" y="71" font-size="8.5" font-family="Menlo, monospace" fill="#5d646d">firmware/**</text>
+    <text x="239" y="92" font-size="9" fill="#5d646d">tools</text>
+    <text x="239" y="105" font-size="9" font-family="Menlo, monospace" fill="#0d5c6b">stm32-toolchain</text>
+    <text x="239" y="126" font-size="9" fill="#5d646d">agents</text>
+    <text x="239" y="139" font-size="9" font-family="Menlo, monospace">firmware-engineer</text>
+    <text x="239" y="162" font-size="9" fill="#5d646d">model: claude-opus-5-5</text>
+
+    <rect x="325" y="38" width="152" height="136" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="401" y="57" font-weight="700">api</text>
+    <text x="401" y="71" font-size="8.5" font-family="Menlo, monospace" fill="#5d646d">api/**</text>
+    <text x="401" y="92" font-size="9" fill="#5d646d">tools</text>
+    <text x="401" y="105" font-size="9" fill="#5d646d">none of its own</text>
+    <text x="401" y="126" font-size="9" fill="#5d646d">agents</text>
+    <text x="401" y="139" font-size="9" font-family="Menlo, monospace">security-reviewer</text>
+    <text x="401" y="152" font-size="9" font-family="Menlo, monospace">issue-triager</text>
+
+    <rect x="487" y="38" width="152" height="136" rx="4" fill="#f4f5f6" stroke="#aab0b7"/>
+    <text x="563" y="57" font-weight="700">eda-design</text>
+    <text x="563" y="71" font-size="8.5" font-family="Menlo, monospace" fill="#5d646d">hardware/**/*.kicad_*</text>
+    <text x="563" y="92" font-size="9" fill="#5d646d">tools</text>
+    <text x="563" y="105" font-size="9" font-family="Menlo, monospace" fill="#0d5c6b">kicad, kicad-sch-api</text>
+    <text x="563" y="126" font-size="9" fill="#5d646d">agents</text>
+    <text x="563" y="139" font-size="9" font-family="Menlo, monospace">drc-checker</text>
+    <text x="563" y="152" font-size="9" font-family="Menlo, monospace">schematic-engineer</text>
+
+    <rect x="1" y="184" width="638" height="26" rx="3" fill="#e8f2f4" stroke="#0d5c6b"/>
+    <text x="320" y="201.5"><tspan font-weight="700">shared_tools: github</tspan><tspan fill="#5d646d" font-size="10">   provides source-control in every aspect</tspan></text>
+  </g>
+</svg>
+<div class="figcap">Figure 4. The smart-thermostat map. Each agent sees its own aspect's tools and the shared ones, never another aspect's.</div>
+</div>
+
+<p>Read it from the outside in:</p>
+<ul>
+  <li><strong>One pack.</strong> <code>superpowers</code> puts its rule about evidence before claims of success at the top of every agent's prompt.</li>
+  <li><strong>Four aspects, one per folder.</strong> Each names its paths, its tools and the agents that work there. <code>api</code> binds no tools of its own because its agents need only GitHub, which every aspect shares.</li>
+  <li><strong>Tools are chosen by capability.</strong> <code>drc-checker</code> requires <code>schematic-erc</code> and <code>design-rule-check</code>, which <code>kicad</code> provides. <code>schematic-engineer</code> requires <code>schematic-capture</code>, from <code>kicad-sch-api</code>, and also <code>schematic-erc</code>. That's why <code>eda-design</code> binds both tools.</li>
+  <li><strong>One model override.</strong> <code>firmware</code> pins <code>claude-opus-5-5</code>, which is also <code>firmware-engineer</code>'s own preferred model, so its evals test the model it deploys with.</li>
+</ul>
+
+<h2>Step 1. Validate the map</h2>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../projects/smart-thermostat/project-map.yaml</pre></div>
+<p>The run also checks the map's two playbooks. <a href="#c9">Chapter 9</a> covers writing a map. The validator catches a missing tool before any model is called. Remove <code>kicad</code> from <code>eda-design</code> and both of its agents fail:</p>
+<div class="code out"><div class="cap">Output with kicad removed, paths shortened</div><pre>error    .../project-map.yaml [eda-design]: agent 'drc-checker' requires ['design-rule-check', 'schematic-erc']; bound tools provide ['schematic-capture', 'source-control']
+error    .../project-map.yaml [eda-design]: agent 'schematic-engineer' requires ['schematic-erc']; bound tools provide ['schematic-capture', 'source-control']</pre></div>
+<p>Routing an agent to the wrong folder fails the same way. Put <code>firmware-engineer</code> in <code>ux-design</code> and the validator reports that it requires <code>embedded-toolchain</code>, which Pen doesn't provide.</p>
+
+<h2>Step 2. Evaluate every agent the way the project runs it</h2>
+<p><a href="#c6">Chapter 6</a> covers evals. Run each agent's evals through the map, so the <code>superpowers</code> text and the aspect's tools are part of what's tested. For <code>ux-designer</code> this is required, because its Pen server is mounted only through the map.</p>
+<div class="code bill"><div class="cap">Bills: 21 evals in all, at most $25.20 at the default caps</div><pre>M=../projects/smart-thermostat/project-map.yaml
+/usr/bin/python3 scripts/run_evals.py ux-designer --map $M --aspect ux-design
+/usr/bin/python3 scripts/run_evals.py firmware-engineer --map $M --aspect firmware
+/usr/bin/python3 scripts/run_evals.py security-reviewer issue-triager --map $M --aspect api
+/usr/bin/python3 scripts/run_evals.py drc-checker schematic-engineer --map $M --aspect eda-design</pre></div>
+<table class="keep">
+  <thead><tr><th style="width:22%">Agent</th><th style="width:9%">Evals</th><th style="width:31%">Needs on your machine</th><th>What the evals test</th></tr></thead>
+  <tbody>
+  <tr><td class="nw"><code>ux-designer</code></td><td>2</td><td>The Pen app, running</td><td>Adding a Settings screen to a thermostat design from its existing components and tokens, and adding one well-named token when a screen needs a colour the file lacks</td></tr>
+  <tr><td class="nw"><code>firmware-engineer</code></td><td>5</td><td><code>arm-none-eabi</code> with newlib</td><td>Fixing two real defects in a snapshot of real STM32G474 firmware, adding a CAN feature, rejecting a false review claim, and declining to claim a flash no probe performed</td></tr>
+  <tr><td class="nw"><code>security-reviewer</code></td><td>3</td><td>Nothing extra</td><td>Finding a SQL injection, passing a clean diff without inventing findings, and declining to fix what it reviews</td></tr>
+  <tr><td class="nw"><code>issue-triager</code></td><td>3</td><td>Nothing extra</td><td>Labelling issues by type and severity, asking only for missing information, and declining to post on GitHub itself</td></tr>
+  <tr><td class="nw"><code>drc-checker</code></td><td>4</td><td>KiCad</td><td>Reporting a clearance violation, an unconnected label and a clean design correctly, and declining to edit a board</td></tr>
+  <tr><td class="nw"><code>schematic-engineer</code></td><td>4</td><td>KiCad and <code>kicad-sch-api</code></td><td>Creating and changing schematics, proved by ERC and a netlist</td></tr>
+  </tbody>
+</table>
+<p>Each of these agents passed all its evals before it was routed in this map. Many of the evals check that an agent refuses work outside its role, not only that it does its job.</p>
+<div class="note"><b class="h">Evals don't run in your repo</b>
+They run on copies of <code>catalog/fixtures/</code> in a throwaway workspace. A pass shows that the agent can do this kind of work with these tools. It says nothing about the state of your own code.</div>
+
+<h2>Step 3. Chain the agents that hand work to each other</h2>
+<p>Two everyday sequences in this project have a hard gate between their steps, so they are playbooks rather than instructions to a model (<a href="#c11">chapter 11</a>):</p>
+<ul>
+  <li><strong><code>schematic-change-and-check</code>.</strong> <code>schematic-engineer</code> makes the requested change. Then KiCad's ERC runs as a command. Only if it exits with status 0 does <code>drc-checker</code> review the result.</li>
+  <li><strong><code>triage-and-review</code>.</strong> <code>issue-triager</code> labels an issue. Only if its <code>severity</code> output is <code>high</code> or <code>critical</code> does <code>security-reviewer</code> review the change the issue refers to.</li>
+</ul>
+<div class="code free"><div class="cap">Free: trace both, calling no model</div><pre>P=../projects/smart-thermostat/playbooks
+/usr/bin/python3 scripts/run_playbook.py $P/schematic-change-and-check.yaml --dry-run
+/usr/bin/python3 scripts/run_playbook.py $P/triage-and-review.yaml --dry-run</pre></div>
+<div class="code bill"><div class="cap">Bills: two evals each. Recorded runs passed both, for $0.54 and $0.22.</div><pre>/usr/bin/python3 scripts/run_playbook.py $P/schematic-change-and-check.yaml
+/usr/bin/python3 scripts/run_playbook.py $P/triage-and-review.yaml</pre></div>
+<p>Each playbook has one eval where the gate opens and one where it holds. In the second eval of <code>schematic-change-and-check</code>, ERC still finds an unconnected label after the change, so the run stops and <code>drc-checker</code> never starts. Playbooks aren't deployed. You run them from Kitbash, and they work on fixtures.</p>
+
+<h2>Step 4. Deploy into the repo</h2>
+<p>This map can't go through a reviewed release, because <code>ux-design</code> binds Pen, an MCP tool. <code>release.py</code> refuses it with <code>a plugin cannot bind MCP tools yet</code>. Use <code>deploy.py</code> instead (<a href="#c12">chapter 12</a>), on a repo that has the layout above:</p>
+<div class="code free"><div class="cap">Free: preview first, then write. <code>$M</code> is the map path from step 2.</div><pre>/usr/bin/python3 scripts/deploy.py $M --target ~/code/smart-thermostat --dry-run
+/usr/bin/python3 scripts/deploy.py $M --target ~/code/smart-thermostat</pre></div>
+<div class="code out"><div class="cap">Output</div><pre>wrote    .claude/agents/ux-designer.md
+wrote    .claude/agents/firmware-engineer.md
+wrote    .claude/agents/security-reviewer.md
+wrote    .claude/kitbash/hooks/block-network.py
+wrote    .claude/agents/issue-triager.md
+wrote    .claude/agents/drc-checker.md
+wrote    .claude/agents/schematic-engineer.md
+
+7 file(s) deployed to /Users/you/code/smart-thermostat; manifest at .claude/kitbash.json</pre></div>
+<p style="break-after: avoid">The frontmatter of each file carries the map's boundaries into Claude Code:</p>
+<table class="keep">
+  <thead><tr><th style="width:24%">Agent</th><th style="width:20%">Model</th><th>What its file allows and denies</th></tr></thead>
+  <tbody>
+  <tr><td class="nw"><code>ux-designer</code></td><td><code>claude-sonnet-5-5</code></td><td>The only agent with Pen, under <code>mcpServers</code>. Every other agent lists <code>mcp__pencil</code> in <code>disallowedTools</code>.</td></tr>
+  <tr><td class="nw"><code>firmware-engineer</code></td><td><code>claude-opus-5-5</code></td><td>Its prompt carries the STM32 toolchain's skill and its <code>build</code>, <code>flash</code> and <code>test</code> commands. Its <code>runs-tests</code> trait makes it show test results before reporting a change as done.</td></tr>
+  <tr><td class="nw"><code>security-reviewer</code></td><td><code>claude-opus-5-5</code></td><td>Denied <code>Edit</code> and <code>Write</code>. Its hook blocks network commands such as <code>curl</code>.</td></tr>
+  <tr><td class="nw"><code>issue-triager</code></td><td><code>claude-sonnet-5-5</code></td><td>Denied <code>Edit</code> and <code>Write</code></td></tr>
+  <tr><td class="nw"><code>drc-checker</code></td><td><code>claude-sonnet-5-5</code></td><td>Denied <code>Edit</code> and <code>Write</code>, so it reports violations without fixing them</td></tr>
+  <tr><td class="nw"><code>schematic-engineer</code></td><td><code>claude-opus-5-5</code></td><td>May edit, and must prove each change with ERC and a netlist</td></tr>
+  </tbody>
+</table>
+<p>Only MCP tools are enforced this way. A command-line tool such as <code>stm32-toolchain</code> reaches an agent as text in its prompt. Nothing stops another agent from running the same command in a shell.</p>
+
+<h2>Step 5. Work with the agents</h2>
+<p>Start a new Claude Code session in <code>~/code/smart-thermostat</code>. Each agent's description names its aspect and paths, so Claude Code picks the right one from the files a request mentions. You can also name the agent:</p>
+<table class="keep">
+  <thead><tr><th style="width:62%">You ask</th><th>Agent that handles it</th></tr></thead>
+  <tbody>
+  <tr><td>"Add a fan-speed control to the home screen in <code>design/app.pen</code>, using the existing tokens."</td><td><code>ux-designer</code></td></tr>
+  <tr><td>"The setpoint drifts after a brown-out. Fix it in <code>firmware/</code>."</td><td><code>firmware-engineer</code></td></tr>
+  <tr><td>"Review PR 42 for security problems."</td><td><code>security-reviewer</code></td></tr>
+  <tr><td>"Add a 10uF decoupling capacitor at the regulator input in <code>hardware/main.kicad_sch</code>."</td><td><code>schematic-engineer</code></td></tr>
+  <tr><td>"Run ERC and DRC on the board and list every violation."</td><td><code>drc-checker</code></td></tr>
+  </tbody>
+</table>
+
+<h2>As the project grows</h2>
+<ul>
+  <li><strong>The cloud service needs an engineer.</strong> Bind <code>python-toolchain</code> or <code>node-toolchain</code> to <code>api</code> and run <code>backend-engineer</code>'s evals with <code>--map</code> and <code>--aspect api</code>. Route it only once they pass, then deploy again.</li>
+  <li><strong>The enclosure moves into the repo.</strong> <code>mechanical-engineer</code> exists, but its evals have never run. Don't route it until they pass.</li>
+  <li><strong>You change the pack.</strong> Every composed prompt changes, so run the evals of all six agents again.</li>
+  <li><strong>You change an agent or a part it uses.</strong> Run its evals again, and deploy again. The manifest lets Kitbash replace its own files and remove ones the map no longer produces.</li>
+</ul>
+
+<!-- ============================================================ 6 -->
+<h1 class="flow" id="c6">6. Evaluate an agent</h1>
 <p class="lead">Evals are how an agent earns its place in a project. Don't route an agent in a map until its evals pass.</p>
 
 <div class="code free"><div class="cap">Free: preview first</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run</pre></div>
@@ -428,7 +647,7 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 <code>run_evals.py</code> always uses the agent's <code>preferred_llm</code>, even with <code>--map</code>. <code>deploy.py</code>, <code>release.py</code> and playbooks use the aspect's <code>preferred_llm</code> when one is set. The validator also checks a skill's <code>min_model_tier</code> only against the agent's own model. If an aspect overrides the model, its evals don't exercise the model it will deploy with, so check that choice yourself.</div>
 
 <h2>Evals that need real tools</h2>
-<p>Some evals run real software, listed by agent in <a href="#c13">chapter 13</a>. A few have extra conditions:</p>
+<p>Some evals run real software, listed by agent in <a href="#c14">chapter 14</a>. A few have extra conditions:</p>
 <ul>
   <li><strong>Pen and FreeCAD.</strong> The desktop app must be running. Pen evals leave their workspace copy open in the app. FreeCAD needs the <code>freecad-mcp</code> addon listening on <code>localhost:9875</code>.</li>
   <li><strong>STM32.</strong> Needs an <code>arm-none-eabi</code> toolchain that ships newlib: <code>$PREFIX</code>, then <code>~/.local/arm-gnu-toolchain</code>, then <code>PATH</code>. Homebrew's <code>arm-none-eabi-gcc</code> has no C library and can't link it.</li>
@@ -441,12 +660,12 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 <div class="note"><b class="h">Leave fixture defects alone</b>
 <code>fixtures/firmware/pdu/</code> is an unaltered snapshot of a real project, and two evals target its real defects. <code>fixtures/backend/</code> and <code>fixtures/mobile/</code> contain planted defects. Fixing any of them breaks those evals.</div>
 
-<!-- ============================================================ 6 -->
-<h1 class="flow" id="c6">6. Create an agent by hand</h1>
+<!-- ============================================================ 7 -->
+<h1 class="flow" id="c7">7. Create an agent by hand</h1>
 <p class="lead">This walkthrough builds <code>docs-reviewer</code>, an agent that finds contradictions in a document. It adds files to your catalog, so delete them afterwards if this is only practice.</p>
 
 <h3 class="step"><span class="s">Step 1.</span> Check which parts exist</h3>
-<p>Look through <a href="#c13">chapter 13</a> and the registry first. This agent can reuse the <code>read-only</code> and <code>concise-reporter</code> traits. It needs one new skill.</p>
+<p>Look through <a href="#c14">chapter 14</a> and the registry first. This agent can reuse the <code>read-only</code> and <code>concise-reporter</code> traits. It needs one new skill.</p>
 
 <h3 class="step"><span class="s">Step 2.</span> Write the skill</h3>
 <div class="code"><div class="cap">catalog/skills/docs-accuracy/SKILL.md</div><pre data-file="catalog/skills/docs-accuracy/SKILL.md">---
@@ -496,7 +715,7 @@ evals:
 
 <h3 class="step"><span class="s">Step 6.</span> Run the evals</h3>
 <div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 scripts/run_evals.py docs-reviewer</pre></div>
-<p>If an eval fails, read the judge's reason and decide what is wrong. It might be the agent, the skill or the pass condition. Rerun with <code>--keep</code> if you need to see the workspace. Once all pass, you can route the agent in a map (<a href="#c8">chapter 8</a>).</p>
+<p>If an eval fails, read the judge's reason and decide what is wrong. It might be the agent, the skill or the pass condition. Rerun with <code>--keep</code> if you need to see the workspace. Once all pass, you can route the agent in a map (<a href="#c9">chapter 9</a>).</p>
 <div class="note"><b class="h">A real failure: when the pass condition is wrong</b>
 The third eval first required the agent to &ldquo;describe the fix in one sentence&rdquo;, and it failed. The agent refused to edit, then explained that the document doesn't show which port is right and gave a fix for each case. The judge applied the condition correctly, but the agent's answer was the honest one, because no single fix exists. So the condition changed, not the agent. Tightening the agent would have taught it to guess. When an eval fails, read the agent's message as well as the judge's reason.</div>
 
@@ -528,8 +747,8 @@ skill: null                    # or skills/NAME/SKILL.md, to teach agents how to
 <h3>A hook</h3>
 <p>A hook is an executable script listed in an agent under <code>hooks: {pre_tool_use: [hooks/NAME.py]}</code>. It reads the tool call as JSON on stdin. Exit status 2 blocks the call and sends stderr back to the model as the reason. <code>hooks/block-network.py</code> is a short example.</p>
 
-<!-- ============================================================ 7 -->
-<h1 class="flow" id="c7">7. Create an agent from a description</h1>
+<!-- ============================================================ 8 -->
+<h1 class="flow" id="c8">8. Create an agent from a description</h1>
 <p class="lead"><code>make_agent.py</code> is the meta-agent. Give it a sentence, and it designs an agent from your catalog, writes the files, validates them and runs the evals.</p>
 <div class="code bill"><div class="cap">Every line bills, including --dry-run</div><pre>/usr/bin/python3 scripts/make_agent.py "an agent that triages GitHub issues" \
     --dry-run                                            # write nothing
@@ -559,8 +778,8 @@ skill: null                    # or skills/NAME/SKILL.md, to teach agents how to
   <li><strong>Other options.</strong> <code>--model</code> sets the designing model (default <code>claude-opus-5-5</code>) and <code>--budget</code> caps the design call (default $1.00).</li>
 </ul>
 
-<!-- ============================================================ 8 -->
-<h1 class="flow" id="c8">8. Write a project map</h1>
+<!-- ============================================================ 9 -->
+<h1 class="flow" id="c9">9. Write a project map</h1>
 <p class="lead">A project map tells Kitbash how a project is divided up, and which tools and agents work in each part.</p>
 
 <h2>Before you write it</h2>
@@ -623,8 +842,8 @@ It confirms that the map is consistent, not that its agents have passed. Running
   </tbody>
 </table>
 
-<!-- ============================================================ 9 -->
-<h1 class="flow" id="c9">9. Import skills and MCP servers</h1>
+<!-- ============================================================ 10 -->
+<h1 class="flow" id="c10">10. Import skills and MCP servers</h1>
 <p class="lead">The registry holds parts imported in bulk from trusted sources. Once synced, an imported skill or server works by name, just like a catalog file.</p>
 
 <h2>Find and use a part</h2>
@@ -676,8 +895,8 @@ It confirms that the map is consistent, not that its agents have passed. Running
     notion-mcp: [knowledge-base]       # required before a map can bind it</pre></div>
 <p>The scripts never browse the web for parts. A map must validate and deploy from repo files and pinned sources alone. So look for new leads yourself, then add them as sources.</p>
 
-<!-- ============================================================ 10 -->
-<h1 class="flow" id="c10">10. Chain agents with a playbook</h1>
+<!-- ============================================================ 11 -->
+<h1 class="flow" id="c11">11. Chain agents with a playbook</h1>
 <p class="lead">A playbook runs agents in a fixed order. Code, not a model, decides whether to continue after each step, so a hard gate can't be talked around.</p>
 
 <div class="fig">
@@ -697,7 +916,7 @@ It confirms that the map is consistent, not that its agents have passed. Running
     <polygon points="297,91 293,84 301,84" fill="#a3322a"/>
   </g>
 </svg>
-<div class="figcap">Figure 4. The steps of the sample playbook <code>triage-and-review</code>. All steps share one workspace.</div>
+<div class="figcap">Figure 5. The steps of the sample playbook <code>triage-and-review</code>. All steps share one workspace.</div>
 </div>
 
 <h2>Write one</h2>
@@ -749,9 +968,9 @@ evals:
   issue=fixtures/issue-triager/issue-search-crash.md diff=fixtures/security/pr-sql-injection.diff</pre></div>
 <p>Each run also reports its handoffs, such as <code>handoff after issue-triager: continue (...)</code>, and the path it took. Add <code>--keep</code> to keep the shared workspace.</p>
 
-<!-- ============================================================ 11 -->
-<h1 class="flow" id="c11">11. Deploy to a project</h1>
-<p class="lead"><code>deploy.py</code> writes a map's agents straight into a project's <code>.claude/</code> folder. It suits your own machine and maps that bind MCP tools. For anything that needs review, use a release (<a href="#c12">chapter 12</a>).</p>
+<!-- ============================================================ 12 -->
+<h1 class="flow" id="c12">12. Deploy to a project</h1>
+<p class="lead"><code>deploy.py</code> writes a map's agents straight into a project's <code>.claude/</code> folder. It suits your own machine and maps that bind MCP tools. For anything that needs review, use a release (<a href="#c13">chapter 13</a>).</p>
 <div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme --dry-run
 /usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme</pre></div>
 <div class="code out"><div class="cap">Output</div><pre>wrote    .claude/agents/docs-reviewer.md
@@ -762,8 +981,10 @@ wrote    .claude/agents/backend-engineer.md
 
 5 file(s) deployed to /Users/you/code/acme; manifest at .claude/kitbash.json</pre></div>
 
-<div class="note warn"><b class="h">deploy.py doesn't check eval results</b>
-It requires a valid map but will deploy an agent that has never been evaluated. Make sure the map's evals have passed first.</div>
+<div class="note warn"><b class="h">deploy.py checks eval results only for a project's .kitbash/ map</b>
+Run inside a project, <code>deploy.py</code> with no map deploys <code>.kitbash/project-map.yaml</code> into that project. It writes nothing while any routed agent has no record in <code>.kitbash/evals.lock.json</code>, failed one of its evals, or has changed since they ran, and it names the <code>run_evals.py</code> command for each. A map anywhere else, like this one, has no such gate, so make sure its evals have passed first.</div>
+<div class="code out"><div class="cap">Output of deploy.py --dry-run in a project whose agent has no eval result</div><pre>a deploy would be refused: 1 agent(s) without a current pass:
+  api/security-reviewer: no eval result; run: run_evals.py security-reviewer --aspect api</pre></div>
 
 <h2>What gets written</h2>
 <p>Each (aspect, agent) pair becomes one Claude Code subagent at <code>.claude/agents/&lt;agent&gt;.md</code>, or <code>&lt;agent&gt;-&lt;aspect&gt;.md</code> if the agent is routed in several aspects. Its body is built by the same function the eval runner uses. The frontmatter carries the rest:</p>
@@ -787,8 +1008,8 @@ It requires a valid map but will deploy an agent that has never been evaluated. 
 <h2>Use the agents</h2>
 <p>Start a new Claude Code session in the project. The subagents load from <code>.claude/agents/</code>, and Claude Code picks one when work matches its description. You can also ask for one by name.</p>
 
-<!-- ============================================================ 12 -->
-<h1 class="flow" id="c12">12. Publish through a reviewed release</h1>
+<!-- ============================================================ 13 -->
+<h1 class="flow" id="c13">13. Publish through a reviewed release</h1>
 <p class="lead">A release delivers agents to a project's repos as pull requests, and only after you have reviewed exactly what each agent will receive, beside its eval result.</p>
 
 <div class="fig">
@@ -808,7 +1029,7 @@ It requires a valid map but will deploy an agent that has never been evaluated. 
     <text x="320" y="88" font-size="10" fill="#5d646d">Green: free script.  Amber: bills your account.  Teal: your decision. The merge in the private repo is the approval.</text>
   </g>
 </svg>
-<div class="figcap">Figure 5. The release pipeline.</div>
+<div class="figcap">Figure 6. The release pipeline.</div>
 </div>
 
 <h2>Set up a project for release</h2>
@@ -868,8 +1089,8 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
   <li><strong>Publishing is yours to approve.</strong> If an assistant runs Kitbash for you, don't let it merge these PRs or run <code>publish</code> unless you ask.</li>
 </ul>
 
-<!-- ============================================================ 13 -->
-<h1 id="c13">13. What's in the catalog</h1>
+<!-- ============================================================ 14 -->
+<h1 id="c14">14. What's in the catalog</h1>
 <p>This chapter lists the catalog as of this guide's date. To see what a map actually routes, read the map.</p>
 <h2>Agents</h2>
 <table>
@@ -922,13 +1143,14 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <p><strong>Skills:</strong> <code>backend-service</code>, <code>issue-triage</code>, <code>kicad-eda</code>, <code>kicad-schematic</code>, <code>mechanical-design</code>, <code>mobile-app</code>, <code>pencil-design</code>, <code>recipe-authoring</code>, <code>security-review</code>, <code>spec-consistency</code>, <code>stm32-firmware</code>. The registry adds 40 imported skills.</p>
 <p><strong>Hooks:</strong> <code>block-network.py</code> blocks shell commands such as <code>curl</code>, <code>ssh</code> and <code>npm install</code>. <code>only-for-agents.py</code> limits a plugin's hook to named agents. Releases add it for you.</p>
 
-<!-- ============================================================ 14 -->
-<h1 class="flow" id="c14">14. Command reference</h1>
-<p>Run everything from <code>catalog/</code>. Every script except <code>validate.py</code> also has <code>--help</code>. <code>validate.py</code> has no help option and simply runs the checks.</p>
+<!-- ============================================================ 15 -->
+<h1 class="flow" id="c15">15. Command reference</h1>
+<p>Run everything from <code>catalog/</code>, or inside a project with a <code>.kitbash/</code> folder (<a href="#c2">chapter 2</a>). Every script except <code>validate.py</code> also has <code>--help</code>. <code>validate.py</code> has no help option and simply runs the checks.</p>
 
 <h2><code>validate.py</code> <span class="tag free">FREE</span></h2>
 <table class="keep"><tbody>
   <tr><td style="width:44%"><code>validate.py</code></td><td>Catalog, plus maps in <code>../projects/</code> and <code>../private/projects/</code></td></tr>
+  <tr><td><code>validate.py</code> inside a project</td><td>Its <code>.kitbash/project-map.yaml</code>, with <code>.kitbash/catalog/</code> merged in</td></tr>
   <tr><td><code>validate.py PATH/TO/project-map.yaml ...</code></td><td>The named maps, which may live anywhere, and their playbooks</td></tr>
   <tr><td><code>validate.py --catalog DIR</code></td><td>Catalog only</td></tr>
 </tbody></table>
@@ -938,6 +1160,7 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <table class="keep"><tbody>
   <tr><td style="width:27%"><code>--all</code></td><td>Every agent. Costly, and it needs every external tool.</td></tr>
   <tr><td><code>--map FILE --aspect NAME</code></td><td>Compose with the map's pack and the aspect's tools</td></tr>
+  <tr><td><code>--aspect NAME</code> inside a project</td><td>Use <code>.kitbash/project-map.yaml</code> without <code>--map</code>, keep workspaces in <code>.kitbash/work/</code> and record results in <code>.kitbash/evals.lock.json</code></td></tr>
   <tr><td><code>--dry-run</code></td><td>Print the composed prompt and commands. Free.</td></tr>
   <tr><td><code>--budget USD</code></td><td>Cap per agent run, default 1.00. The judge gets 0.20.</td></tr>
   <tr><td><code>--max-turns N</code></td><td>Turn limit per agent run, default 30</td></tr>
@@ -976,6 +1199,7 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <table class="keep"><tbody>
   <tr><td style="width:27%"><code>--dry-run</code></td><td>Print the files and write nothing</td></tr>
   <tr><td><code>--force</code></td><td>Overwrite agent files Kitbash didn't write</td></tr>
+  <tr><td>No map, inside a project</td><td>Deploy <code>.kitbash/project-map.yaml</code> into that project, refusing any agent without a current pass</td></tr>
 </tbody></table>
 
 <h2><code>release.py</code></h2>
@@ -990,8 +1214,8 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
   <tr><td>&nbsp;&nbsp;<code>--trailer TEXT</code>, <code>--pr-footer TEXT</code></td><td>Last lines of each commit message and PR description</td></tr>
 </tbody></table>
 
-<!-- ============================================================ 15 -->
-<h1 id="c15">15. File formats</h1>
+<!-- ============================================================ 16 -->
+<h1 id="c16">16. File formats</h1>
 <p>Every file is YAML, with a Markdown body for traits, skills and packs. A file's <code>name</code> must match its file name or folder. <strong>Bold</strong> fields are required. Three small conventions appear inside values: <code>{name}</code> placeholders, <code>tool.command</code> references, and list order meaning merge order.</p>
 
 <h2>Agent: <code>agents/&lt;name&gt;.yaml</code></h2>
@@ -1047,8 +1271,8 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <h2>Release settings: <code>release.yaml</code></h2>
 <p><strong><code>target</code></strong> is the code root. <code>claude</code> maps each destination to a source file. <code>remove</code> lists files to delete. <code>eval_budget</code> sets a per-run budget by agent.</p>
 
-<!-- ============================================================ 16 -->
-<h1 class="flow" id="c16">16. Validator rules</h1>
+<!-- ============================================================ 17 -->
+<h1 class="flow" id="c17">17. Validator rules</h1>
 <p>The validator runs automatically before evals, playbooks and deploys. These are the checks it makes.</p>
 <table>
   <thead><tr><th style="width:6%">Rule</th><th>What must be true</th></tr></thead>
@@ -1066,8 +1290,8 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 </table>
 <p>It also checks that names match file names, no name is used twice, and every referenced trait, skill, hook, fixture, tool and agent exists. Non-executable hooks and overrides that allow nothing denied produce warnings.</p>
 
-<!-- ============================================================ 17 -->
-<h1 class="flow" id="c17">17. Troubleshooting</h1>
+<!-- ============================================================ 18 -->
+<h1 class="flow" id="c18">18. Troubleshooting</h1>
 <h2>Validator errors</h2>
 <table>
   <thead><tr><th style="width:47%">Message</th><th>Fix</th></tr></thead>
@@ -1095,7 +1319,8 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <table>
   <thead><tr><th style="width:47%">Symptom</th><th>Cause and fix</th></tr></thead>
   <tbody>
-  <tr><td><code>ModuleNotFoundError: No module named 'yaml'</code></td><td>The wrong interpreter. Use <code>/usr/bin/python3</code>, or install PyYAML for yours.</td></tr>
+  <tr><td><code>recipe_validate: cannot import the recipe engine</code></td><td>Set <code>EPICURA_RECIPE_ENGINE</code> to the engine's checkout. If the message ends <code>No module named 'pydantic'</code>, install pydantic for the interpreter running Kitbash, or set <code>KITBASH_PYTHON</code> to one that has it.</td></tr>
+  <tr><td><code>refusing to deploy: N agent(s) without a current pass</code></td><td>Run the <code>run_evals.py</code> command printed for each agent, or remove the agent from the map.</td></tr>
   <tr><td><code>no registry at ...; run registry.py sync</code></td><td>The registry hasn't been built. Run <code>registry.py sync</code>.</td></tr>
   <tr><td><code>target is not a directory</code></td><td>Create the <code>--target</code> folder first.</td></tr>
   <tr><td><code>a plugin needs each aspect in one git repo</code></td><td>An aspect's paths cross repos or aren't in one. Split it into one aspect per repo.</td></tr>
@@ -1104,13 +1329,13 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
   <tr><td>The judge fails an eval on a huge or irrelevant diff</td><td>Run through a map whose tool declares <code>artifacts</code>, or add <code>artifacts</code> to the tool.</td></tr>
   <tr><td>A <code>command</code> handoff always passes</td><td>The tool exits 0 even on failure. Declare a gate command that exits nonzero, as <code>kicad.erc-gate</code> does.</td></tr>
   <tr><td>An eval hits its budget or turn limit</td><td>Raise <code>--budget</code> or <code>--max-turns</code>, or set <code>eval_budget</code> for releases.</td></tr>
-  <tr><td>A skill or a tool's command can't be found on your machine</td><td>Its file has a path from another machine. Edit the tool or skill file.</td></tr>
+  <tr><td>A skill or a tool's command can't be found on your machine</td><td>Set the environment variable the tool names, such as <code>KICAD_CLI</code>, <code>ANDROID_HOME</code>, <code>JAVA_HOME</code> or <code>DEVELOPER_DIR</code>. <code>catalog/README.md</code> lists them all.</td></tr>
   <tr><td>A recipe eval reports HTTP 429</td><td>YouTube rate-limits caption fetches. Those evals accept an honest failure report.</td></tr>
   </tbody>
 </table>
 
-<!-- ============================================================ 18 -->
-<h1 id="c18">18. Cheat sheet</h1>
+<!-- ============================================================ 19 -->
+<h1 id="c19">19. Cheat sheet</h1>
 <div class="cheat two">
 <p style="font-size:8.6pt">Run from <code>catalog/</code>. <code>py</code> here means <code>/usr/bin/python3</code>. Green is free, amber bills.</p>
 <h2>Check</h2>

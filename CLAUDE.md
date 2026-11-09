@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Kitbash assembles AI agents from a catalog of reusable parts, validates them, and runs their evals before they can join a project. `GOAL.md` is the spec, with dated decisions and the build order. `catalog/README.md` is the full reference for merge order, validator rules and every flag. `docs/Composable-Agent-Taxonomy.pdf` is the paper behind the design.
 
-Not built yet: map synthesis, a `/kitbash` skill and `csv-index` registry sources. Project maps are written by hand.
+Not built yet: map synthesis in the scripts and `csv-index` registry sources. Project maps are written by hand, or drafted by Claude through the plugin's `/kitbash` skill (`skills/kitbash/SKILL.md`).
 
 ## Commands
 
-There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`: on this machine `./scripts/validate.py` and plain `python3` resolve to an interpreter without PyYAML and fail. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
+There is no build step, test suite or linter. Run everything from `catalog/` with `/usr/bin/python3`. Any Python 3.9 or later runs the scripts, because they fall back to the pure-Python PyYAML in `scripts/vendor/`. On this machine, though, only `/usr/bin/python3` has pydantic, which the recipe validator needs, and tool commands run under the interpreter that runs Kitbash. That interpreter is Python 3.9, so the scripts must stay 3.9-compatible.
 
 Free, no model call:
 
@@ -41,7 +41,7 @@ Some evals need the real tool: KiCad, the Pen desktop app, the FreeCAD app with 
 
 ## Architecture
 
-**`validate.py` is also the shared library.** `load_catalog` merges the catalog files, pack checkouts and registry rows by name, so imported skills and servers look like ordinary members to every script. `run_evals.py` imports it and adds `compose` and `aspect_context`. `run_playbook.py` and `deploy.py` import both, so what passes evals is exactly what gets deployed. `registry.py` and `make_agent.py` import `validate.py` only.
+**`validate.py` is also the shared library.** `load_catalog` merges the catalog files, a project's `.kitbash/catalog/` when run inside that project, pack checkouts and registry rows by name, so imported and project skills and servers look like ordinary members to every script. `run_evals.py` imports it and adds `compose` and `aspect_context`. `run_playbook.py` and `deploy.py` import both, so what passes evals is exactly what gets deployed. `registry.py` and `make_agent.py` import `validate.py` only.
 
 **An agent is composed, not inherited.** `compose` concatenates text in this order: the map's pack base (traits, then skills), the agent's traits left to right, its skills, the skills of mounted tools, `prompt`, `overrides`. Later text wins. A skill reached twice is composed once, at its first position.
 
@@ -60,14 +60,14 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 
 ## Working in this repo
 
-- **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map.
+- **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map. For maps in a project's `.kitbash/`, `deploy.py` enforces this from `.kitbash/evals.lock.json`, which `run_evals.py --aspect` writes.
 - **Don't fix the fixtures' defects.** `fixtures/firmware/pdu/` is an unaltered snapshot of a real project whose real defects two evals target. `fixtures/backend/` and `fixtures/mobile/` carry planted defects that evals target.
 - **Epicura's map is at `private/projects/epicura/project-map.yaml`**, targeting `~/code/Epicura`. `projects/epicura/README.md` points to it.
 - **Run backend and mobile evals through a map** (`--aspect cloud` or `--aspect ios` on the live Epicura map). The aspect's toolchain `artifacts` keep `node_modules` and `.build` out of the judge's diff.
 - **Evals that create files** list them under `creates:`, and those paths must not already exist.
 - **After editing `registry-sources.yaml`**, including `provides` or `names`, run `registry.py sync` or the validator reports the source as stale. Capabilities for an imported server are always tagged by hand, never inferred. Only tagged servers can be bound.
 - **Before writing a project map**, ask which pack to attach and where the code root is. A project's code is usually separate from its docs workspace and spans several repos, so inventory every repo and map them all.
-- **Tool and skill files contain host-specific absolute paths**, and deployed agent files inline them as they stand. A deploy is only valid for this machine.
+- **Never write a host-specific path into a catalog file.** Use `${KITBASH_CATALOG}`, `${KITBASH_PYTHON}` or `${NAME:-default}` (an environment variable, else the macOS default; `catalog/README.md` has the rules). Deployed agent files inline the resolved values, so a deploy is still only valid for the machine that made it.
 - **`--keep` leaves workspaces in `catalog/.evals/`**, which is not gitignored. Use `--workdir` when two sessions run at once.
 - **`private/` and `_html/Composable-Agent-Taxonomy.html`** (the PDF's source) are gitignored. The PDF is tracked.
 - **Check the maps directly for what's routed.** `GOAL.md` and `catalog/README.md` are partly dated narrative and can lag them. For example, `mechanical-engineer` is in the catalog but not routed in any map.
