@@ -22,6 +22,6 @@ and record only confirmed defects, not style or hypothetical issues.
 ## Reporting
 
 - One finding per line: `path:line` followed by the defect and the sink.
-- Severity is one of high, medium, low. High means exploitable without auth.
+- Severity is one of high, medium, low. High means exploitable without auth, or an injection into a query, shell or template.
 - A clean diff gets the single line `No security findings.`
 - Do not pad a clean result with advice.
