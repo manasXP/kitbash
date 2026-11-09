@@ -3,6 +3,7 @@ name: kitbash
 description: Set up Claude Code subagents for this project from Kitbash's catalog of tested parts. Writes the project map in .kitbash/, validates it, runs each agent's evals (billed, only on the user's go-ahead) and deploys only the agents whose evals passed. Use when the user wants project subagents, mentions Kitbash or a .kitbash/ folder, or asks to check, evaluate or deploy agents.
 argument-hint: "[what you want, e.g. set up agents for this repo]"
 allowed-tools:
+  - Read(/${CLAUDE_PLUGIN_ROOT}/**)
   - Bash(python3 "${CLAUDE_PLUGIN_ROOT}/catalog/scripts/validate.py")
   - Bash(python3 "${CLAUDE_PLUGIN_ROOT}/catalog/scripts/validate.py" *)
   - Bash(python3 "${CLAUDE_PLUGIN_ROOT}/catalog/scripts/run_evals.py" --dry-run *)
@@ -86,15 +87,19 @@ agents are routed, which have a current pass, and what is refused and why. Then 
 Only when there is none, or the user asks to change it.
 
 1. Inventory the project: top-level folders, languages, build and test files, design or hardware files, docs.
-   A project often spans several repositories; ask whether there are others and where.
+   A project often spans several repositories; you will ask whether there are others in step 3.
 2. Read the catalog: every file in `${CLAUDE_PLUGIN_ROOT}/catalog/agents/` and `${CLAUDE_PLUGIN_ROOT}/catalog/tools/`,
-   and the one-line description at the top of each file in `${CLAUDE_PLUGIN_ROOT}/catalog/packs/`. An agent lists
-   the capabilities it `requires`; a tool lists the ones it `provides`. Some catalog agents were written for one
-   project's stack (their description says which); route them only where that stack matches.
+   and the one-line description at the top of each file in `${CLAUDE_PLUGIN_ROOT}/catalog/packs/`. Write the
+   plugin path out in full in each command: a shell variable can't be checked in advance, so it needs approval.
+   An agent lists the capabilities it `requires`; a tool lists the ones it `provides`. Some catalog agents were
+   written for one project's stack (their description says which); route them only where that stack matches.
 3. Propose aspects: one per part of the project that needs different tools or agents, each with path globs
-   relative to the project root, the tools whose capabilities its agents require, and the agents. Ask the user
-   which pack to attach (one, or none; each pack's base is composed before every agent in the map) and confirm the
-   aspects before writing anything.
+   relative to the project root, the tools whose capabilities its agents require, and the agents. Then ask, in a
+   single AskUserQuestion call: which pack to attach (one, or none; each pack's base is composed before every
+   agent in the map), whether the project spans other repositories, and whether the proposed aspects are right.
+   Ask with the tool, not in a reply: this skill's command permissions last only for the turn it was invoked in,
+   and the answers to the tool arrive within that turn. Write nothing before the answers. If the tool is not
+   available, ask in your reply and say that the validator will then need approval.
 4. Write `.kitbash/project-map.yaml`. Leave out `catalog:`: the map then uses this plugin's catalog.
 
 ```yaml
