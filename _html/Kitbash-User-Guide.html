@@ -872,7 +872,7 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
   <thead><tr><th style="width:21%">Agent</th><th style="width:43%">Does</th><th>Its evals need</th></tr></thead>
   <tbody>
   <tr><td class="nw"><code>security-reviewer</code></td><td>Reviews a PR or file set for security defects only. Read-only.</td><td>Nothing extra</td></tr>
-  <tr><td class="nw"><code>spec-reviewer</code></td><td>Finds statements in specification documents that contradict each other, citing both sides. Read-only.</td><td>Nothing extra</td></tr>
+  <tr><td class="nw"><code>spec-reviewer</code></td><td>Finds statements in specification documents that contradict each other, citing both sides. Lists statements that depend on something the documents never provide in a separate Gaps section. Read-only.</td><td>Nothing extra</td></tr>
   <tr><td class="nw"><code>issue-triager</code></td><td>Labels issues by type and severity and drafts a first reply. Declares <code>type</code> and <code>severity</code> outputs.</td><td>Nothing extra</td></tr>
   <tr><td class="nw"><code>backend-engineer</code></td><td>Implements and fixes TypeScript and Python services, testing first.</td><td>Python; Node and <code>pnpm</code>. Run through a map.</td></tr>
   <tr><td class="nw"><code>mobile-engineer</code></td><td>Implements and fixes Kotlin and SwiftUI companion apps.</td><td>Xcode for Swift. Run through a map.</td></tr>
