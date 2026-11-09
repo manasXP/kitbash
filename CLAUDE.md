@@ -57,7 +57,7 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 
 - **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map.
 - **Don't fix the fixtures' defects.** `fixtures/firmware/pdu/` is an unaltered snapshot of a real project whose real defects two evals target. `fixtures/backend/` and `fixtures/mobile/` carry planted defects that evals target.
-- **Epicura's live map is outside this repo**, at `__Workspaces/Appliance/Epicura/epi-PM/Agents/project-map.yaml` in the vault, targeting `~/code/Epicura`. `projects/epicura/` is an older copy that names deleted repos, and `validate.py` with no arguments checks only `projects/`, so pass the live map explicitly.
+- **Epicura's live map is outside this repo**, at `__Workspaces/Appliance/Epicura/epi-PM/Agents/project-map.yaml` in the vault, targeting `~/code/Epicura`. `projects/epicura/README.md` points to it. `validate.py` with no arguments checks only `projects/`, so pass the live map explicitly.
 - **Run backend and mobile evals through a map** (`--aspect cloud` or `--aspect ios` on the live Epicura map). The aspect's toolchain `artifacts` keep `node_modules` and `.build` out of the judge's diff.
 - **Evals that create files** list them under `creates:`, and those paths must not already exist.
 - **After editing `registry-sources.yaml`**, including `provides` or `names`, run `registry.py sync` or the validator reports the source as stale. Capabilities for an imported server are always tagged by hand, never inferred. Only tagged servers can be bound.
@@ -65,4 +65,4 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 - **Tool and skill files contain host-specific absolute paths**, and deployed agent files inline them as they stand. A deploy is only valid for this machine.
 - **`--keep` leaves workspaces in `catalog/.evals/`**, which is not gitignored. Use `--workdir` when two sessions run at once.
 - **`private/` and `Composable-Agent-Taxonomy.html`** (the PDF's source) are gitignored. The PDF is tracked.
-- **Check the maps directly for what's routed.** `GOAL.md` and `catalog/README.md` are partly dated narrative and can lag them. For example, `mechanical-engineer` is in the catalog but not routed in any map, so the README's `--aspect mechanical` command fails.
+- **Check the maps directly for what's routed.** `GOAL.md` and `catalog/README.md` are partly dated narrative and can lag them. For example, `mechanical-engineer` is in the catalog but not routed in any map.

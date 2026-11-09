@@ -145,7 +145,6 @@ replaces the browsing step with a local search once the datasets are bought.
 ./run_evals.py security-reviewer firmware-engineer
 ./run_evals.py --all
 ./run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
-./run_evals.py mechanical-engineer --map ../projects/epicura/project-map.yaml --aspect mechanical
 ./run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
 ```
 
@@ -232,9 +231,9 @@ outside DIR, and writes each group to `<repo>/.claude/skills/<repo>/` with the s
 scope, not per-agent, and loads only when a session starts at the repo root, not in a subfolder. Plugin subagents ignore `hooks` and `mcpServers`, so an agent's hooks go to
 the plugin's `hooks/hooks.json` behind `hooks/only-for-agents.py`, which matches `agent_type` (`<repo>:<agent>`), and
 a map that binds an MCP tool is refused. Such a plugin loads only once that exact folder is trusted: `claude -p` or a
-trusted parent is not enough, and nothing warns that it did not load. Tested with `--plugin-dir` on a scratch mirror
-of the Epicura repos: the hook blocked `security-reviewer` and left the main session and `backend-engineer` alone.
-Loading from `.claude/skills/` in a trusted folder has not been run.
+trusted parent is not enough, and nothing warns that it did not load. Tested on the five Epicura repos on 9 Nov 2026:
+each loaded as `<plugin>@skills-dir` once trusted, and in `epicura-cloud` the hook blocked `security-reviewer` and left
+the main session alone.
 
 ## Firmware fixture
 
@@ -261,7 +260,8 @@ with a Source note (`decided:`, `inference:`, `PLACEHOLDER:`), bind with `setExp
 request, recompute, check validity, save. `agents/mechanical-engineer.yaml` requires `mechanical-cad`, which
 `tools/mcp/freecad.yaml` provides through `uvx freecad-mcp`; its two evals add a second hole on a new
 `hole_pitch` alias and change thickness through `T_plate` alone. They have not been run: the FreeCAD app must
-be up with the freecad-mcp addon, and port 9875 was closed when the set was built. To rebuild the fixture,
+be up with the freecad-mcp addon, and port 9875 was closed when the set was built. No map routes the agent today,
+so running them also needs an aspect that binds `freecad`. To rebuild the fixture,
 feed a script to `/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd` on stdin ending with `exit()`
 and pass the output path through an environment variable: `-c` waits on stdin and every positional argument
 is taken as a file to open.
@@ -279,8 +279,8 @@ eval accepts a real run or an honest report that none was possible. `xcode-selec
 the Command Line Tools, which ship no XCTest, so `swift test` needs `DEVELOPER_DIR` set to Xcode's Developer
 directory (recorded in `tools/cli/xcode-toolchain.yaml`). Installs and builds in these fixtures write
 `node_modules` and `.build`, which the toolchain tools declare as `artifacts`, so run the evals through the map
-(`--map ../projects/epicura/project-map.yaml --aspect device` for backend-engineer, `--aspect ios` for
-mobile-engineer) or the judge's diff is swamped. Written 2 Nov 2026.
+(`--aspect cloud` for backend-engineer and `--aspect ios` for mobile-engineer on the Epicura map, see
+`projects/epicura/README.md`) or the judge's diff is swamped. Written 2 Nov 2026.
 
 ## Recipe fixtures and tools
 
