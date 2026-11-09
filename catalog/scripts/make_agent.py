@@ -216,8 +216,11 @@ def planned_files(p):
 
 
 def installed_plugin():
-    """True when this catalog is a Claude Code plugin install, under ~/.claude/plugins/."""
-    return f"{os.sep}.claude{os.sep}plugins{os.sep}" in os.path.realpath(CATALOG)
+    """True when this catalog is a Claude Code plugin install: under ~/.claude/plugins/, or the plugins/ folder of
+    the config directory CLAUDE_CONFIG_DIR names."""
+    here = os.path.realpath(CATALOG)
+    configs = ["~/.claude"] + ([os.environ["CLAUDE_CONFIG_DIR"]] if os.environ.get("CLAUDE_CONFIG_DIR") else [])
+    return any(here.startswith(os.path.realpath(os.path.expanduser(c)) + f"{os.sep}plugins{os.sep}") for c in configs)
 
 
 def write_files(files, root):

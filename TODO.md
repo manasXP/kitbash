@@ -33,6 +33,23 @@ Steps
 - release.py ships but the skill doesn't offer it.
 - Check: claude plugin validate, then install from a local marketplace path into a clean project and walk through /kitbash:kitbash up to deploy.
 
+Status on branch plugin-portable: steps 1 to 5 are done and committed. claude plugin validate passes with two
+warnings (root CLAUDE.md is not loaded for plugin users, which is expected; no icon). Install and the user flow
+were tested from a local clone in a throwaway CLAUDE_CONFIG_DIR, with evals faked.
+
+5b. Billed walkthrough of the skill (approved 10 Nov 2026), before step 6.
+- Goal: a real session that uses /kitbash:kitbash in a scratch project, up to the deploy dry run, no evals.
+  Budget roughly $0.20 to $0.50.
+- Confirms what only a session can: ${CLAUDE_PLUGIN_ROOT} is substituted in the skill body, the allowed-tools
+  rules (quoted path, --dry-run right after the script name) run without a permission prompt, and the skill
+  asks which pack and confirms aspects before writing .kitbash/project-map.yaml.
+- Setup that leaves ~/.claude untouched: a git clone of this branch with the plugin files, added with
+  `claude plugin marketplace add <clone path>` and `claude plugin install kitbash@kitbash` under
+  CLAUDE_CONFIG_DIR=<scratch>/cfg. A fresh config dir may have no login; if so, ask before using the real one.
+- Scratch project: a git repo with a services/api/ folder. Drive it with `claude -p` (cap with --max-budget-usd)
+  or ask the user to run it interactively. Record what was prompted for, what was run, and the cost.
+- Not exercised by a local-path install: the copy into ~/.claude/plugins/cache/, which only a GitHub install does.
+
 6. Update the docs.
 - Add install steps to the README.
 - Rewrite the guide's setup chapter around the plugin and .kitbash/.
