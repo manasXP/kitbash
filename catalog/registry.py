@@ -13,8 +13,9 @@ script fetches that into ~/.local/share/kitbash/registry.db, so the database is 
 from the vault alone. validate.load_catalog merges the rows into the catalog: an agent lists an imported
 skill by name like any other, and a map binds an imported MCP server like any other tool.
 
-Skill bodies are composed from the git checkout under ~/.cache/kitbash/sources/<source>/ (the loader
-fetches it when missing); the copy in the database serves search and show. A server's config is derived
+Skill bodies are composed from the git checkout under ~/.cache/kitbash/sources/<repo>-<commit>/, shared by
+sources with the same repo and pin (the loader fetches it when missing); the copy in the database serves
+search and show. A server's config is derived
 once at sync (a streamable-http remote first, else the npm, pypi or oci package) and secrets are stored as
 environment variable names only; the config references them as ${NAME} for Claude Code to expand.
 """
@@ -101,7 +102,7 @@ def skill_license(data, folder):
 
 def sync_git(db, name, src, rep):
     """Upsert every skill the layout finds in the pinned checkout; drop rows no longer there. Returns the count."""
-    root = V.git_checkout(os.path.join(V.SOURCE_CACHE, name), src["url"], src["commit"], name, rep)
+    root = V.git_checkout(V.source_dir(src["url"], src["commit"]), src["url"], src["commit"], name, rep)
     if root is None:
         return 0
     prefix, _, suffix = src["layout"].partition("{name}")
@@ -368,7 +369,8 @@ def cmd_show(opts):
         print(f"description  {r['description']}")
         print(f"license      {r['license']}")
         print(f"resources    {'yes: scripts/references/assets beside SKILL.md' if r['has_resources'] else 'none'}")
-        print(f"checkout     {os.path.join(V.SOURCE_CACHE, r['source'], r['path'])}")
+        src = db.execute("SELECT url, pin FROM sources WHERE name=?", (r["source"],)).fetchone()
+        print(f"checkout     {os.path.join(V.source_dir(src['url'], src['pin']), r['path'])}")
         print(f"imported     {r['imported_at']}  sha {r['content_sha'][:12]}  body {len(r['body'])} chars")
         return 0
     r = db.execute("SELECT * FROM mcp_servers WHERE name=?", (opts.name,)).fetchone()
