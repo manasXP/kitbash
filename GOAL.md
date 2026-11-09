@@ -1,6 +1,6 @@
 Create an AI agent that assembles agents from a catalog of composable parts, validates them, and evaluates them before they are deployed to a project.
 
-First step is to define a taxonomy that supports composition of agents. Agents are composed, not inherited. See Composable-Agent-Taxonomy.pdf for the full proposal and examples.
+First step is to define a taxonomy that supports composition of agents. Agents are composed, not inherited. See docs/Composable-Agent-Taxonomy.pdf for the full proposal and examples.
 
 ## Taxonomy
 
@@ -86,4 +86,4 @@ Playbooks so far: `projects/smart-thermostat/playbooks/schematic-change-and-chec
 8. [ ] Map synthesis. First real map written by hand on 2 Nov 2026 as the reference for what synthesis must produce: the Epicura map, since rewritten and moved to private project content, see `projects/epicura/README.md` (at the time: pack pstack, four aspects: eda-design over the KiCAD sheets, tracking over PM and TCC, code over the UX mocks and spec scripts, mechanical over `epi-design/**/*.FCStd` via a new FreeCAD set: `tools/mcp/freecad.yaml`, `skills/mechanical-design`, `agents/mechanical-engineer`, `fixtures/mech/bracket.FCStd`; two playbooks). Gaps it exposed: no spec-review agent for the markdown, no firmware in that workspace. Read a real project tree, propose aspects with paths, pick catalog agents or call `make_agent.py` for gaps, write a map that validates. This is what "forms itself" means and it does not exist yet.
 9. [ ] A `/kitbash` skill that runs synthesis, validation, evals and deploy in order and refuses to deploy an agent that has not passed.
 
-See Composable-Agent-Taxonomy.pdf sections 5 to 8 (its HTML source is Composable-Agent-Taxonomy.html) and `catalog/README.md` for details.
+See docs/Composable-Agent-Taxonomy.pdf sections 5 to 8 (its HTML source is _html/Composable-Agent-Taxonomy.html) and `catalog/README.md` for details.

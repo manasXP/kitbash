@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Kitbash assembles AI agents from a catalog of reusable parts, validates them, and runs their evals before they can join a project. `GOAL.md` is the spec, with dated decisions and the build order. `catalog/README.md` is the full reference for merge order, validator rules and every flag. `Composable-Agent-Taxonomy.pdf` is the paper behind the design.
+Kitbash assembles AI agents from a catalog of reusable parts, validates them, and runs their evals before they can join a project. `GOAL.md` is the spec, with dated decisions and the build order. `catalog/README.md` is the full reference for merge order, validator rules and every flag. `docs/Composable-Agent-Taxonomy.pdf` is the paper behind the design.
 
 Not built yet: map synthesis, a `/kitbash` skill and `csv-index` registry sources. Project maps are written by hand.
 
@@ -69,5 +69,5 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 - **Before writing a project map**, ask which pack to attach and where the code root is. A project's code is usually separate from its docs workspace and spans several repos, so inventory every repo and map them all.
 - **Tool and skill files contain host-specific absolute paths**, and deployed agent files inline them as they stand. A deploy is only valid for this machine.
 - **`--keep` leaves workspaces in `catalog/.evals/`**, which is not gitignored. Use `--workdir` when two sessions run at once.
-- **`private/` and `Composable-Agent-Taxonomy.html`** (the PDF's source) are gitignored. The PDF is tracked.
+- **`private/` and `_html/Composable-Agent-Taxonomy.html`** (the PDF's source) are gitignored. The PDF is tracked.
 - **Check the maps directly for what's routed.** `GOAL.md` and `catalog/README.md` are partly dated narrative and can lag them. For example, `mechanical-engineer` is in the catalog but not routed in any map.
