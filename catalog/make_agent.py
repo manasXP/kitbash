@@ -7,7 +7,7 @@ Usage:
     make_agent.py "..." --no-evals            # select, emit, validate only
     make_agent.py "..." --dry-run             # print the proposed files, write nothing
 
-Stages (see Composable-Agent-Taxonomy.pdf, part 7):
+Stages (see docs/Composable-Agent-Taxonomy.pdf, part 7):
     1. Select   one headless Claude call reads the catalog inventory and picks traits, skills, capabilities.
     2. Emit     the script writes agents/<name>.yaml, any fixtures the evals need, and at most one new skill.
     3. Validate validate.py rules run; on failure the errors go back to the model for one repair pass,

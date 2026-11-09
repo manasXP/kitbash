@@ -2,7 +2,7 @@
 
 Kitbash assembles AI agents from a catalog of reusable parts, validates them, and runs their evals before they can join a project.
 
-It implements the design in the paper [A Composable Agent Taxonomy](Composable-Agent-Taxonomy.pdf), which refers to it as the AgentTaxonomy project. The paper's argument is that LLM agents behave like documents, not classes, so they should be composed from flat parts with explicit merge rules and have to prove they work before they're used.
+It implements the design in the paper [A Composable Agent Taxonomy](docs/Composable-Agent-Taxonomy.pdf), which refers to it as the AgentTaxonomy project. The paper's argument is that LLM agents behave like documents, not classes, so they should be composed from flat parts with explicit merge rules and have to prove they work before they're used.
 
 **Status:** early. The catalog, validator, eval runner, playbook runner, meta-agent, deploy script and release pipeline all exist. Generating a project map automatically is not built yet, so maps are written by hand. See [GOAL.md](GOAL.md) for the build order.
 
