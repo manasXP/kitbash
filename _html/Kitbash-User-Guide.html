@@ -518,9 +518,16 @@ shared_tools: [github]</pre></div>
 
 <h2>Step 1. Validate the map</h2>
 <div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../projects/smart-thermostat/project-map.yaml</pre></div>
-<p>The run also checks the map's two playbooks. <a href="#c9">Chapter 9</a> covers writing a map. The validator catches a missing tool before any model is called. Remove <code>kicad</code> from <code>eda-design</code> and both of its agents fail:</p>
-<div class="code out"><div class="cap">Output with kicad removed, paths shortened</div><pre>error    .../project-map.yaml [eda-design]: agent 'drc-checker' requires ['design-rule-check', 'schematic-erc']; bound tools provide ['schematic-capture', 'source-control']
-error    .../project-map.yaml [eda-design]: agent 'schematic-engineer' requires ['schematic-erc']; bound tools provide ['schematic-capture', 'source-control']</pre></div>
+<p>The run also checks the map's two playbooks. <a href="#c9">Chapter 9</a> covers writing a map. The validator catches a missing tool before any model is called. Remove <code>kicad</code> from <code>eda-design</code> and both of its agents fail, as does the playbook handoff that runs KiCad's ERC:</p>
+<div class="code out"><div class="cap">Output with kicad removed, paths shortened, lines wrapped</div><pre>error    .../project-map.yaml [eda-design]: agent 'drc-checker'
+           requires ['design-rule-check', 'schematic-erc'];
+           bound tools provide ['schematic-capture', 'source-control']
+error    .../project-map.yaml [eda-design]: agent 'schematic-engineer'
+           requires ['schematic-erc'];
+           bound tools provide ['schematic-capture', 'source-control']
+error    .../playbooks/schematic-change-and-check.yaml [steps[0]]:
+           handoff command 'kicad.erc-gate': tool 'kicad' is not bound
+           to this aspect or shared (bound: ['github', 'kicad-sch-api'])</pre></div>
 <p>Routing an agent to the wrong folder fails the same way. Put <code>firmware-engineer</code> in <code>ux-design</code> and the validator reports that it requires <code>embedded-toolchain</code>, which Pen doesn't provide.</p>
 
 <h2>Step 2. Evaluate every agent the way the project runs it</h2>
@@ -957,7 +964,8 @@ evals:
 <p>After the first step, each task is prefixed with the diff the previous step made, so the next agent knows what changed.</p>
 
 <h2>Run one</h2>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml   # also checks its playbooks
+<div class="code free"><div class="cap">Free</div><pre># Validate the map and its playbooks
+/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml
 /usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml \
     --dry-run</pre></div>
 <div class="code bill"><div class="cap">Bills. --budget is per step, default $1.00.</div><pre># Run its evals. A wrong path fails without calling the judge.
