@@ -1,0 +1,3 @@
+# Test fixtures (vendor firmware and sample projects) are not Kitbash source.
+# Keep them out of GitHub's language statistics.
+catalog/fixtures/** linguist-vendored
