@@ -86,4 +86,14 @@ Playbooks so far: `projects/smart-thermostat/playbooks/schematic-change-and-chec
 8. [ ] Map synthesis. First real map written by hand on 2 Nov 2026 as the reference for what synthesis must produce: the Epicura map, since rewritten and moved to private project content, see `projects/epicura/README.md` (at the time: pack pstack, four aspects: eda-design over the KiCAD sheets, tracking over PM and TCC, code over the UX mocks and spec scripts, mechanical over `epi-design/**/*.FCStd` via a new FreeCAD set: `tools/mcp/freecad.yaml`, `skills/mechanical-design`, `agents/mechanical-engineer`, `fixtures/mech/bracket.FCStd`; two playbooks). Gaps it exposed: no spec-review agent for the markdown, no firmware in that workspace. Read a real project tree, propose aspects with paths, pick catalog agents or call `make_agent.py` for gaps, write a map that validates. This is what "forms itself" means and it does not exist yet.
 9. [ ] A `/kitbash` skill that runs synthesis, validation, evals and deploy in order and refuses to deploy an agent that has not passed.
 
+## Ideas from the Standard Agent Spec
+
+Noted 11 Nov 2026 after comparing Kitbash with the Standard Agent Specification v0.2.0 (standardagentspec.org), which defines an agent's runtime behavior and its npm packaging, and has no evals, capabilities or project map. These are candidates, not decisions, and none is built. Each waits for an eval or a map that needs it.
+
+- [ ] Fallback chains. A spec model names backup models to try, in order, when the primary still fails after retries. Kitbash has `llms` and `preferred_llm` but nothing says what runs when the preferred model is unavailable.
+- [ ] Tool allowlist. A spec tool may declare `uses`, the only other tools it is allowed to call, and the runtime rejects anything else. Kitbash denies tools per trait but has no per-tool or per-skill list of what may be invoked.
+- [ ] Hook disclosure. A spec package states the hooks it will add to a parent, each with a reason, in its manifest, so an installer can show them without running package code, and composition fails if one cannot load. Kitbash packs and imported skills carry no such statement.
+
+Not planned: emitting Standard Agent packages as a second deploy target. Its tools are TypeScript functions, so each catalog tool would need rewriting, and the pages read do not cover MCP. Reopen only on a concrete need for a runtime other than Claude Code.
+
 See docs/Composable-Agent-Taxonomy.pdf sections 5 to 8 (its HTML source is _html/Composable-Agent-Taxonomy.html) and `catalog/README.md` for details.
