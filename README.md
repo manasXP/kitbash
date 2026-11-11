@@ -61,7 +61,7 @@ Run inside a project, the same scripts find its `.kitbash/` folder. The [user gu
 | `catalog/traits/`, `skills/`, `tools/`, `agents/`, `packs/` | The parts agents are composed from |
 | `catalog/fixtures/` | Test material the evals run against |
 | `catalog/scripts/` | The validator, eval runner, playbook runner, meta-agent, deploy and release scripts, and registry |
-| `projects/` | Example project maps, which bind tools and agents to parts of a project, plus playbooks |
+| `examples/` | Example project maps, which bind tools and agents to parts of a project, plus playbooks |
 | `.claude-plugin/`, `skills/kitbash/` | The plugin manifest, its marketplace entry and the `/kitbash` skill |
 
 ## License

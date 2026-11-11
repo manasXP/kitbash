@@ -13,7 +13,7 @@ There is no build step, test suite or linter. Run everything from `catalog/` wit
 Free, no model call:
 
 ```sh
-/usr/bin/python3 scripts/validate.py                       # catalog + maps in ../projects/ and ../private/projects/; exit 1 on any error
+/usr/bin/python3 scripts/validate.py                       # catalog + maps in ../examples/ and ../private/projects/; exit 1 on any error
 /usr/bin/python3 scripts/validate.py PATH/TO/project-map.yaml                # one map, which may live outside this repo
 /usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run           # print composed prompt and command
 /usr/bin/python3 scripts/run_playbook.py PLAYBOOK --dry-run
@@ -31,7 +31,7 @@ These bill the user's account through the `claude` CLI. `--budget` caps each age
 
 ```sh
 /usr/bin/python3 scripts/run_evals.py security-reviewer    # one agent is the smallest unit; there is no per-eval selector
-/usr/bin/python3 scripts/run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT   # with pack and MCP tools
+/usr/bin/python3 scripts/run_evals.py AGENT --map ../private/projects/NAME/project-map.yaml --aspect ASPECT   # with pack and MCP tools
 /usr/bin/python3 scripts/run_playbook.py PLAYBOOK          # runs the playbook's evals
 /usr/bin/python3 scripts/release.py evals ../private/projects/NAME   # every agent without a current pass; stops starting agents at --max-total, default $30
 /usr/bin/python3 scripts/make_agent.py "..."               # also bills with --dry-run, which still makes the design call
@@ -47,7 +47,7 @@ Some evals need the real tool: KiCad, the Pen desktop app, the FreeCAD app with 
 
 **Tools bind to aspects, not agents.** A project map divides a project into aspects, each with paths, tools and routed agents. An agent requires vendor-neutral capabilities, and the aspect's tools plus `shared_tools` must provide them. Swapping a tool is a one-line map edit. A map attaches at most one pack.
 
-**Playbooks are read by code, never by a model.** They live beside a map in `projects/<name>/playbooks/`. Steps are linear and share a workspace. Handoffs are decided by a tool command's exit status or by one field of the previous agent's `outputs` JSON block.
+**Playbooks are read by code, never by a model.** They live in a `playbooks/` folder beside the map. Steps are linear and share a workspace. Handoffs are decided by a tool command's exit status or by one field of the previous agent's `outputs` JSON block.
 
 **Project content reaches its repos through a reviewed release.** Project maps, CLAUDE files and generated plugins live in the private `manasXP/kitbash-projects` repo, checked out at `private/projects/`, which this public repo gitignores, so never copy project content into a tracked path here. `release.py` builds into that repo, records eval results against a hash of each agent, and publishes PRs to target repos only from merged `main`. Merging there is the human approval, so don't merge those PRs or run `publish` unless asked. `deploy.py` remains for maps that release refuses, such as those binding MCP tools.
 
@@ -62,7 +62,7 @@ The scripts never browse the web for leads: a map must validate and deploy from 
 
 - **Evals gate registration.** Don't route an agent in a map until its evals pass. After changing an agent or anything it composes, re-run its evals. After changing a map's pack, re-run the evals of every agent in that map. For maps in a project's `.kitbash/`, `deploy.py` enforces this from `.kitbash/evals.lock.json`, which `run_evals.py --aspect` writes.
 - **Don't fix the fixtures' defects.** `fixtures/firmware/pdu/` is an unaltered snapshot of a real project whose real defects two evals target. `fixtures/backend/` and `fixtures/mobile/` carry planted defects that evals target.
-- **Epicura's map is at `private/projects/epicura/project-map.yaml`**, targeting `~/code/Epicura`. `projects/epicura/README.md` points to it.
+- **Epicura's map is at `private/projects/epicura/project-map.yaml`**, targeting `~/code/Epicura`.
 - **Run backend and mobile evals through a map** (`--aspect cloud` or `--aspect ios` on the live Epicura map). The aspect's toolchain `artifacts` keep `node_modules` and `.build` out of the judge's diff.
 - **Evals that create files** list them under `creates:`, and those paths must not already exist.
 - **After editing `registry-sources.yaml`**, including `provides` or `names`, run `registry.py sync` or the validator reports the source as stale. Capabilities for an imported server are always tagged by hand, never inferred. Only tagged servers can be bound.

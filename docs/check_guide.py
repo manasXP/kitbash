@@ -37,11 +37,19 @@ def run(label, args, want=0, contains=None, cwd=cat):
     return out
 
 
-# 1. tagged files, exactly as printed
+def sh(cmd, cwd):
+    subprocess.run(cmd, shell=True, cwd=cwd, check=True, capture_output=True,
+                   env={**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"})
+
+
+# 1. tagged files, exactly as printed; private/projects/ is a clone of a local remote, as in the release chapter
+rem = os.path.join(WORK, "remotes")
+os.makedirs(rem)
+sh("git init -q --bare -b main app.git; git init -q --bare -b main projects.git", rem)
+os.makedirs(os.path.join(kb, "private"))
+sh(f'git clone -q "{rem}/projects.git" projects', os.path.join(kb, "private"))
 tagged = re.findall(r'<pre data-file="([^"]+)">(.*?)</pre>', src, re.S)
 for rel, body in tagged:
-    if rel.startswith("private/"):
-        continue
     path = os.path.join(kb, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(html.unescape(body) + "\n")
@@ -101,10 +109,10 @@ for sub, flags in {"evals": ["--only", "--max-total", "--jobs", "--workdir"], "p
     print(f"{'ok  ' if not missing else 'FAIL'}  flags of release.py {sub}")
 
 # 4. the map as printed: last line, deploy, re-deploy refusal
-acme = "../projects/acme/project-map.yaml"
+acme = "../private/projects/acme/project-map.yaml"
 out = run("printed map validates", [PY, "scripts/validate.py", acme], contains="0 error(s), 3 warning(s)")
 print("      " + out.strip().split("\n")[-1])
-run("printed playbook dry-runs", [PY, "scripts/run_playbook.py", "../projects/acme/playbooks/triage-then-review.yaml", "--dry-run"], contains="step 1: security-reviewer")
+run("printed playbook dry-runs", [PY, "scripts/run_playbook.py", "../private/projects/acme/playbooks/triage-then-review.yaml", "--dry-run"], contains="step 1: security-reviewer")
 out = run("deploy", [PY, "scripts/deploy.py", acme, "--target", target], contains="5 file(s) deployed")
 for f in ("docs-reviewer", "security-reviewer", "issue-triager", "backend-engineer"):
     if f"wrote    .claude/agents/{f}.md" not in out:
@@ -113,7 +121,7 @@ for f in ("docs-reviewer", "security-reviewer", "issue-triager", "backend-engine
 run("evals work before routing via --map", [PY, "scripts/run_evals.py", "spec-reviewer", "--map", acme, "--aspect", "docs", "--dry-run"], contains="pack: superpowers")
 
 # 5. printed snippets
-map_path = os.path.join(kb, "projects/acme/project-map.yaml")
+map_path = os.path.join(kb, "private/projects/acme/project-map.yaml")
 base = open(map_path).read()
 exclude = base.replace("    agents: [docs-reviewer]\n", "    agents: [docs-reviewer]\n    pack_exclude:\n      skills: [verification-before-completion]\n      reason: this agent only reads and runs no commands\n")
 open(map_path, "w").write(exclude)
@@ -129,21 +137,14 @@ run("bind imported MCP", [PY, "scripts/validate.py", acme], contains="0 error(s)
 open(map_path, "w").write(base)
 
 # 6. release as printed, against local remotes
-def sh(cmd, cwd):
-    subprocess.run(cmd, shell=True, cwd=cwd, check=True, capture_output=True,
-                   env={**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"})
-rem = os.path.join(WORK, "remotes")
-os.makedirs(rem)
-sh("git init -q --bare -b main app.git; git init -q --bare -b main projects.git", rem)
 sh(f'git init -q -b main . && mkdir -p docs services/api && echo a > docs/a.md && echo b > services/api/b.py && git add . && git commit -qm init && git remote add origin "{rem}/app.git" && git push -q -u origin main', target)
-os.makedirs(os.path.join(kb, "private"))
-sh(f'git clone -q "{rem}/projects.git" projects', os.path.join(kb, "private"))
 proj = os.path.join(kb, "private/projects/acme")
+shutil.rmtree(os.path.join(proj, "playbooks"))    # its steps name agents the release map below drops
 os.makedirs(os.path.join(proj, "claude"))
 open(os.path.join(proj, "claude/app.md"), "w").write("# App\n")
 rel_body = dict(tagged)["private/projects/acme/release.yaml"]
 open(os.path.join(proj, "release.yaml"), "w").write(html.unescape(rel_body).replace("~/code/acme", target) + "\n")
-open(os.path.join(proj, "project-map.yaml"), "w").write(base.replace("catalog: ../../catalog", "catalog: ../../../catalog")
+open(os.path.join(proj, "project-map.yaml"), "w").write(base
     .replace('paths: ["docs/**", "README.md"]', 'paths: ["docs/**"]')
     .replace("    agents: [security-reviewer, issue-triager, backend-engineer]\n", "    agents: [backend-engineer]\n"))
 P = "../private/projects/acme"

@@ -120,7 +120,7 @@ shared_tools: [github]            # optional, bound to every aspect
 
 An aspect may also drop part of the pack base for its agents:
 `pack_exclude: {skills: [NAME], reason: "..."}`. `${CLAUDE_PLUGIN_ROOT}/catalog/README.md` has every field and
-validator rule, and `${CLAUDE_PLUGIN_ROOT}/projects/smart-thermostat/` is a complete example with playbooks.
+validator rule, and `${CLAUDE_PLUGIN_ROOT}/examples/smart-thermostat/` is a complete example with playbooks.
 
 ### 3. Validate
 

@@ -4,7 +4,7 @@
 Usage:
     run_evals.py security-reviewer [firmware-engineer ...]
     run_evals.py --all
-    run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
+    run_evals.py ux-designer --map ../examples/smart-thermostat/project-map.yaml --aspect ux-design
     run_evals.py security-reviewer --dry-run          # print the composed prompt and command, run nothing
 
 Options:

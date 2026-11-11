@@ -9,7 +9,7 @@ Steps
 
 2. Find maps in the user's project.
 - validate.py, run_evals.py, run_playbook.py and deploy.py look for $CLAUDE_PROJECT_DIR/.kitbash/project-map.yaml (or the current folder's) when no map is given.
-- A map without a catalog: line uses the plugin's own catalog. The repo's own maps keep their explicit paths, so projects/ and private/projects/ still validate.
+- A map without a catalog: line uses the plugin's own catalog. The repo's own maps keep their explicit paths, so examples/ and private/projects/ still validate.
 - --workdir defaults to .kitbash/work/.
 - Check: a scratch project with only a .kitbash/ folder validates, does an eval --dry-run and deploys with --dry-run.
 

@@ -284,7 +284,7 @@ This guide writes <code>/usr/bin/python3</code>, the macOS system interpreter. A
   <tbody>
   <tr><td><code>catalog/</code></td><td>Parts and fixtures, with the scripts in <code>catalog/scripts/</code></td></tr>
   <tr><td><code>.kitbash/</code> in your project</td><td>The project's map, playbooks and own parts, its eval results in <code>evals.lock.json</code>, and eval workspaces in <code>work/</code></td></tr>
-  <tr><td><code>projects/&lt;name&gt;/</code></td><td>Project maps and playbooks you can publish</td></tr>
+  <tr><td><code>examples/&lt;name&gt;/</code></td><td>Example project maps and playbooks that ship with Kitbash</td></tr>
   <tr><td><code>private/projects/&lt;name&gt;/</code></td><td>A separate private repo for project content. Git ignores this folder.</td></tr>
   <tr><td><code>~/.cache/kitbash/packs/</code>, <code>sources/</code></td><td>Pinned checkouts of packs and imported skills</td></tr>
   <tr><td><code>~/.local/share/kitbash/registry.db</code></td><td>The SQLite registry of imported skills and MCP servers</td></tr>
@@ -317,7 +317,7 @@ You review pull requests for security defects only. Ignore style, naming, ...
 <h3 class="step"><span class="s">Step 2.</span> See what a project adds</h3>
 <p>Add a map and an aspect, and the agent is composed the way that project would run it.</p>
 <div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer --dry-run \
-  --map ../projects/smart-thermostat/project-map.yaml --aspect api</pre></div>
+  --map ../examples/smart-thermostat/project-map.yaml --aspect api</pre></div>
 <p>The prompt now starts with <code>## Pack superpowers, skill: verification-before-completion</code>, because that map attaches the <code>superpowers</code> pack and a pack's text comes first.</p>
 
 <h3 class="step"><span class="s">Step 3.</span> Search for parts you could import</h3>
@@ -328,12 +328,12 @@ skill  canvas-design                anthropics-skills  Create beautiful visual a
 
 <h3 class="step"><span class="s">Step 4.</span> Trace a multi-step playbook</h3>
 <div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/run_playbook.py --dry-run \
-  ../projects/smart-thermostat/playbooks/triage-and-review.yaml</pre></div>
+  ../examples/smart-thermostat/playbooks/triage-and-review.yaml</pre></div>
 <p>The prompts are long. Look for the lines that start with <code>=====</code> and <code>-----</code>. They show each step's agent, model, task, tools and the condition for moving on, such as <code>{'output': 'severity', 'in': ['high', 'critical']}</code>.</p>
 
 <h3 class="step"><span class="s">Step 5.</span> Preview a deploy</h3>
 <div class="code free"><div class="cap">Free: the target folder must exist, but nothing is written to it</div><pre>mkdir -p /tmp/kitbash-demo
-/usr/bin/python3 scripts/deploy.py ../projects/smart-thermostat/project-map.yaml \
+/usr/bin/python3 scripts/deploy.py ../examples/smart-thermostat/project-map.yaml \
   --target /tmp/kitbash-demo --dry-run</pre></div>
 <p>You see the complete text of every file a deploy would write, ending with <code>(dry run, nothing written; 7 file(s) for /tmp/kitbash-demo)</code>.</p>
 
@@ -363,9 +363,9 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
   <tr><td><strong>Fixture</strong></td><td>Test material that evals work on.</td><td><code>catalog/fixtures/</code></td></tr>
   <tr><td><strong>Hook</strong></td><td>A script that can block an agent's tool call.</td><td><code>catalog/hooks/</code></td></tr>
   <tr><td><strong>Pack</strong></td><td>An external skill set pinned to a commit. Its base applies to every agent in a map.</td><td><code>catalog/packs/&lt;name&gt;.md</code></td></tr>
-  <tr><td><strong>Project map</strong></td><td>Binds the catalog to one project through aspects.</td><td><code>projects/&lt;name&gt;/project-map.yaml</code></td></tr>
+  <tr><td><strong>Project map</strong></td><td>Binds the catalog to one project through aspects.</td><td class="nw"><code>.kitbash/</code> in the project, or <code>private/projects/&lt;name&gt;/</code></td></tr>
   <tr><td><strong>Aspect</strong></td><td>One part of a project: its paths, tools, agents and optional model.</td><td>Inside the map</td></tr>
-  <tr><td><strong>Playbook</strong></td><td>A fixed sequence of agents that code runs and code hands off.</td><td><code>projects/&lt;name&gt;/playbooks/</code></td></tr>
+  <tr><td><strong>Playbook</strong></td><td>A fixed sequence of agents that code runs and code hands off.</td><td><code>playbooks/</code> beside the map</td></tr>
   </tbody>
 </table>
 
@@ -421,7 +421,7 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 
 <!-- ============================================================ 5 -->
 <h1 class="flow" id="c5">5. A worked example: a smart thermostat</h1>
-<p class="lead">This chapter follows one project from map to working agents. The repo ships its map in <code>projects/smart-thermostat/</code>, with two playbooks. Each step links to the chapter that covers it in detail.</p>
+<p class="lead">This chapter follows one project from map to working agents. The repo ships its map in <code>examples/smart-thermostat/</code>, with two playbooks. Each step links to the chapter that covers it in detail.</p>
 
 <h2>The project</h2>
 <p>A smart thermostat is a good test of Kitbash because one product needs four kinds of work, each with its own tools. Its repo is laid out like this:</p>
@@ -437,7 +437,7 @@ pass   security-reviewer[2]  $COST  SECONDSs  REASON FROM THE JUDGE
 <p>A single general-purpose assistant would see all of these tools all the time. Kitbash gives each folder its own agents, which see only that folder's tools.</p>
 
 <h2>The map</h2>
-<div class="code"><div class="cap">projects/smart-thermostat/project-map.yaml</div><pre data-file="projects/smart-thermostat/project-map.yaml">project: smart-thermostat
+<div class="code"><div class="cap">examples/smart-thermostat/project-map.yaml</div><pre data-file="examples/smart-thermostat/project-map.yaml">project: smart-thermostat
 catalog: ../../catalog
 pack: superpowers        # exactly one pack per map; its base applies to every agent below
 aspects:
@@ -517,7 +517,7 @@ shared_tools: [github]</pre></div>
 </ul>
 
 <h2>Step 1. Validate the map</h2>
-<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../projects/smart-thermostat/project-map.yaml</pre></div>
+<div class="code free"><div class="cap">Free</div><pre>/usr/bin/python3 scripts/validate.py ../examples/smart-thermostat/project-map.yaml</pre></div>
 <p>The run also checks the map's two playbooks. <a href="#c9">Chapter 9</a> covers writing a map. The validator catches a missing tool before any model is called. Remove <code>kicad</code> from <code>eda-design</code> and both of its agents fail, as does the playbook handoff that runs KiCad's ERC:</p>
 <div class="code out"><div class="cap">Output with kicad removed, paths shortened, lines wrapped</div><pre>error    .../project-map.yaml [eda-design]: agent 'drc-checker'
            requires ['design-rule-check', 'schematic-erc'];
@@ -532,7 +532,7 @@ error    .../playbooks/schematic-change-and-check.yaml [steps[0]]:
 
 <h2>Step 2. Evaluate every agent the way the project runs it</h2>
 <p><a href="#c6">Chapter 6</a> covers evals. Run each agent's evals through the map, so the <code>superpowers</code> text and the aspect's tools are part of what's tested. For <code>ux-designer</code> this is required, because its Pen server is mounted only through the map.</p>
-<div class="code bill"><div class="cap">Bills: 21 evals in all, at most $25.20 at the default caps</div><pre>M=../projects/smart-thermostat/project-map.yaml
+<div class="code bill"><div class="cap">Bills: 21 evals in all, at most $25.20 at the default caps</div><pre>M=../examples/smart-thermostat/project-map.yaml
 /usr/bin/python3 scripts/run_evals.py ux-designer --map $M --aspect ux-design
 /usr/bin/python3 scripts/run_evals.py firmware-engineer --map $M --aspect firmware
 /usr/bin/python3 scripts/run_evals.py security-reviewer issue-triager --map $M --aspect api
@@ -558,7 +558,7 @@ They run on copies of <code>catalog/fixtures/</code> in a throwaway workspace. A
   <li><strong><code>schematic-change-and-check</code>.</strong> <code>schematic-engineer</code> makes the requested change. Then KiCad's ERC runs as a command. Only if it exits with status 0 does <code>drc-checker</code> review the result.</li>
   <li><strong><code>triage-and-review</code>.</strong> <code>issue-triager</code> labels an issue. Only if its <code>severity</code> output is <code>high</code> or <code>critical</code> does <code>security-reviewer</code> review the change the issue refers to.</li>
 </ul>
-<div class="code free"><div class="cap">Free: trace both, calling no model</div><pre>P=../projects/smart-thermostat/playbooks
+<div class="code free"><div class="cap">Free: trace both, calling no model</div><pre>P=../examples/smart-thermostat/playbooks
 /usr/bin/python3 scripts/run_playbook.py $P/schematic-change-and-check.yaml --dry-run
 /usr/bin/python3 scripts/run_playbook.py $P/triage-and-review.yaml --dry-run</pre></div>
 <div class="code bill"><div class="cap">Bills: two evals each. Recorded runs passed both, for $0.54 and $0.22.</div><pre>/usr/bin/python3 scripts/run_playbook.py $P/schematic-change-and-check.yaml
@@ -621,7 +621,8 @@ wrote    .claude/agents/schematic-engineer.md
 <div class="code bill"><div class="cap">Bills</div><pre>/usr/bin/python3 scripts/run_evals.py security-reviewer                     # one agent
 /usr/bin/python3 scripts/run_evals.py security-reviewer issue-triager       # several
 /usr/bin/python3 scripts/run_evals.py security-reviewer --budget 0.50 --report results.json
-/usr/bin/python3 scripts/run_evals.py AGENT --map ../projects/NAME/project-map.yaml --aspect ASPECT</pre></div>
+/usr/bin/python3 scripts/run_evals.py AGENT --aspect ASPECT \
+    --map ../private/projects/NAME/project-map.yaml</pre></div>
 
 <h2>What happens during a run</h2>
 <ol class="steps">
@@ -793,12 +794,12 @@ skill: null                    # or skills/NAME/SKILL.md, to teach agents how to
 <ul>
   <li><strong>Decide which pack to attach,</strong> if any. A map may attach at most one.</li>
   <li><strong>Find the code root.</strong> A project's code is often separate from its docs workspace and spread across several repos. List every repo and map them all.</li>
-  <li><strong>Choose where the map lives.</strong> Use <code>projects/&lt;name&gt;/</code> for content you can publish and <code>private/projects/&lt;name&gt;/</code> for everything else. Never copy private project content into a tracked path.</li>
+  <li><strong>Choose where the map lives.</strong> Use the project's own <code>.kitbash/</code> folder, or <code>private/projects/&lt;name&gt;/</code> to keep the maps of several projects in one private repo. <code>examples/</code> holds only the maps that ship with Kitbash. Never copy private project content into a tracked path.</li>
 </ul>
 
 <h2>A working example</h2>
-<div class="code"><div class="cap">projects/acme/project-map.yaml</div><pre data-file="projects/acme/project-map.yaml">project: acme
-catalog: ../../catalog          # relative to this file's real location, or absolute
+<div class="code"><div class="cap">private/projects/acme/project-map.yaml</div><pre data-file="private/projects/acme/project-map.yaml">project: acme
+catalog: ../../../catalog       # relative to this file's real location, or absolute
 pack: superpowers               # at most one; its base applies to every agent below
 aspects:
   docs:
@@ -810,11 +811,11 @@ aspects:
     tools: [python-toolchain]
     agents: [security-reviewer, issue-triager, backend-engineer]
 shared_tools: [github]          # visible in every aspect</pre></div>
-<div class="code free"><div class="cap">Free: check one map. It may live outside this repo.</div><pre>/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml</pre></div>
+<div class="code free"><div class="cap">Free: check one map. It may live outside this repo.</div><pre>/usr/bin/python3 scripts/validate.py ../private/projects/acme/project-map.yaml</pre></div>
 <div class="code bill"><div class="cap">Bills: evaluate each agent the way this project will run it</div><pre>/usr/bin/python3 scripts/run_evals.py docs-reviewer \
-  --map ../projects/acme/project-map.yaml --aspect docs
+  --map ../private/projects/acme/project-map.yaml --aspect docs
 /usr/bin/python3 scripts/run_evals.py security-reviewer \
-  --map ../projects/acme/project-map.yaml --aspect backend</pre></div>
+  --map ../private/projects/acme/project-map.yaml --aspect backend</pre></div>
 
 <div class="note"><b class="h">The validator doesn't check eval results</b>
 It confirms that the map is consistent, not that its agents have passed. Running the evals is your responsibility until you use <code>release.py</code>, which does enforce it.</div>
@@ -928,7 +929,7 @@ It confirms that the map is consistent, not that its agents have passed. Running
 
 <h2>Write one</h2>
 <p>A playbook lives in <code>playbooks/</code> beside its map, and its file name must match <code>name</code>. Every agent it uses must be routed in the aspect the step names.</p>
-<div class="code long"><div class="cap">projects/acme/playbooks/triage-then-review.yaml</div><pre data-file="projects/acme/playbooks/triage-then-review.yaml">name: triage-then-review
+<div class="code long"><div class="cap">private/projects/acme/playbooks/triage-then-review.yaml</div><pre data-file="private/projects/acme/playbooks/triage-then-review.yaml">name: triage-then-review
 description: Triage an issue. If it is high or critical, security-review the change it refers to.
 map: ../project-map.yaml
 inputs: [issue, diff]                      # used as {issue} and {diff} below
@@ -965,22 +966,26 @@ evals:
 
 <h2>Run one</h2>
 <div class="code free"><div class="cap">Free</div><pre># Validate the map and its playbooks
-/usr/bin/python3 scripts/validate.py ../projects/acme/project-map.yaml
-/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml \
-    --dry-run</pre></div>
+/usr/bin/python3 scripts/validate.py ../private/projects/acme/project-map.yaml
+/usr/bin/python3 scripts/run_playbook.py --dry-run \
+    ../private/projects/acme/playbooks/triage-then-review.yaml</pre></div>
 <div class="code bill"><div class="cap">Bills. --budget is per step, default $1.00.</div><pre># Run its evals. A wrong path fails without calling the judge.
-/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml
+/usr/bin/python3 scripts/run_playbook.py \
+    ../private/projects/acme/playbooks/triage-then-review.yaml
 
 # One real run with your own inputs, and no judge
-/usr/bin/python3 scripts/run_playbook.py ../projects/acme/playbooks/triage-then-review.yaml --run \
-  issue=fixtures/issue-triager/issue-search-crash.md diff=fixtures/security/pr-sql-injection.diff</pre></div>
+/usr/bin/python3 scripts/run_playbook.py \
+    ../private/projects/acme/playbooks/triage-then-review.yaml --run \
+    issue=fixtures/issue-triager/issue-search-crash.md diff=fixtures/security/pr-sql-injection.diff</pre></div>
 <p>Each run also reports its handoffs, such as <code>handoff after issue-triager: continue (...)</code>, and the path it took. Add <code>--keep</code> to keep the shared workspace.</p>
 
 <!-- ============================================================ 12 -->
 <h1 class="flow" id="c12">12. Deploy to a project</h1>
 <p class="lead"><code>deploy.py</code> writes a map's agents straight into a project's <code>.claude/</code> folder. It suits your own machine and maps that bind MCP tools. For anything that needs review, use a release (<a href="#c13">chapter 13</a>).</p>
-<div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme --dry-run
-/usr/bin/python3 scripts/deploy.py ../projects/acme/project-map.yaml --target ~/code/acme</pre></div>
+<div class="code free"><div class="cap">Free: the target folder must already exist</div><pre>/usr/bin/python3 scripts/deploy.py ../private/projects/acme/project-map.yaml \
+    --target ~/code/acme --dry-run
+/usr/bin/python3 scripts/deploy.py ../private/projects/acme/project-map.yaml \
+    --target ~/code/acme</pre></div>
 <div class="code out"><div class="cap">Output</div><pre>wrote    .claude/agents/docs-reviewer.md
 wrote    .claude/agents/security-reviewer.md
 wrote    .claude/kitbash/hooks/block-network.py
@@ -1157,7 +1162,7 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 
 <h2><code>validate.py</code> <span class="tag free">FREE</span></h2>
 <table class="keep"><tbody>
-  <tr><td style="width:44%"><code>validate.py</code></td><td>Catalog, plus maps in <code>../projects/</code> and <code>../private/projects/</code></td></tr>
+  <tr><td style="width:44%"><code>validate.py</code></td><td>Catalog, plus maps in <code>../examples/</code> and <code>../private/projects/</code></td></tr>
   <tr><td><code>validate.py</code> inside a project</td><td>Its <code>.kitbash/project-map.yaml</code>, with <code>.kitbash/catalog/</code> merged in</td></tr>
   <tr><td><code>validate.py PATH/TO/project-map.yaml ...</code></td><td>The named maps, which may live anywhere, and their playbooks</td></tr>
   <tr><td><code>validate.py --catalog DIR</code></td><td>Catalog only</td></tr>
@@ -1349,7 +1354,7 @@ A repo plugin loads only when a session starts at the repo root, not in a subfol
 <h2>Check</h2>
 <div class="code free"><pre>py scripts/validate.py
 py scripts/validate.py \
-    ../projects/NAME/project-map.yaml</pre></div>
+    ../private/projects/NAME/project-map.yaml</pre></div>
 <h2>Look inside</h2>
 <div class="code free"><pre>py scripts/run_evals.py AGENT --dry-run
 py scripts/run_evals.py AGENT --dry-run \
