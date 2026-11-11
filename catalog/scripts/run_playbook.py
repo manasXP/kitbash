@@ -2,7 +2,7 @@
 """Run a playbook: a sequence of agent invocations that code runs and code hands off.
 
 Usage:
-    run_playbook.py ../projects/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
+    run_playbook.py ../examples/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
     run_playbook.py PLAYBOOK --run request="Add ..." file=fixtures/eda/x.kicad_sch            # one run, no judge
     run_playbook.py PLAYBOOK --dry-run                                                        # print, run nothing
 

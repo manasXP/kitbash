@@ -74,7 +74,7 @@ Any other `${...}`, such as a secret reference in a server config, is left for C
 ## Validator
 
 ```
-./scripts/validate.py                                  # .kitbash/project-map.yaml here or above, else this catalog + ../projects/*/project-map.yaml
+./scripts/validate.py                                  # .kitbash/project-map.yaml here or above, else this catalog + ../examples/*/project-map.yaml
 ./scripts/validate.py path/to/project-map.yaml [...]   # specific maps; catalog is taken from each map's `catalog` field, else this one
 ./scripts/validate.py --catalog DIR                    # catalog only
 ```
@@ -174,7 +174,7 @@ replaces the browsing step with a local search once the datasets are bought.
 ```
 ./scripts/run_evals.py security-reviewer firmware-engineer
 ./scripts/run_evals.py --all
-./scripts/run_evals.py ux-designer --map ../projects/smart-thermostat/project-map.yaml --aspect ux-design
+./scripts/run_evals.py ux-designer --map ../examples/smart-thermostat/project-map.yaml --aspect ux-design
 ./scripts/run_evals.py ux-designer --aspect ux-design   # inside a project: its .kitbash/project-map.yaml
 ./scripts/run_evals.py security-reviewer --dry-run      # print composed prompt and command, run nothing
 ```
@@ -224,9 +224,9 @@ localhost:9875) for the agent's MCP calls to work. `fixtures/mech/bracket.FCStd`
 ## Playbook runner
 
 ```
-./scripts/run_playbook.py ../projects/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
+./scripts/run_playbook.py ../examples/smart-thermostat/playbooks/schematic-change-and-check.yaml   # run its evals
 ./scripts/run_playbook.py PLAYBOOK --run request="Add ..." file=fixtures/eda/x.kicad_sch            # one run, no judge
-./scripts/run_playbook.py ../projects/smart-thermostat/playbooks/triage-and-review.yaml              # output handoff
+./scripts/run_playbook.py ../examples/smart-thermostat/playbooks/triage-and-review.yaml              # output handoff
 ./scripts/run_playbook.py PLAYBOOK --dry-run                                                        # print, run nothing
 ```
 
@@ -243,7 +243,7 @@ stops the run. An eval whose path differs from `expect_path` fails without a jud
 ## Deploy
 
 ```
-./scripts/deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+./scripts/deploy.py ../examples/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
 ./scripts/deploy.py                                # inside a project: its .kitbash/project-map.yaml, into that project
 ./scripts/deploy.py MAP --target DIR --dry-run     # print the files, write nothing
 ./scripts/deploy.py MAP --target DIR --force       # overwrite agent files Kitbash did not write
@@ -351,7 +351,7 @@ the Command Line Tools, which ship no XCTest, so `swift test` needs `DEVELOPER_D
 directory (recorded in `tools/cli/xcode-toolchain.yaml`). Installs and builds in these fixtures write
 `node_modules` and `.build`, which the toolchain tools declare as `artifacts`, so run the evals through the map
 (`--aspect cloud` for backend-engineer and `--aspect ios` for mobile-engineer on the Epicura map, see
-`projects/epicura/README.md`) or the judge's diff is swamped. Written 2 Nov 2026.
+`private/projects/epicura/project-map.yaml`) or the judge's diff is swamped. Written 2 Nov 2026.
 
 ## Recipe fixtures and tools
 
@@ -369,7 +369,7 @@ and water), and an empty `out/` the evals write into. Written 2 Nov 2026.
 
 ```
 ./scripts/make_agent.py "an agent that triages incoming GitHub issues"
-./scripts/make_agent.py "..." --map ../projects/smart-thermostat/project-map.yaml --aspect api --register
+./scripts/make_agent.py "..." --map ../examples/smart-thermostat/project-map.yaml --aspect api --register
 ./scripts/make_agent.py "..." --dry-run        # print the proposal, write nothing
 ./scripts/make_agent.py "..." --no-evals       # stop after validation
 ```

@@ -3,7 +3,7 @@
 
 Usage:
     validate.py                       # .kitbash/project-map.yaml here or in the nearest parent, if there is one;
-                                      # else the catalog above this script + ../projects/*/ and ../private/projects/*/
+                                      # else the catalog above this script + ../examples/*/ and ../private/projects/*/
     validate.py path/to/project-map.yaml [...]   # a map with no `catalog:` uses the catalog above this script
     validate.py --catalog DIR         # catalog only, no maps
 
@@ -926,7 +926,7 @@ def main(argv):
         if not maps:
             catalogs[(here, None)] = load_catalog(here, rep)
             check_catalog(catalogs[(here, None)], rep)
-            maps = sorted(glob.glob(os.path.join(here, "..", "projects", "*", "project-map.yaml")) +
+            maps = sorted(glob.glob(os.path.join(here, "..", "examples", "*", "project-map.yaml")) +
                           glob.glob(os.path.join(here, "..", "private", "projects", "*", "project-map.yaml")))
 
     for m in maps:

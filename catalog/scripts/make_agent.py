@@ -3,7 +3,7 @@
 
 Usage:
     make_agent.py "an agent that triages incoming GitHub issues"
-    make_agent.py "..." --map ../projects/smart-thermostat/project-map.yaml --aspect api --register
+    make_agent.py "..." --map ../examples/smart-thermostat/project-map.yaml --aspect api --register
     make_agent.py "..." --no-evals            # select, emit, validate only
     make_agent.py "..." --dry-run             # print the proposed files, write nothing
 

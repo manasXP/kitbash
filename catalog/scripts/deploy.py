@@ -2,7 +2,7 @@
 """Deploy a project map: write every routed agent, composed inside its aspect, into a real project's .claude/.
 
 Usage:
-    deploy.py ../projects/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
+    deploy.py ../examples/smart-thermostat/project-map.yaml --target ~/src/smart-thermostat
     deploy.py                                   # .kitbash/project-map.yaml here or in a parent, into its project
     deploy.py MAP --target DIR --dry-run        # print the files, write nothing
     deploy.py MAP --target DIR --force          # overwrite files in .claude/agents/ that Kitbash did not write
