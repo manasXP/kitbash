@@ -86,6 +86,34 @@ Playbooks so far: `projects/smart-thermostat/playbooks/schematic-change-and-chec
 8. [ ] Map synthesis. First real map written by hand on 2 Nov 2026 as the reference for what synthesis must produce: the Epicura map, since rewritten and moved to private project content, see `projects/epicura/README.md` (at the time: pack pstack, four aspects: eda-design over the KiCAD sheets, tracking over PM and TCC, code over the UX mocks and spec scripts, mechanical over `epi-design/**/*.FCStd` via a new FreeCAD set: `tools/mcp/freecad.yaml`, `skills/mechanical-design`, `agents/mechanical-engineer`, `fixtures/mech/bracket.FCStd`; two playbooks). Gaps it exposed: no spec-review agent for the markdown, no firmware in that workspace. Read a real project tree, propose aspects with paths, pick catalog agents or call `make_agent.py` for gaps, write a map that validates. This is what "forms itself" means and it does not exist yet.
 9. [ ] A `/kitbash` skill that runs synthesis, validation, evals and deploy in order and refuses to deploy an agent that has not passed.
 
+## Runtime independence
+
+Decided 11 Nov 2026: Kitbash should not depend on Claude as its runtime. The second runtime to try is Codex, a coding-agent CLI like Claude Code, chosen over a hosted runtime because Kitbash agents edit files in a repo and use MCP. The scripts stay Python and the catalog stays YAML: a runtime adapter layer is added, not a TypeScript rewrite. None of this is built.
+
+Already neutral: the composed prompt text, capabilities, the map and aspects, the validator rules, playbook handoffs, the registry, and MCP servers.
+
+Where Claude is wired in today, and what each needs:
+
+- Running an agent: `claude -p` in `run_evals.py`, reused by `run_playbook.py`. Needs an adapter call that runs a prompt, model and tool set in a workspace and returns the final message and cost.
+- Judge and designer calls: the `--json-schema` calls in `run_evals.py`, `run_playbook.py` and `make_agent.py`. Needs an adapter call that returns JSON matching a schema.
+- Deployed files: `.claude/agents/*.md` and plugins, written by `deploy.py` and `release.py`. Needs one emitter per runtime.
+- Model names: `llms` and `preferred_llm` hold Claude model ids in every agent, and `MODEL_TIERS` in `validate.py` is haiku, sonnet, opus, fable. Needs neutral tiers in the catalog and a per-runtime table of model ids.
+- Built-in tool names: `Read`, `Edit`, `Write`, `Bash`, `Grep`, `Glob` in traits and skills. Needs a neutral vocabulary mapped per runtime.
+- Hooks: `hooks/block-network.py` reads Claude Code's hook input and blocks with exit 2. Hook protocols differ, so a route onto a runtime with no equivalent must fail validation, never drop the guard silently.
+- Budget caps and isolation flags (`--max-budget-usd`, `--setting-sources ""`, `--strict-mcp-config`) are Claude CLI features. Each adapter states which it supports.
+
+Evals gate per runtime. A pass on Claude says nothing about the same text on another model, so the lock records the runtime, and deploy and release refuse an agent that has not passed on the runtime it is going to.
+
+Sandboxing is the invoker's choice. Decided 11 Nov 2026: whoever invokes an agent decides whether it runs locally or in a sandbox, using the runtime's own controls. Agents, traits and maps declare no sandbox, and evals do not run in one. A pass on the host therefore does not cover a sandbox where a tool is missing, and that risk sits with the invoker. What Kitbash owes the invoker is output that still works there, and three things can break today: deployed agent files inline machine-specific paths, so a deploy is valid only for the machine that made it; agents bound to a desktop app (Pen, FreeCAD) reach it over a local port; and some MCP servers are fetched on first use or are remote, so they need the network. The one place Kitbash is itself the invoker is `run_playbook.py --run`, which can pass a sandbox setting through to the runtime once the adapter exists.
+
+Build order:
+
+1. [ ] Extract the adapter interface with Claude as the only implementation. Verify: `--dry-run` output of `run_evals.py`, `run_playbook.py` and `deploy.py`, and the files `release.py build` generates, are byte-identical before and after.
+2. [ ] Move model names and built-in tool names to neutral terms in the catalog. Verify: the same outputs are still identical, and the validator ends with 0 errors.
+3. [ ] Check Codex before designing its adapter: headless mode, structured output, MCP configuration, per-agent tool limits, hooks, spend caps, and what a deployed agent file looks like there. Not yet checked.
+4. [ ] Add the Codex adapter and emitter, record the runtime in the eval lock, and run the existing evals on Codex, starting with security-reviewer. Expect the interface to change here.
+5. [ ] Let `run_playbook.py --run` pass a sandbox setting through to the runtime. Evals are unaffected.
+
 ## Ideas from the Standard Agent Spec
 
 Noted 11 Nov 2026 after comparing Kitbash with the Standard Agent Specification v0.2.0 (standardagentspec.org), which defines an agent's runtime behavior and its npm packaging, and has no evals, capabilities or project map. These are candidates, not decisions, and none is built. Each waits for an eval or a map that needs it.
@@ -94,6 +122,6 @@ Noted 11 Nov 2026 after comparing Kitbash with the Standard Agent Specification 
 - [ ] Tool allowlist. A spec tool may declare `uses`, the only other tools it is allowed to call, and the runtime rejects anything else. Kitbash denies tools per trait but has no per-tool or per-skill list of what may be invoked.
 - [ ] Hook disclosure. A spec package states the hooks it will add to a parent, each with a reason, in its manifest, so an installer can show them without running package code, and composition fails if one cannot load. Kitbash packs and imported skills carry no such statement.
 
-Not planned: emitting Standard Agent packages as a second deploy target. Its tools are TypeScript functions, so each catalog tool would need rewriting, and the pages read do not cover MCP. Reopen only on a concrete need for a runtime other than Claude Code.
+Not planned: emitting Standard Agent packages as a second deploy target. Its tools are TypeScript functions, so each catalog tool would need rewriting, and the pages read do not cover MCP. Reopen only on a concrete need for a hosted runtime; the second runtime is Codex (see Runtime independence).
 
 See docs/Composable-Agent-Taxonomy.pdf sections 5 to 8 (its HTML source is _html/Composable-Agent-Taxonomy.html) and `catalog/README.md` for details.
